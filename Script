@@ -1,0 +1,1761 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Lighting = game:GetService("Lighting")
+local Light = game:GetService("Lighting")
+
+local LocalPlayer = Players.LocalPlayer
+local player = LocalPlayer
+local plr = LocalPlayer
+local mouse = plr:GetMouse()
+local playerGui = player:WaitForChild("PlayerGui")
+local PlaceId = game.PlaceId
+
+local flying = false
+local flyThreadRunning = false
+local ignoreNextFlyToggle = false
+local FlySpeed = 50
+local FlyToggleKey = nil
+
+local ctrl = { f = 0, b = 0, l = 0, r = 0 }
+local lastctrl = { f = 0, b = 0, l = 0, r = 0 }
+
+local TargetedPlayer = nil
+local teleportKeyHeld = false
+local teleportCaptureConnection = nil
+local capturingTeleportKey = false
+
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+local capturingKey = false
+local captureConnection = nil
+local KeyDownFunction = nil
+local KeyUpFunction = nil
+
+local shadersOn = false
+
+local viewing = false
+local headsitting = false
+local backpacking = false
+local focusing = false
+local headsitWeld
+local backpackWeld
+
+local TripKey = nil
+local isTripRebinding = false
+
+local REWIND_STEP = 1
+local RECORD_FPS = 25
+local RECORD_INTERVAL = 1 / RECORD_FPS
+local REWIND_DURATION = 300
+local MAX_FRAMES = RECORD_FPS * REWIND_DURATION
+local REWIND_SPEED = 0.001
+
+local RewindToggleKey = nil
+local isRewinding = false
+local recordingEnabled = true
+local isRebinding = false
+
+local rewindHistory = table.create(MAX_FRAMES)
+local writeIndex = 1
+local storedFrames = 0
+local lastRecordTime = 0
+
+if game.PlaceId == 6884319169 then
+	if not workspace:FindFirstChild("MicUpBaseplate") then
+		local baseplate = Instance.new("Part")
+		baseplate.Name = "MicUpBaseplate"
+		baseplate.Anchored = true
+		baseplate.CanCollide = true
+		baseplate.Locked = true
+		baseplate.Size = Vector3.new(8192, 1, 8192)
+		baseplate.Position = Vector3.new(0, -0.6, -512)
+		baseplate.Material = Enum.Material.Grass
+		baseplate.Color = Color3.fromRGB(85, 175, 100)
+		baseplate.TopSurface = Enum.SurfaceType.Smooth
+		baseplate.BottomSurface = Enum.SurfaceType.Smooth
+		baseplate.Parent = workspace
+	end
+end
+
+-- if playerGui:FindFirstChild("RevoGUI") then
+-- 	game:GetService("StarterGui"):SetCore("SendNotification", {
+-- 		Title = "Revo",
+-- 		Text = "GUI Already loaded, rejoin to re-execute",
+-- 		Duration = 5
+-- 	})
+-- 	return
+-- end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RevoGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = playerGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 420, 0, 320)
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -160)
+MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
+
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 42)
+TitleBar.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+TitleBar.BorderSizePixel = 0
+TitleBar.Active = true
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 10)
+TitleCorner.Parent = TitleBar
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 1, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Revo"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.Parent = TitleBar
+
+
+local function Notify(title, text, duration)
+	game:GetService("StarterGui"):SetCore("SendNotification", {
+		Title = title,
+		Text = text,
+		Duration = duration or 5
+	})
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.UserInputType == Enum.UserInputType.Keyboard then
+		if input.KeyCode == Enum.KeyCode.B then
+			ScreenGui.Enabled = not ScreenGui.Enabled
+		end
+	end
+end)
+
+TitleBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = MainFrame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+TitleBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		if dragging then
+			local delta = input.Position - dragStart
+			MainFrame.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end
+end)
+
+local Pages = {}
+local function CreatePage(name)
+	local Page = Instance.new("Frame")
+	Page.Size = UDim2.new(1, 0, 1, -42)
+	Page.Position = UDim2.new(0, 0, 0, 42)
+	Page.BackgroundTransparency = 1
+	Page.Parent = MainFrame
+	Page.Visible = false
+	Pages[name] = Page
+	return Page
+end
+
+local CharacterPage = CreatePage("Character")
+local TargetPage = CreatePage("Target")
+local AnimationsPage = CreatePage("Animations")
+local MiscPage = CreatePage("Misc")
+local CreditsPage = CreatePage("Credits")
+
+local CreditsLabel = Instance.new("TextLabel")
+CreditsLabel.Size = UDim2.new(1, -20, 0, 30)
+CreditsLabel.Position = UDim2.new(0, 10, 0, 10)
+CreditsLabel.BackgroundTransparency = 1
+CreditsLabel.Text = "Created by: Kavrenoo"
+CreditsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+CreditsLabel.Font = Enum.Font.Gotham
+CreditsLabel.TextSize = 16
+CreditsLabel.TextXAlignment = Enum.TextXAlignment.Left
+CreditsLabel.Parent = CreditsPage
+
+local VersionLabel = Instance.new("TextLabel")
+VersionLabel.Size = UDim2.new(1, -20, 0, 20)
+VersionLabel.Position = UDim2.new(0, 10, 0, 45)
+VersionLabel.BackgroundTransparency = 1
+VersionLabel.Text = "Version: 1.0"
+VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+VersionLabel.Font = Enum.Font.Gotham
+VersionLabel.TextSize = 14
+VersionLabel.TextXAlignment = Enum.TextXAlignment.Left
+VersionLabel.Parent = CreditsPage
+
+local ButtonBar = Instance.new("Frame")
+ButtonBar.Size = UDim2.new(1, 0, 0, 28)
+ButtonBar.Position = UDim2.new(0, 0, 0, 45)
+ButtonBar.BackgroundTransparency = 1
+ButtonBar.Parent = MainFrame
+
+local UIList = Instance.new("UIListLayout")
+UIList.FillDirection = Enum.FillDirection.Horizontal
+UIList.Padding = UDim.new(0, 4)
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIList.VerticalAlignment = Enum.VerticalAlignment.Center
+UIList.Parent = ButtonBar
+
+local HomeButton = Instance.new("TextButton")
+HomeButton.Size = UDim2.new(0, 60, 0, 30)
+HomeButton.Position = UDim2.new(0, 2, 0.5, -15)
+HomeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+HomeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+HomeButton.Font = Enum.Font.Gotham
+HomeButton.TextSize = 14
+HomeButton.Text = "Home"
+HomeButton.Parent = TitleBar
+
+local HomeCorner = Instance.new("UICorner")
+HomeCorner.CornerRadius = UDim.new(0,6)
+HomeCorner.Parent = HomeButton
+
+HomeButton.MouseButton1Click:Connect(function()
+	for _, page in pairs(Pages) do
+		page.Visible = false
+	end
+	for _, b in ipairs(ButtonBar:GetChildren()) do
+		if b:IsA("TextButton") then
+			b.Visible = true
+		end
+	end
+end)
+
+local function CreateButton(name)
+	local Btn = Instance.new("TextButton")
+	Btn.Size = UDim2.new(0, 80, 1, 0)
+	Btn.Text = name
+	Btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	Btn.TextColor3 = Color3.fromRGB(255,255,255)
+	Btn.Font = Enum.Font.Gotham
+	Btn.TextSize = 14
+	Btn.Parent = ButtonBar
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0,6)
+	Corner.Parent = Btn
+
+	Btn.MouseButton1Click:Connect(function()
+		for _, page in pairs(Pages) do
+			page.Visible = false
+		end
+		local target = Pages[name]
+		if target then target.Visible = true end
+		for _, b in ipairs(ButtonBar:GetChildren()) do
+			if b:IsA("TextButton") then
+				b.Visible = false
+			end
+		end
+		HomeButton.Visible = true
+	end)
+
+	return Btn
+end
+
+CreateButton("Character")
+CreateButton("Target")
+CreateButton("Animations")
+CreateButton("Misc")
+CreateButton("Credits")
+
+local RejoinButton = Instance.new("TextButton")
+RejoinButton.Size = UDim2.new(0, 200, 0, 30)
+RejoinButton.Position = UDim2.new(0, 5, 0, 3)
+RejoinButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+RejoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+RejoinButton.Font = Enum.Font.Gotham
+RejoinButton.TextSize = 16
+RejoinButton.Text = "Rejoin"
+RejoinButton.Parent = MiscPage
+
+local RejoinCorner = Instance.new("UICorner")
+RejoinCorner.CornerRadius = UDim.new(0,6)
+RejoinCorner.Parent = RejoinButton
+
+RejoinButton.MouseButton1Click:Connect(function()
+	game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+end)
+
+local ServerHopButton = Instance.new("TextButton")
+ServerHopButton.Size = UDim2.new(0, 200, 0, 30)
+ServerHopButton.Position = UDim2.new(1, -205, 0, 3)
+ServerHopButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ServerHopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ServerHopButton.Font = Enum.Font.Gotham
+ServerHopButton.TextSize = 16
+ServerHopButton.Text = "Server Hop"
+ServerHopButton.Parent = MiscPage
+
+local ServerHopCorner = Instance.new("UICorner")
+ServerHopCorner.CornerRadius = UDim.new(0,6)
+ServerHopCorner.Parent = ServerHopButton
+
+local function getServers(cursor)
+    local url = "https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+    if cursor then
+        url = url.."&cursor="..cursor
+    end
+    local success, response = pcall(function()
+        return HttpService:JSONDecode(game:HttpGet(url))
+    end)
+    if success and response then
+        return response
+    else
+        return nil
+    end
+end
+
+function GetRoot(player)
+	if player.Character then
+		return player.Character:FindFirstChild("HumanoidRootPart")
+	end
+	return nil
+end
+
+local function pickServer()
+    local response = getServers()
+    if not response then return nil end
+    local servers = response.data
+    if #servers == 0 then return nil end
+
+    for i = #servers, 1, -1 do
+        if servers[i].id == game.JobId or servers[i].playing >= servers[i].maxPlayers then
+            table.remove(servers, i)
+        end
+    end
+
+    if #servers == 0 then return nil end
+    return servers[math.random(1, #servers)].id
+end
+
+ServerHopButton.MouseButton1Click:Connect(function()
+    local serverId = pickServer()
+    if serverId then
+        TeleportService:TeleportToPlaceInstance(PlaceId, serverId, player)
+    else
+        warn("No available servers found to hop to.")
+    end
+end)
+
+local WalkSpeedButton = Instance.new("TextButton")
+WalkSpeedButton.Size = UDim2.new(0, 200, 0, 30)
+WalkSpeedButton.Position = UDim2.new(0, 5, 0, 3)
+WalkSpeedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+WalkSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+WalkSpeedButton.Font = Enum.Font.Gotham
+WalkSpeedButton.TextSize = 16
+WalkSpeedButton.Text = "Walk Speed: 16"
+WalkSpeedButton.Parent = CharacterPage
+
+local WalkSpeedCorner = Instance.new("UICorner")
+WalkSpeedCorner.CornerRadius = UDim.new(0,6)
+WalkSpeedCorner.Parent = WalkSpeedButton
+
+local WalkSpeed_Input = Instance.new("TextBox")
+WalkSpeed_Input.Size = WalkSpeedButton.Size
+WalkSpeed_Input.Position = WalkSpeedButton.Position
+WalkSpeed_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+WalkSpeed_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+WalkSpeed_Input.Font = Enum.Font.Gotham
+WalkSpeed_Input.TextSize = 16
+WalkSpeed_Input.PlaceholderText = "Enter walk speed"
+WalkSpeed_Input.Visible = false
+WalkSpeed_Input.ClearTextOnFocus = true
+WalkSpeed_Input.Parent = CharacterPage
+
+local WalkSpeedInputCorner = Instance.new("UICorner")
+WalkSpeedInputCorner.CornerRadius = UDim.new(0,6)
+WalkSpeedInputCorner.Parent = WalkSpeed_Input
+
+WalkSpeedButton.MouseButton1Click:Connect(function()
+    WalkSpeedButton.Visible = false
+    WalkSpeed_Input.Visible = true
+    WalkSpeed_Input:CaptureFocus()
+end)
+
+WalkSpeed_Input.FocusLost:Connect(function()
+    pcall(function()
+        local Speed = WalkSpeed_Input.Text:gsub("%D", "")
+        if Speed == "" then
+            Speed = 16
+        end
+        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+            plr.Character.Humanoid.WalkSpeed = tonumber(Speed)
+        end
+        WalkSpeedButton.Text = "Walk Speed: "..Speed
+    end)
+    WalkSpeed_Input.Text = ""
+    WalkSpeed_Input.Visible = false
+    WalkSpeedButton.Visible = true
+end)
+
+plr.CharacterAdded:Connect(function()
+    if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+        plr.Character.Humanoid.WalkSpeed = 16
+    end
+
+    WalkSpeedButton.Text = "Walk Speed: 16"
+end)
+
+local FlySpeedButton = Instance.new("TextButton")
+FlySpeedButton.Size = UDim2.new(0, 200, 0, 30)
+FlySpeedButton.Position = UDim2.new(1, -205, 0, 3)
+FlySpeedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FlySpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlySpeedButton.Font = Enum.Font.Gotham
+FlySpeedButton.TextSize = 16
+FlySpeedButton.Text = "Fly Speed: "..FlySpeed
+FlySpeedButton.Parent = CharacterPage
+
+local FlySpeedCorner = Instance.new("UICorner")
+FlySpeedCorner.CornerRadius = UDim.new(0,6)
+FlySpeedCorner.Parent = FlySpeedButton
+
+local FlySpeed_Input = Instance.new("TextBox")
+FlySpeed_Input.Size = FlySpeedButton.Size
+FlySpeed_Input.Position = FlySpeedButton.Position
+FlySpeed_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FlySpeed_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlySpeed_Input.Font = Enum.Font.Gotham
+FlySpeed_Input.TextSize = 16
+FlySpeed_Input.PlaceholderText = "Enter fly speed"
+FlySpeed_Input.Visible = false
+FlySpeed_Input.ClearTextOnFocus = true
+FlySpeed_Input.Parent = CharacterPage
+
+local FlySpeedInputCorner = Instance.new("UICorner")
+FlySpeedInputCorner.CornerRadius = UDim.new(0,6)
+FlySpeedInputCorner.Parent = FlySpeed_Input
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+
+	if isRebinding then
+		RewindToggleKey = input.KeyCode
+		RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
+		isRebinding = false
+		return
+	end
+
+	if RewindToggleKey and input.KeyCode == RewindToggleKey then
+		toggleRewind()
+	end
+end)
+
+FlySpeedButton.MouseButton1Click:Connect(function()
+    FlySpeedButton.Visible = false
+    FlySpeed_Input.Visible = true
+    FlySpeed_Input:CaptureFocus()
+end)
+
+FlySpeed_Input.FocusLost:Connect(function()
+    pcall(function()
+        local Speed = FlySpeed_Input.Text:gsub("%D", "")
+        if Speed == "" then Speed = 50 end
+        FlySpeed = tonumber(Speed)
+        FlySpeedButton.Text = "Fly Speed: "..FlySpeed
+    end)
+    FlySpeed_Input.Text = ""
+    FlySpeed_Input.Visible = false
+    FlySpeedButton.Visible = true
+end)
+
+local function Fly()
+    if flyThreadRunning then return end
+    flyThreadRunning = true
+
+    local torso
+    if plr.Character:FindFirstChild("UpperTorso") then
+        torso = plr.Character.UpperTorso
+    elseif plr.Character:FindFirstChild("Torso") then
+        torso = plr.Character.Torso
+    else
+        warn("No torso found!")
+        flyThreadRunning = false
+        return
+    end
+
+    local humanoid = plr.Character:FindFirstChildOfClass("Humanoid")
+
+    local bg = Instance.new("BodyGyro")
+    bg.P = 1e5
+    bg.maxTorque = Vector3.new(400000, 400000, 400000)
+    bg.CFrame = CFrame.new(torso.Position, torso.Position + workspace.CurrentCamera.CFrame.LookVector)
+    bg.Parent = torso
+
+    local bv = Instance.new("BodyVelocity")
+    bv.velocity = Vector3.new(0, 0.1, 0)
+    bv.maxForce = Vector3.new(400000, 400000, 400000)
+    bv.Parent = torso
+
+    plr.Character.Humanoid.PlatformStand = true
+
+    local speed = 0
+    while flying and torso.Parent do
+        task.wait()
+
+        if humanoid then
+            for _, track in pairs(humanoid:GetPlayingAnimationTracks()) do
+                track:Stop()
+            end
+            humanoid.Jump = false
+        end
+
+        if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
+            speed = math.clamp(speed + FlySpeed * 0.1, 0, FlySpeed)
+        else
+            speed = math.clamp(speed - FlySpeed * 0.1, 0, FlySpeed)
+        end
+
+        if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
+            bv.velocity = ((workspace.CurrentCamera.CFrame.LookVector * (ctrl.f + ctrl.b)) +
+                ((workspace.CurrentCamera.CFrame * CFrame.new(ctrl.l + ctrl.r, (ctrl.f + ctrl.b) * 0.2, 0).p) - workspace.CurrentCamera.CFrame.p)) * speed
+            lastctrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
+        elseif speed ~= 0 then
+            bv.velocity = ((workspace.CurrentCamera.CFrame.LookVector * (lastctrl.f + lastctrl.b)) +
+                ((workspace.CurrentCamera.CFrame * CFrame.new(lastctrl.l + lastctrl.r, (lastctrl.f + lastctrl.b) * 0.2, 0).p) - workspace.CurrentCamera.CFrame.p)) * speed
+        else
+            bv.velocity = Vector3.new(0, 0.1, 0)
+        end
+
+        bg.CFrame = CFrame.new(torso.Position, torso.Position + workspace.CurrentCamera.CFrame.LookVector)
+    end
+
+    bg:Destroy()
+    bv:Destroy()
+    if humanoid then
+        plr.Character.Humanoid.PlatformStand = false
+    end
+    flyThreadRunning = false
+end
+
+local function ConnectFlyKeys()
+    KeyDownFunction = mouse.KeyDown:Connect(function(key)
+        key = key:lower()
+        if key == "w" then ctrl.f = 1
+        elseif key == "s" then ctrl.b = -1
+        elseif key == "a" then ctrl.l = -1
+        elseif key == "d" then ctrl.r = 1
+        end
+    end)
+    KeyUpFunction = mouse.KeyUp:Connect(function(key)
+        key = key:lower()
+        if key == "w" then ctrl.f = 0
+        elseif key == "s" then ctrl.b = 0
+        elseif key == "a" then ctrl.l = 0
+        elseif key == "d" then ctrl.r = 0
+        end
+    end)
+end
+
+local function DisconnectFlyKeys()
+    if KeyDownFunction then KeyDownFunction:Disconnect() end
+    if KeyUpFunction then KeyUpFunction:Disconnect() end
+end
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+	if not FlyToggleKey then return end
+
+	if ignoreNextFlyToggle then
+		ignoreNextFlyToggle = false
+		return
+	end
+
+	if input.KeyCode == FlyToggleKey then
+		flying = not flying
+		if flying then
+			ConnectFlyKeys()
+			task.spawn(Fly)
+		else
+			DisconnectFlyKeys()
+			ctrl = {f=0,b=0,l=0,r=0}
+			lastctrl = {f=0,b=0,l=0,r=0}
+		end
+	end
+end)
+
+local FlyKeyButton = Instance.new("TextButton")
+FlyKeyButton.Size = UDim2.new(0, 200, 0, 30)
+FlyKeyButton.Position = UDim2.new(0, 215, 0, 3 + 30 + 5)
+FlyKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FlyKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyKeyButton.Font = Enum.Font.Gotham
+FlyKeyButton.TextSize = 16
+FlyKeyButton.Text = "Fly Key: "..(FlyToggleKey and FlyToggleKey.Name or "None")
+FlyKeyButton.Parent = CharacterPage
+
+local FlyKeyCorner = Instance.new("UICorner")
+FlyKeyCorner.CornerRadius = UDim.new(0,6)
+FlyKeyCorner.Parent = FlyKeyButton
+
+local FlyKey_Input = Instance.new("TextBox")
+FlyKey_Input.Size = FlyKeyButton.Size
+FlyKey_Input.Position = FlyKeyButton.Position
+FlyKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FlyKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyKey_Input.Font = Enum.Font.Gotham
+FlyKey_Input.TextSize = 16
+FlyKey_Input.PlaceholderText = "Press a key..."
+FlyKey_Input.Visible = false
+FlyKey_Input.ClearTextOnFocus = true
+FlyKey_Input.Text = ""
+FlyKey_Input.Parent = CharacterPage
+
+local FlyKeyInputCorner = Instance.new("UICorner")
+FlyKeyInputCorner.CornerRadius = UDim.new(0,6)
+FlyKeyInputCorner.Parent = FlyKey_Input
+
+FlyKeyButton.MouseButton1Click:Connect(function()
+	FlyKeyButton.Visible = false
+	FlyKey_Input.Visible = true
+	FlyKey_Input.Text = "Press any key..."
+	capturingKey = true
+
+	if captureConnection then
+		captureConnection:Disconnect()
+	end
+
+	captureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+		if gpe then return end
+		if not capturingKey then return end
+
+		if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Backspace then
+			FlyToggleKey = nil
+			FlyKeyButton.Text = "Fly Key: None"
+		elseif input.UserInputType == Enum.UserInputType.Keyboard then
+			FlyToggleKey = input.KeyCode
+			FlyKeyButton.Text = "Fly Key: " .. FlyToggleKey.Name
+			ignoreNextFlyToggle = true
+		elseif input.UserInputType == Enum.UserInputType.MouseButton1 or
+		       input.UserInputType == Enum.UserInputType.MouseButton2 or
+		       input.UserInputType == Enum.UserInputType.MouseButton3 then
+			FlyToggleKey = nil
+			FlyKeyButton.Text = "Fly Key: None"
+		end
+
+		FlyKey_Input.Visible = false
+		FlyKeyButton.Visible = true
+		capturingKey = false
+
+		captureConnection:Disconnect()
+		captureConnection = nil
+	end)
+
+	FlyKey_Input.FocusLost:Connect(function()
+		if capturingKey then
+			FlyToggleKey = nil
+			FlyKeyButton.Text = "Fly Key: None"
+			FlyKey_Input.Visible = false
+			FlyKeyButton.Visible = true
+			capturingKey = false
+
+			if captureConnection then
+				captureConnection:Disconnect()
+				captureConnection = nil
+			end
+		end
+	end)
+end)
+
+local TeleportKeyButton = Instance.new("TextButton")
+TeleportKeyButton.Size = UDim2.new(0, 200, 0, 30)
+TeleportKeyButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5)
+TeleportKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TeleportKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeleportKeyButton.Font = Enum.Font.Gotham
+TeleportKeyButton.TextSize = 16
+TeleportKeyButton.Text = "Teleport Key: "..(TeleportToggleKey and TeleportToggleKey.Name or "None")
+TeleportKeyButton.Parent = CharacterPage
+
+local TeleportKeyCorner = Instance.new("UICorner")
+TeleportKeyCorner.CornerRadius = UDim.new(0,6)
+TeleportKeyCorner.Parent = TeleportKeyButton
+
+local TeleportKey_Input = Instance.new("TextBox")
+TeleportKey_Input.Size = TeleportKeyButton.Size
+TeleportKey_Input.Position = TeleportKeyButton.Position
+TeleportKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TeleportKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeleportKey_Input.Font = Enum.Font.Gotham
+TeleportKey_Input.TextSize = 16
+TeleportKey_Input.PlaceholderText = "Press a key..."
+TeleportKey_Input.Visible = false
+TeleportKey_Input.ClearTextOnFocus = true
+TeleportKey_Input.Text = ""
+TeleportKey_Input.Parent = CharacterPage
+
+local TeleportKeyInputCorner = Instance.new("UICorner")
+TeleportKeyInputCorner.CornerRadius = UDim.new(0,6)
+TeleportKeyInputCorner.Parent = TeleportKey_Input
+
+local globalTeleportConnection
+
+local function enableGlobalTeleportListener()
+    if globalTeleportConnection then return end
+    globalTeleportConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if capturingTeleportKey then return end
+
+        if TeleportToggleKey and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == TeleportToggleKey then
+            teleportKeyHeld = true
+        end
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and teleportKeyHeld then
+            clicktpFunc()
+        end
+    end)
+end
+
+enableGlobalTeleportListener()
+
+local function cancelTeleportCapture()
+    TeleportToggleKey = nil
+    TeleportKeyButton.Text = "Teleport Key: None"
+    TeleportKey_Input.Visible = false
+    TeleportKeyButton.Visible = true
+    capturingTeleportKey = false
+
+    enableGlobalTeleportListener()
+
+    if teleportCaptureConnection then
+        teleportCaptureConnection:Disconnect()
+        teleportCaptureConnection = nil
+    end
+end
+
+TeleportKeyButton.MouseButton1Click:Connect(function()
+    TeleportKeyButton.Visible = false
+    TeleportKey_Input.Visible = true
+    TeleportKey_Input.Text = "Press any key..."
+    capturingTeleportKey = true
+
+    if globalTeleportConnection then
+        globalTeleportConnection:Disconnect()
+        globalTeleportConnection = nil
+    end
+
+    if teleportCaptureConnection then
+        teleportCaptureConnection:Disconnect()
+    end
+
+    teleportCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if not capturingTeleportKey then return end
+
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == Enum.KeyCode.Backspace then
+                cancelTeleportCapture()
+            else
+                TeleportToggleKey = input.KeyCode
+                TeleportKeyButton.Text = "Teleport Key: " .. TeleportToggleKey.Name
+                TeleportKey_Input.Visible = false
+                TeleportKeyButton.Visible = true
+                capturingTeleportKey = false
+
+                enableGlobalTeleportListener()
+
+                teleportCaptureConnection:Disconnect()
+                teleportCaptureConnection = nil
+            end
+
+        elseif input.UserInputType == Enum.UserInputType.MouseButton1 or
+               input.UserInputType == Enum.UserInputType.MouseButton2 or
+               input.UserInputType == Enum.UserInputType.MouseButton3 then
+            cancelTeleportCapture()
+        end
+    end)
+end)
+
+UserInputService.InputEnded:Connect(function(input, gpe)
+	if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == TeleportToggleKey then
+		teleportKeyHeld = false
+	end
+end)
+
+local function getRoot(character)
+    return character:FindFirstChild("HumanoidRootPart")
+end
+
+function clicktpFunc()
+    local char = plr.Character
+    if not char then return end
+
+    local rootPart = getRoot(char)
+    if not rootPart then return end
+
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+
+    local hitPos = mouse.Hit.Position
+
+    local targetPos = Vector3.new(hitPos.X, hitPos.Y + humanoid.HipHeight, hitPos.Z)
+
+    local lookDirection = (Vector3.new(hitPos.X, rootPart.Position.Y, hitPos.Z) - rootPart.Position).Unit
+
+    local uprightCFrame = CFrame.new(targetPos, targetPos + lookDirection)
+    uprightCFrame = CFrame.new(uprightCFrame.Position, Vector3.new(uprightCFrame.Position.X + lookDirection.X, uprightCFrame.Position.Y, uprightCFrame.Position.Z + lookDirection.Z))
+
+    humanoid.Sit = false
+    rootPart.CFrame = uprightCFrame
+    humanoid.AutoRotate = true
+end
+
+local ShadersButton = Instance.new("TextButton")
+ShadersButton.Size = UDim2.new(0, 200, 0, 30)
+ShadersButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5)
+ShadersButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ShadersButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ShadersButton.Font = Enum.Font.Gotham
+ShadersButton.TextSize = 16
+ShadersButton.Text = "Shaders"
+ShadersButton.Parent = MiscPage
+
+local ShadersCorner = Instance.new("UICorner")
+ShadersCorner.CornerRadius = UDim.new(0,6)
+ShadersCorner.Parent = ShadersButton
+
+local DayButton = Instance.new("TextButton")
+DayButton.Size = UDim2.new(0, 200, 0, 30)
+DayButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5 + 30 + 5)
+DayButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+DayButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DayButton.Font = Enum.Font.Gotham
+DayButton.TextSize = 16
+DayButton.Text = "Day"
+DayButton.Parent = MiscPage
+
+local DayCorner = Instance.new("UICorner")
+DayCorner.CornerRadius = UDim.new(0,6)
+DayCorner.Parent = DayButton
+
+local NightButton = Instance.new("TextButton")
+NightButton.Size = UDim2.new(0, 200, 0, 30)
+NightButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5 + 30 + 5 + 30 + 5)
+NightButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+NightButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NightButton.Font = Enum.Font.Gotham
+NightButton.TextSize = 16
+NightButton.Text = "Night"
+NightButton.Parent = MiscPage
+
+local NightCorner = Instance.new("UICorner")
+NightCorner.CornerRadius = UDim.new(0,6)
+NightCorner.Parent = NightButton
+
+ShadersButton.MouseButton1Click:Connect(function()
+	if not shadersOn then
+		local Sky = Instance.new("Sky")
+		local Bloom = Instance.new("BloomEffect")
+		local Blur = Instance.new("BlurEffect")
+		local ColorC = Instance.new("ColorCorrectionEffect")
+		local SunRays = Instance.new("SunRaysEffect")
+
+		Light.Brightness = 2.25
+		Light.ExposureCompensation = 0.1
+		Light.ClockTime = 17.55
+
+		Sky.SkyboxBk = "http://www.roblox.com/asset/?id=144933338"
+		Sky.SkyboxDn = "http://www.roblox.com/asset/?id=144931530"
+		Sky.SkyboxFt = "http://www.roblox.com/asset/?id=144933262"
+		Sky.SkyboxLf = "http://www.roblox.com/asset/?id=144933244"
+		Sky.SkyboxRt = "http://www.roblox.com/asset/?id=144933299"
+		Sky.SkyboxUp = "http://www.roblox.com/asset/?id=144931564"
+		Sky.StarCount = 5000
+		Sky.SunAngularSize = 5
+		Sky.Name = "RevoSky"
+		Sky.Parent = Light
+
+		Bloom.Intensity = 0.3
+		Bloom.Size = 10
+		Bloom.Threshold = 0.8
+		Bloom.Name = "RevoBloom"
+		Bloom.Parent = Light
+
+		Blur.Size = 3
+		Blur.Name = "RevoBlur"
+		Blur.Parent = Light
+
+		ColorC.Brightness = 0
+		ColorC.Contrast = 0.1
+		ColorC.Saturation = 0.25
+		ColorC.TintColor = Color3.fromRGB(255, 255, 255)
+		ColorC.Name = "RevoColorC"
+		ColorC.Parent = Light
+
+		SunRays.Intensity = 0.1
+		SunRays.Spread = 0.8
+		SunRays.Name = "RevoSunRays"
+		SunRays.Parent = Light
+
+		shadersOn = true
+	else
+		for _, v in pairs(Light:GetChildren()) do
+			if v.Name == "RevoSky" or v.Name == "RevoBloom" or v.Name == "RevoBlur" or v.Name == "RevoColorC" or v.Name == "RevoSunRays" then
+				v:Destroy()
+			end
+		end
+
+		Light.Brightness = 2
+		Light.ExposureCompensation = 0
+
+		shadersOn = false
+	end
+end)
+
+DayButton.MouseButton1Click:Connect(function()
+	if shadersOn then
+		Notify("Revo", "Please turn off shaders before changing time.", 5)
+	else
+		Light.ClockTime = 14
+	end
+end)
+
+NightButton.MouseButton1Click:Connect(function()
+	if shadersOn then
+		Notify("Revo", "Please turn off shaders before changing time.", 5)
+	else
+		Light.ClockTime = 19
+	end
+end)
+
+local InfiniteYieldButton = Instance.new("TextButton")
+InfiniteYieldButton.Size = UDim2.new(0, 200, 0, 30)
+InfiniteYieldButton.Position = UDim2.new(1, -205, 0, 3 + 30 + 5)
+InfiniteYieldButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+InfiniteYieldButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+InfiniteYieldButton.Font = Enum.Font.Gotham
+InfiniteYieldButton.TextSize = 16
+InfiniteYieldButton.Text = "Infinite Yield"
+InfiniteYieldButton.Parent = MiscPage
+
+local InfiniteYieldCorner = Instance.new("UICorner")
+InfiniteYieldCorner.CornerRadius = UDim.new(0,6)
+InfiniteYieldCorner.Parent = InfiniteYieldButton
+
+local EmotesButton = Instance.new("TextButton")
+EmotesButton.Size = UDim2.new(0, 200, 0, 30)
+EmotesButton.Position = UDim2.new(1, -205, 0, 3 + 30 + 5 + 30 + 5)
+EmotesButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+EmotesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+EmotesButton.Font = Enum.Font.Gotham
+EmotesButton.TextSize = 16
+EmotesButton.Text = "Emotes"
+EmotesButton.Parent = MiscPage
+
+local EmotesCorner = Instance.new("UICorner")
+EmotesCorner.CornerRadius = UDim.new(0,6)
+EmotesCorner.Parent = EmotesButton
+
+local UGCEmotesButton = Instance.new("TextButton")
+UGCEmotesButton.Size = UDim2.new(0, 200, 0, 30)
+UGCEmotesButton.Position = UDim2.new(1, -205, 0, 3 + 30 + 5 + 30 + 5 + 30 + 5)
+UGCEmotesButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+UGCEmotesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+UGCEmotesButton.Font = Enum.Font.Gotham
+UGCEmotesButton.TextSize = 16
+UGCEmotesButton.Text = "UGC Emotes"
+UGCEmotesButton.Parent = MiscPage
+
+local UGCEmotesCorner = Instance.new("UICorner")
+UGCEmotesCorner.CornerRadius = UDim.new(0,6)
+UGCEmotesCorner.Parent = UGCEmotesButton
+
+InfiniteYieldButton.MouseButton1Click:Connect(function()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+end)
+
+EmotesButton.MouseButton1Click:Connect(function()
+		Notify("Revo","Loading emotes. Keybind Is , \nCredits: Gi#7331")
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Gi7331/scripts/main/Emote.lua"))()
+end)
+
+UGCEmotesButton.MouseButton1Click:Connect(function()	
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/7yd7/Hub/refs/heads/Branch/GUIS/Emotes.lua"))()
+end)
+
+local JerkButton = Instance.new("TextButton")
+JerkButton.Size = UDim2.new(0, 200, 0, 30)
+JerkButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5 + 30 + 5)
+JerkButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+JerkButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+JerkButton.Font = Enum.Font.Gotham
+JerkButton.TextSize = 16
+JerkButton.Text = "Jerk"
+JerkButton.Parent = CharacterPage
+
+local JerkButtonCorner = Instance.new("UICorner")
+JerkButtonCorner.CornerRadius = UDim.new(0,6)
+JerkButtonCorner.Parent = JerkButton
+
+local function runJerk()
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoid = character:WaitForChild("Humanoid")
+	local backpack = player:WaitForChild("Backpack")
+
+	if backpack:FindFirstChild("Jerk Off") then return end
+
+	local tool = Instance.new("Tool")
+	tool.Name = "Jerk Off"
+	tool.ToolTip = ";)"
+	tool.RequiresHandle = false
+	tool.Parent = backpack
+
+	local jorkin = false
+	local track
+
+	local function stopTomfoolery()
+		jorkin = false
+		if track then
+			track:Stop()
+			track = nil
+		end
+	end
+
+	tool.Equipped:Connect(function()
+		jorkin = true
+	end)
+
+	tool.Unequipped:Connect(stopTomfoolery)
+	humanoid.Died:Connect(stopTomfoolery)
+
+	task.spawn(function()
+		while task.wait() do
+			if not jorkin then continue end
+
+			local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
+
+			if not track then
+				local anim = Instance.new("Animation")
+				anim.AnimationId = isR15
+					and "rbxassetid://698251653"
+					or  "rbxassetid://72042024"
+
+				track = humanoid:LoadAnimation(anim)
+			end
+
+			track:Play()
+			track:AdjustSpeed(isR15 and 0.7 or 0.65)
+			track.TimePosition = 0.6
+
+			task.wait(0.1)
+			while track and track.TimePosition < (isR15 and 0.7 or 0.65) do
+				task.wait(0.1)
+			end
+
+			if track then
+				track:Stop()
+				track = nil
+			end
+		end
+	end)
+end
+
+JerkButton.MouseButton1Click:Connect(function()
+	runJerk()
+end)
+
+local RewindKeyButton = Instance.new("TextButton")
+RewindKeyButton.Size = UDim2.new(0, 200, 0, 30)
+RewindKeyButton.Position = UDim2.new(0, 215, 0, 3 + 30 + 5 + 30 + 5)
+RewindKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+RewindKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+RewindKeyButton.Font = Enum.Font.Gotham
+RewindKeyButton.TextSize = 16
+RewindKeyButton.Text = "Rewind Key: None"
+RewindKeyButton.Parent = CharacterPage
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 6)
+ButtonCorner.Parent = RewindKeyButton
+
+RunService.Heartbeat:Connect(function()
+    if not recordingEnabled then return end
+    local now = os.clock()
+    if now - lastRecordTime < RECORD_INTERVAL then return end
+    lastRecordTime = now
+
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    rewindHistory[writeIndex] = hrp.CFrame
+    writeIndex += 1
+    if writeIndex > MAX_FRAMES then writeIndex = 1 end
+    storedFrames = math.min(storedFrames + 1, MAX_FRAMES)
+end)
+
+local function lerpCFrame(a, b, t)
+    return a:Lerp(b, t)
+end
+
+local function toggleRewind()
+    isRewinding = not isRewinding
+    recordingEnabled = not isRewinding
+
+    if not isRewinding then return end
+
+    task.spawn(function()
+        local char = player.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        local lastRewindTime = 0
+
+        while isRewinding and storedFrames > 0 do
+            local now = os.clock()
+            if now - lastRewindTime >= REWIND_SPEED then
+                lastRewindTime = now
+
+                local prevIndex = writeIndex - 1
+                if prevIndex < 1 then prevIndex = MAX_FRAMES end
+
+                local cf1 = rewindHistory[prevIndex]
+                local cf2 = rewindHistory[writeIndex]
+                if cf1 and cf2 then
+                    hrp.CFrame = lerpCFrame(cf2, cf1, 0.5)
+                end
+
+                writeIndex -= 1
+                if writeIndex < 1 then writeIndex = MAX_FRAMES end
+                if storedFrames > 0 then storedFrames -= 1 end
+            end
+            RunService.Heartbeat:Wait()
+        end
+
+        isRewinding = false
+        recordingEnabled = true
+    end)
+end
+
+local globalInputConnection
+
+local function enableGlobalListener()
+    if globalInputConnection then return end
+    globalInputConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if isRebinding then return end
+        if RewindToggleKey and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == RewindToggleKey then
+            toggleRewind()
+        end
+    end)
+end
+
+enableGlobalListener()
+
+local function cancelRewindCapture()
+    RewindToggleKey = nil
+    RewindKeyButton.Text = "Rewind Key: None"
+    RewindKeyButton.Visible = true
+    isRebinding = false
+
+    enableGlobalListener()
+
+    if rewindCaptureConnection then
+        rewindCaptureConnection:Disconnect()
+        rewindCaptureConnection = nil
+    end
+end
+
+RewindKeyButton.MouseButton1Click:Connect(function()
+    isRebinding = true
+    RewindKeyButton.Text = "Press any key..."
+    RewindKeyButton.Visible = true
+
+    if globalInputConnection then
+        globalInputConnection:Disconnect()
+        globalInputConnection = nil
+    end
+
+    if rewindCaptureConnection then
+        rewindCaptureConnection:Disconnect()
+    end
+
+    rewindCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if not isRebinding then return end
+
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == Enum.KeyCode.Backspace then
+                cancelRewindCapture()
+            else
+                RewindToggleKey = input.KeyCode
+                RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
+                isRebinding = false
+
+                enableGlobalListener()
+
+                rewindCaptureConnection:Disconnect()
+                rewindCaptureConnection = nil
+            end
+        else
+            cancelRewindCapture()
+        end
+    end)
+end)
+
+local BorderOutline = Instance.new("UIStroke")
+BorderOutline.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+BorderOutline.Color = Color3.fromRGB(50, 50, 50)
+BorderOutline.Thickness = 2
+BorderOutline.Parent = TargetBorder
+
+local AnimScrollFrame = Instance.new("ScrollingFrame")
+AnimScrollFrame.Size = UDim2.new(1, 0, 1, 0)
+AnimScrollFrame.Position = UDim2.new(0, 0, 0, 0)
+AnimScrollFrame.BackgroundTransparency = 1
+AnimScrollFrame.ScrollBarThickness = 0
+AnimScrollFrame.Parent = AnimationsPage
+
+local horizontalOffset = 5
+
+local LeftColumn = Instance.new("Frame")
+LeftColumn.Size = UDim2.new(0.5, -horizontalOffset, 1, 0)
+LeftColumn.Position = UDim2.new(0, horizontalOffset, 0, 0)
+LeftColumn.BackgroundTransparency = 1
+LeftColumn.Parent = AnimScrollFrame
+
+local LeftPadding = Instance.new("UIPadding")
+LeftPadding.PaddingTop = UDim.new(0, 5)
+LeftPadding.Parent = LeftColumn
+
+local LeftLayout = Instance.new("UIListLayout")
+LeftLayout.FillDirection = Enum.FillDirection.Vertical
+LeftLayout.Padding = UDim.new(0,5)
+LeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+LeftLayout.Parent = LeftColumn
+
+local RightColumn = Instance.new("Frame")
+RightColumn.Size = UDim2.new(0.5, -horizontalOffset, 1, 0)
+RightColumn.Position = UDim2.new(0.5, horizontalOffset, 0, 0)
+RightColumn.BackgroundTransparency = 1
+RightColumn.Parent = AnimScrollFrame
+
+local RightPadding = Instance.new("UIPadding")
+RightPadding.PaddingTop = UDim.new(0, 5)
+RightPadding.Parent = RightColumn
+
+local RightLayout = Instance.new("UIListLayout")
+RightLayout.FillDirection = Enum.FillDirection.Vertical
+RightLayout.Padding = UDim.new(0,5)
+RightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+RightLayout.Parent = RightColumn
+
+local function CreateAnimButton(column, name, animFunc)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 200, 0, 30)
+    Btn.Text = name
+    Btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    Btn.TextColor3 = Color3.fromRGB(255,255,255)
+    Btn.Font = Enum.Font.Gotham
+    Btn.TextSize = 16
+    Btn.Parent = column
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0,6)
+    Corner.Parent = Btn
+
+    Btn.MouseButton1Click:Connect(animFunc)
+    return Btn
+end
+
+local UseLeft = true
+local function AddAnimButton(name, animFunc)
+    local column = UseLeft and LeftColumn or RightColumn
+    CreateAnimButton(column, name, animFunc)
+    UseLeft = not UseLeft
+end
+
+AddAnimButton("Vampire", PlayVampireAnim)
+AddAnimButton("Hero", HeroAnim)
+AddAnimButton("Zombie Classic", ZombieClassicAnim)
+AddAnimButton("Mage", MageAnim)
+AddAnimButton("Ghost", GhostAnim)
+AddAnimButton("Elder", ElderAnim)
+AddAnimButton("Levitation", LevitationAnim)
+AddAnimButton("Astronaut", AstronautAnim)
+AddAnimButton("Ninja", NinjaAnim)
+AddAnimButton("Werewolf", WerewolfAnim)
+AddAnimButton("Cartoon", CartoonAnim)
+AddAnimButton("Pirate", PirateAnim)
+AddAnimButton("Sneaky", SneakyAnim)
+AddAnimButton("Toy", ToyAnim)
+AddAnimButton("Knight", KnightAnim)
+AddAnimButton("Confident", ConfidentAnim)
+AddAnimButton("Popstar", PopstarAnim)
+AddAnimButton("Princess", PrincessAnim)
+AddAnimButton("Cowboy", CowboyAnim)
+AddAnimButton("Patrol", PatrolAnim)
+AddAnimButton("FE Zombie", FEZombieAnim)
+AddAnimButton("Catwalk", CatwalkAnim)
+AddAnimButton("Unboxed", UnboxedAnim)
+AddAnimButton("Popular", PopularAnim)
+AddAnimButton("Aura", AuraAnim)
+AddAnimButton("Community", CommunityAnim)
+AddAnimButton("Sports", SportsAnim)
+AddAnimButton("Old", OldAnim)
+AddAnimButton("Wicked", WickedAnim)
+AddAnimButton("Stylish", StylishAnim)
+AddAnimButton("Robot", RobotAnim)
+AddAnimButton("Bubbly", BubblyAnim)
+AddAnimButton("Boundaries", BoundariesAnim)
+AddAnimButton("NFL", NFLAnim)
+AddAnimButton("Realistic", RealisticAnim)
+AddAnimButton("Bold", BoldAnim)
+AddAnimButton("Rthro", RthroAnim)
+
+local function UpdateCanvas()
+    local leftHeight = LeftLayout.AbsoluteContentSize.Y
+    local rightHeight = RightLayout.AbsoluteContentSize.Y
+    AnimScrollFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(leftHeight, rightHeight) + 10)
+end
+
+LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
+RightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
+task.defer(UpdateCanvas)
+
+local Target_Section = Instance.new("ScrollingFrame")
+Target_Section.Name = "Target_Section"
+Target_Section.Parent = TargetPage
+Target_Section.Size = UDim2.new(1, -20, 1, -20)
+Target_Section.Position = UDim2.new(0, 10, 0, 10)
+Target_Section.BackgroundTransparency = 1
+Target_Section.ScrollBarThickness = 0
+Target_Section.CanvasSize = UDim2.new(0, 0, 0, 0)
+Target_Section.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Target_Section.ScrollingDirection = Enum.ScrollingDirection.Y
+Target_Section.ClipsDescendants = true
+
+local TargetImage = Instance.new("ImageLabel")
+TargetImage.Name = "TargetImage"
+TargetImage.Parent = Target_Section
+TargetImage.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+TargetImage.BorderColor3 = Color3.fromRGB(100, 100, 100)
+TargetImage.Position = UDim2.new(0, 25, 0, 0)
+TargetImage.Size = UDim2.new(0, 100, 0, 100)
+TargetImage.Image = "rbxassetid://10818605405"
+
+local TargetImageCorner = Instance.new("UICorner")
+TargetImageCorner.CornerRadius = UDim.new(0, 8)
+TargetImageCorner.Parent = TargetImage
+
+local TargetName_Input = Instance.new("TextBox")
+TargetName_Input.Name = "TargetName_Input"
+TargetName_Input.Parent = Target_Section
+TargetName_Input.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+TargetName_Input.BackgroundTransparency = 0.3
+TargetName_Input.BorderColor3 = Color3.fromRGB(100, 100, 100)
+TargetName_Input.Position = UDim2.new(0, 150, 0, 8)
+TargetName_Input.Size = UDim2.new(0, 175, 0, 30)
+TargetName_Input.Font = Enum.Font.Gotham
+TargetName_Input.PlaceholderText = "@target..."
+TargetName_Input.Text = ""
+TargetName_Input.TextColor3 = Color3.fromRGB(0, 0, 0)
+TargetName_Input.TextSize = 14
+TargetName_Input.ClearTextOnFocus = false
+
+local TargetInputCorner = Instance.new("UICorner")
+TargetInputCorner.CornerRadius = UDim.new(0, 6)
+TargetInputCorner.Parent = TargetName_Input
+
+local ClickTargetTool_Button = Instance.new("ImageButton")
+ClickTargetTool_Button.Name = "ClickTargetTool_Button"
+ClickTargetTool_Button.Parent = TargetName_Input
+ClickTargetTool_Button.BackgroundTransparency = 1
+ClickTargetTool_Button.Position = UDim2.new(1, 5, 0, 0)
+ClickTargetTool_Button.Size = UDim2.new(0, 30, 0, 30)
+ClickTargetTool_Button.Image = "rbxassetid://2716591855"
+
+local UserIDTargetLabel = Instance.new("TextLabel")
+UserIDTargetLabel.Name = "UserIDTargetLabel"
+UserIDTargetLabel.Parent = Target_Section
+UserIDTargetLabel.BackgroundTransparency = 1
+UserIDTargetLabel.Position = UDim2.new(0, 150, 0, 48)
+UserIDTargetLabel.Size = UDim2.new(0, 300, 0, 55)
+UserIDTargetLabel.Font = Enum.Font.Oswald
+UserIDTargetLabel.Text = "UserID:\nDisplay:\nJoined:"
+UserIDTargetLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+UserIDTargetLabel.TextSize = 18
+UserIDTargetLabel.TextXAlignment = Enum.TextXAlignment.Left
+UserIDTargetLabel.TextYAlignment = Enum.TextYAlignment.Top
+
+local function CreateTargetButton(text, pos)
+	local btn = Instance.new("TextButton")
+	btn.Parent = Target_Section
+	btn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+	btn.BackgroundTransparency = 0.5
+	btn.BorderSizePixel = 0
+	btn.Position = pos
+	btn.Size = UDim2.new(0, 150, 0, 30)
+	btn.Font = Enum.Font.Oswald
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+	btn.TextScaled = true
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = btn
+
+	return btn
+end
+
+local FlingTarget_Button     = CreateTargetButton("Fling",     UDim2.new(0, 25, 0, 120))
+local ViewTarget_Button      = CreateTargetButton("View",      UDim2.new(0, 210, 0, 120))
+local FocusTarget_Button     = CreateTargetButton("Focus",     UDim2.new(0, 25, 0, 170))
+local BangTarget_Button      = CreateTargetButton("Bang",      UDim2.new(0, 210, 0, 170))
+local StandTarget_Button     = CreateTargetButton("Stand",     UDim2.new(0, 25, 0, 220))
+local HeadsitTarget_Button   = CreateTargetButton("Headsit",   UDim2.new(0, 210, 0, 220))
+local DoggyTarget_Button     = CreateTargetButton("Doggy",     UDim2.new(0, 25, 0, 270))
+local BackpackTarget_Button  = CreateTargetButton("Backpack", UDim2.new(0, 210, 0, 270))
+local DragTarget_Button      = CreateTargetButton("Drag",      UDim2.new(0, 25, 0, 320))
+local TeleportTarget_Button  = CreateTargetButton("Teleport",  UDim2.new(0, 210, 0, 320))
+local PushTarget_Button      = CreateTargetButton("Push",      UDim2.new(0, 25, 0, 370))
+local FaceBangTarget_Button = CreateTargetButton("Face Bang", UDim2.new(0, 210, 0, 370))
+
+local function GetTarget()
+	if TargetedPlayer and TargetedPlayer:IsA("Player") and TargetedPlayer.Character then
+		return TargetedPlayer
+	end
+	return nil
+end
+
+local function FindPlayerByNameOrDisplay(name)
+	name = string.lower(name)
+
+	for _, p in ipairs(Players:GetPlayers()) do
+		local username = string.lower(p.Name)
+		local displayname = string.lower(p.DisplayName)
+
+		if username:sub(1,#name) == name or displayname:sub(1,#name) == name then
+			return p
+		end
+	end
+
+	return nil
+end
+
+function UpdateTarget(player)
+	if player then
+		TargetedPlayer = player
+		TargetName_Input.Text = player.Name
+		UserIDTargetLabel.Text =
+			"UserID: " .. player.UserId ..
+			"\nDisplay: " .. player.DisplayName ..
+			"\nJoined: " .. os.date("%d-%m-%Y", os.time() - (player.AccountAge * 86400)) ..
+			" [Day/Month/Year]"
+		TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+	else
+		TargetedPlayer = nil
+		TargetName_Input.Text = ""
+		TargetName_Input.PlaceholderText = "@target..."
+		UserIDTargetLabel.Text = "UserID:\nDisplay:\nJoined:"
+		TargetImage.Image = "rbxassetid://10818605405"
+	end
+end
+
+ClickTargetTool_Button.MouseButton1Click:Connect(function()
+	if LocalPlayer.Backpack:FindFirstChild("ClickTarget") then return end
+
+	local tool = Instance.new("Tool")
+	tool.Name = "ClickTarget"
+	tool.RequiresHandle = false
+	tool.TextureId = "rbxassetid://2716591855"
+
+	local mouse = LocalPlayer:GetMouse()
+	tool.Activated:Connect(function()
+		local hit = mouse.Target
+		if not hit then return end
+		local model = hit:FindFirstAncestorOfClass("Model")
+		if not model then return end
+		local player = Players:GetPlayerFromCharacter(model)
+		if player then
+			UpdateTarget(player)
+		end
+	end)
+
+	tool.Parent = LocalPlayer.Backpack
+end)
+
+TargetName_Input.FocusLost:Connect(function()
+	local text = TargetName_Input.Text:gsub("@","")
+	if text == "" then
+		headsitting = false
+		backpacking = false
+		standing = false
+		viewing = false
+		local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+		if localHumanoid then
+			game.Workspace.CurrentCamera.CameraSubject = localHumanoid
+		end
+		UpdateTarget(nil)
+		return
+	end
+
+	local player = FindPlayerByNameOrDisplay(text)
+	if player then
+		UpdateTarget(player)
+	else
+		headsitting = false
+		backpacking = false
+		focusing = false
+		viewing = false
+		local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+		if localHumanoid then
+			game.Workspace.CurrentCamera.CameraSubject = localHumanoid
+		end
+		UpdateTarget(nil)
+	end
+end)
+
+TargetName_Input.Focused:Connect(function()
+	TargetName_Input.Text = ""
+end)
+
+local function ClearAllPoses()
+	headsitting = false
+	backpacking = false
+	standing = false
+	dragging = false
+
+	if headsitWeld then headsitWeld:Destroy() headsitWeld = nil end
+	if backpackWeld then backpackWeld:Destroy() backpackWeld = nil end
+	if standWeld then standWeld:Destroy() standWeld = nil end
+	if dragWeld then dragWeld:Destroy() dragWeld = nil end
+
+	local char = plr.Character
+	if char then
+		local humanoid = char:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid.Sit = false
+		end
+	end
+end
+
+ViewTarget_Button.MouseButton1Click:Connect(function()
+	local target = TargetedPlayer
+	if not target or not target.Character then return end
+
+	viewing = not viewing
+
+	if viewing then
+		task.spawn(function()
+			while viewing do
+				pcall(function()
+					if target.Character then
+						local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
+						if humanoid then
+							game.Workspace.CurrentCamera.CameraSubject = humanoid
+						end
+					end
+				end)
+				task.wait(0.1)
+			end
+
+			local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+			if localHumanoid then
+				game.Workspace.CurrentCamera.CameraSubject = localHumanoid
+			end
+		end)
+	else
+		local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+		if localHumanoid then
+			game.Workspace.CurrentCamera.CameraSubject = localHumanoid
+		end
+	end
+end)
+
+FocusTarget_Button.MouseButton1Click:Connect(function()
+	local target = TargetedPlayer
+	if not target or not target.Character then return end
+	local root = GetRoot(plr)
+	if not root then return end
+
+	focusing = not focusing
+
+	if focusing then
+		task.spawn(function()
+			while focusing do
+				pcall(function()
+					if not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
+						task.wait(0.1)
+						return
+					end
+
+					local targetRoot = target.Character.HumanoidRootPart
+					root.CFrame = targetRoot.CFrame + Vector3.new(0, 0, 0)
+					root.Velocity = Vector3.new(0, 0, 0)
+				end)
+				task.wait(0.2)
+			end
+		end)
+	else
+
+	end
+end)
+
+HeadsitTarget_Button.MouseButton1Click:Connect(function()
+	local target = TargetedPlayer
+	if not target or not target.Character then return end
+
+	if headsitting then
+		ClearAllPoses()
+		return
+	end
+
+	ClearAllPoses()
+
+	local char = plr.Character
+	if not char then return end
+
+	local root = char:FindFirstChild("HumanoidRootPart")
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	local head = target.Character:FindFirstChild("Head")
+	if not root or not humanoid or not head then return end
+
+	headsitting = true
+
+	root.CFrame = head.CFrame * CFrame.new(0, 2, 0)
+	humanoid.Sit = true
+
+	headsitWeld = Instance.new("WeldConstraint")
+	headsitWeld.Part0 = root
+	headsitWeld.Part1 = head
+	headsitWeld.Parent = root
+end)
+
+BackpackTarget_Button.MouseButton1Click:Connect(function()
+	local target = TargetedPlayer
+	if not target or not target.Character then return end
+
+	if backpacking then
+		ClearAllPoses()
+		return
+	end
+
+	ClearAllPoses()
+
+	local char = plr.Character
+	if not char then return end
+
+	local root = char:FindFirstChild("HumanoidRootPart")
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
+	if not root or not humanoid or not targetRoot then return end
+
+	backpacking = true
+
+	local offset = CFrame.new(0, 0, 1) * CFrame.Angles(0, math.rad(180), 0)
+	root.CFrame = targetRoot.CFrame * offset
+	humanoid.Sit = true
+
+	backpackWeld = Instance.new("WeldConstraint")
+	backpackWeld.Part0 = root
+	backpackWeld.Part1 = targetRoot
+	backpackWeld.Parent = root
+end)
+
+TeleportTarget_Button.MouseButton1Click:Connect(function()
+	local target = TargetedPlayer
+	if not target or not target.Character then return end
+
+	local root = GetRoot(plr)
+	local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
+	if not root or not targetRoot then return end
+
+	root.CFrame = targetRoot.CFrame + Vector3.new(0, 3, 0)
+end)
+
+local TripKeyButton = Instance.new("TextButton")
+TripKeyButton.Size = UDim2.new(0, 200, 0, 30)
+TripKeyButton.Position = UDim2.new(0, 215, 0, RewindKeyButton.Position.Y.Offset + RewindKeyButton.Size.Y.Offset + 5)
+TripKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TripKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TripKeyButton.Font = Enum.Font.Gotham
+TripKeyButton.TextSize = 16
+TripKeyButton.Text = "Trip Key: None"
+TripKeyButton.Parent = CharacterPage
+
+local TripButtonCorner = Instance.new("UICorner")
+TripButtonCorner.CornerRadius = UDim.new(0, 6)
+TripButtonCorner.Parent = TripKeyButton
+
+TripKeyButton.MouseButton1Click:Connect(function()
+    TripKeyButton.Text = "Trip Key: Press any key..."
+    isTripRebinding = true
+end)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+
+    if isTripRebinding then
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode == Enum.KeyCode.Backspace then
+                TripKey = nil
+                TripKeyButton.Text = "Trip Key: None"
+            else
+                TripKey = input.KeyCode
+                TripKeyButton.Text = "Trip Key: " .. TripKey.Name
+            end
+            isTripRebinding = false
+        elseif input.UserInputType == Enum.UserInputType.MouseButton1 or
+               input.UserInputType == Enum.UserInputType.MouseButton2 or
+               input.UserInputType == Enum.UserInputType.MouseButton3 then
+            TripKey = nil
+            TripKeyButton.Text = "Trip Key: None"
+            isTripRebinding = false
+        end
+        return
+    end
+
+    if TripKey and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == TripKey then
+        local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if humanoid and root then
+            humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+            root.Velocity = root.CFrame.LookVector * 30
+        end
+    end
+end)
+
+TripKeyButton.FocusLost:Connect(function()
+    if isTripRebinding then
+        TripKey = nil
+        TripKeyButton.Text = "Trip Key: None"
+        isTripRebinding = false
+    end
+end)
