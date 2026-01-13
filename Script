@@ -141,7 +141,7 @@ end
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 	if input.UserInputType == Enum.UserInputType.Keyboard then
-		if input.KeyCode == Enum.KeyCode.B then
+		if input.KeyCode == Enum.KeyCode.V then
 			ScreenGui.Enabled = not ScreenGui.Enabled
 		end
 	end
