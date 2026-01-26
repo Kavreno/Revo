@@ -1262,7 +1262,7 @@
 
     --Save Checkpoint
 
-        --Save Checkpoint Button
+        --Save Checpoint Button
 
             local SaveButton = Instance.new("TextButton")
             SaveButton.Size = UDim2.new(0, 200, 0, 30)
@@ -1591,7 +1591,7 @@
             pcall(function()
                 if player.Name == TargetedPlayer then
                     UpdateTarget(nil)
-                    Notify("Revo","Targeted player left/rejoined.",5)
+                    SendNotify("Revo","Targeted player left/rejoined.",5)
                 end
             end)
         end)
@@ -1688,7 +1688,7 @@
 
         HeadsitTarget_Button.MouseButton1Click:Connect(function()
             if not Alive then return end
-            if GetTarget() then
+            if TargetedPlayer ~= nil then
                 headsitting = not headsitting
                 if headsitting then
                     repeat
@@ -1699,7 +1699,7 @@
                                     TempV.Parent = GetRoot(plr)
                                 end)
                             end
-                            local targethead = Players[GetTarget()].Character.Head
+                            local targethead = Players[TargetedPlayer].Character.Head
                             plr.Character.Humanoid.Sit = true
                             GetRoot(plr).CFrame = targethead.CFrame * CFrame.new(0,2,0)
                             GetRoot(plr).Velocity = Vector3.new(0,0,0)
@@ -2558,22 +2558,33 @@
 
     -- Mic Up Base Plate Creation
 
-    	if game.PlaceId == 6884319169 then
-			if not workspace:FindFirstChild("MicUpBaseplate") then
-				local baseplate = Instance.new("Part")
-				baseplate.Name = "MicUpBaseplate"
-				baseplate.Anchored = true
-				baseplate.CanCollide = true
-				baseplate.Locked = true
-				baseplate.Size = Vector3.new(8192, 1, 8192)
-				baseplate.Position = Vector3.new(0, -0.6, -512)
-				baseplate.Material = Enum.Material.Grass
-				baseplate.Color = Color3.fromRGB(85, 175, 100)
-				baseplate.TopSurface = Enum.SurfaceType.Smooth
-				baseplate.BottomSurface = Enum.SurfaceType.Smooth
-				baseplate.Parent = workspace
-			end
-		end
+        if game.PlaceId == 6884319169 then
+            if workspace:FindFirstChild("MicUpBaseplateFolder") then return end
+
+            local folder = Instance.new("Folder")
+            folder.Name = "MicUpBaseplateFolder"
+            folder.Parent = workspace
+
+            local TILE_SIZE = 512
+            local GRID = 16
+
+            for x = -GRID, GRID do
+                for z = -GRID, GRID do
+                    local part = Instance.new("Part")
+                    part.Name = "MicUpTile"
+                    part.Anchored = true
+                    part.CanCollide = true
+                    part.Locked = true
+                    part.Size = Vector3.new(TILE_SIZE, 1, TILE_SIZE)
+                    part.Position = Vector3.new(x * TILE_SIZE, -0.6, z * TILE_SIZE)
+                    part.Material = Enum.Material.Grass
+                    part.Color = Color3.fromRGB(85, 175, 100)
+                    part.TopSurface = Enum.SurfaceType.Smooth
+                    part.BottomSurface = Enum.SurfaceType.Smooth
+                    part.Parent = folder
+                end
+            end
+        end
         
 -- Credits
 
