@@ -51,7 +51,6 @@
     local lastctrl = { f = 0, b = 0, l = 0, r = 0 }
 
     local globalTeleportConnection
-    local TargetedPlayer = nil
     local teleportKeyHeld = false
     local teleportCaptureConnection = nil
     local capturingTeleportKey = false
@@ -66,13 +65,6 @@
     local KeyUpFunction = nil
 
     local shadersOn = false
-
-    local viewing = false
-    local headsitting = false
-    local backpacking = false
-    local focusing = false
-    local headsitWeld
-    local backpackWeld
 
     local TripKey = nil
     local isTripRebinding = false
@@ -95,6 +87,8 @@
     local lastRecordTime = 0
 
     local SavedCheckpoint = nil
+
+    local TargetedPlayer = nil
 
 -- GUI
 
@@ -330,10 +324,6 @@
         -- Stop states
         plr.Character.Humanoid.WalkSpeed = 16
         flying = false
-        viewing = false
-        focusing = false
-        headsitting = false
-        backpacking = false
         dragging = false
         isRewinding = false
         recordingEnabled = false
@@ -1449,109 +1439,23 @@
 
     -- Get Target
     
-        local function GetTarget()
-            if TargetedPlayer and TargetedPlayer:IsA("Player") and TargetedPlayer.Character then
-                return TargetedPlayer
-            end
-            return nil
+    local function UpdateTarget(player)
+        if (player ~= nil) then
+            TargetedPlayer = player.Name
+            TargetName_Input.Text = player.Name
+            UserIDTargetLabel.Text = ("UserID: "..player.UserId.."\nDisplay: "..player.DisplayName.."\nJoined: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).." [Day/Month/Year]")
+            TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
+        else
+            TargetName_Input.Text = "@target..."
+            UserIDTargetLabel.Text = "UserID: \nDisplay: \nJoined: "
+            TargetImage.Image = "rbxassetid://10818605405"
+            TargetedPlayer = nil
         end
+    end
 
-        local function FindPlayerByNameOrDisplay(name)
-            name = string.lower(name)
+    -- Target Tool
 
-            for _, p in ipairs(Players:GetPlayers()) do
-                local username = string.lower(p.Name)
-                local displayname = string.lower(p.DisplayName)
-
-                if username:sub(1,#name) == name or displayname:sub(1,#name) == name then
-                    return p
-                end
-            end
-
-            return nil
-        end
-
-        function UpdateTarget(player)
-            if player then
-                TargetedPlayer = player
-                TargetName_Input.Text = player.Name
-                UserIDTargetLabel.Text =
-                    "UserID: " .. player.UserId ..
-                    "\nDisplay: " .. player.DisplayName ..
-                    "\nJoined: " .. os.date("%d-%m-%Y", os.time() - (player.AccountAge * 86400)) ..
-                    " [Day/Month/Year]"
-                TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-            else
-                TargetedPlayer = nil
-                TargetName_Input.Text = ""
-                TargetName_Input.PlaceholderText = "@target..."
-                UserIDTargetLabel.Text = "UserID:\nDisplay:\nJoined:"
-                TargetImage.Image = "rbxassetid://10818605405"
-            end
-        end
-
-        ClickTargetTool_Button.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            if LocalPlayer.Backpack:FindFirstChild("ClickTarget") then return end
-
-            local tool = Instance.new("Tool")
-            tool.Name = "ClickTarget"
-            tool.RequiresHandle = false
-            tool.TextureId = "rbxassetid://2716591855"
-
-            local mouse = LocalPlayer:GetMouse()
-            tool.Activated:Connect(function()
-                if not Alive then return end
-                local hit = mouse.Target
-                if not hit then return end
-                local model = hit:FindFirstAncestorOfClass("Model")
-                if not model then return end
-                local player = Players:GetPlayerFromCharacter(model)
-                if player then
-                    UpdateTarget(player)
-                end
-            end)
-
-            tool.Parent = LocalPlayer.Backpack
-        end)
-
-        TargetName_Input.FocusLost:Connect(function()
-            local text = TargetName_Input.Text:gsub("@","")
-            if text == "" then
-                headsitting = false
-                backpacking = false
-                standing = false
-                viewing = false
-                local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
-                if localHumanoid then
-                    game.Workspace.CurrentCamera.CameraSubject = localHumanoid
-                end
-                UpdateTarget(nil)
-                return
-            end
-
-            local player = FindPlayerByNameOrDisplay(text)
-            if player then
-                UpdateTarget(player)
-            else
-                headsitting = false
-                backpacking = false
-                focusing = false
-                viewing = false
-                local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
-                if localHumanoid then
-                    game.Workspace.CurrentCamera.CameraSubject = localHumanoid
-                end
-                UpdateTarget(nil)
-            end
-        end)
-
-        TargetName_Input.Focused:Connect(function()
-            TargetName_Input.Text = ""
-        end)
-
-        ClickTargetTool_Button.MouseButton1Click:Connect(function()
-            if not Alive then return end
+    ClickTargetTool_Button.MouseButton1Click:Connect(function()
         local GetTargetTool = Instance.new("Tool")
         GetTargetTool.Name = "ClickTarget"
         GetTargetTool.RequiresHandle = false
@@ -1575,144 +1479,345 @@
         end
 
         GetTargetTool.Activated:Connect(function()
-            if not Alive then return end
             ActivateTool()
         end)
         GetTargetTool.Parent = plr.Backpack
-        end)
+    end)
 
-        TargetName_Input.FocusLost:Connect(function()
-            local LabelText = TargetName_Input.Text
-            local LabelTarget = GetPlayer(LabelText)
-            UpdateTarget(LabelTarget)
-        end)
+    -- Velocity Asset
 
-        Players.PlayerRemoving:Connect(function(player)
-            pcall(function()
-                if player.Name == TargetedPlayer then
-                    UpdateTarget(nil)
-                    SendNotify("Revo","Targeted player left/rejoined.",5)
-                end
-            end)
-        end)
-    
-    -- Clear Poses
+        local Velocity_Asset = Instance.new("BodyAngularVelocity")
 
-        local function ClearAllPoses()
-            headsitting = false
-            backpacking = false
-            standing = false
-            dragging = false
+        Velocity_Asset.AngularVelocity = Vector3.new(0,0,0)
+        Velocity_Asset.MaxTorque = Vector3.new(50000,50000,50000)
+        Velocity_Asset.P = 1250
+        Velocity_Asset.Name = "BreakVelocity"
 
-            if headsitWeld then headsitWeld:Destroy() headsitWeld = nil end
-            if backpackWeld then backpackWeld:Destroy() backpackWeld = nil end
-            if standWeld then standWeld:Destroy() standWeld = nil end
-            if dragWeld then dragWeld:Destroy() dragWeld = nil end
+    -- Stop Animations
 
-            local char = plr.Character
-            if char then
-                local humanoid = char:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.Sit = false
-                end
+        local function StopAnim()
+            plr.Character.Animate.Disabled = false
+            local animtrack = plr.Character.Humanoid:GetPlayingAnimationTracks()
+            for i, track in pairs (animtrack) do
+                track:Stop()
             end
         end
 
-    -- View Player
+    -- Play Animations
+
+        local function PlayAnim(id,time,speed)
+            pcall(function()
+                plr.Character.Animate.Disabled = false
+                local hum = plr.Character.Humanoid
+                local animtrack = hum:GetPlayingAnimationTracks()
+                for i,track in pairs(animtrack) do
+                    track:Stop()
+                end
+                plr.Character.Animate.Disabled = true
+                local Anim = Instance.new("Animation")
+                Anim.AnimationId = "rbxassetid://"..id
+                local loadanim = hum:LoadAnimation(Anim)
+                loadanim:Play()
+                loadanim.TimePosition = time
+                loadanim:AdjustSpeed(speed)
+                loadanim.Stopped:Connect(function()
+                    plr.Character.Animate.Disabled = false
+                    for i, track in pairs (animtrack) do
+                        track:Stop()
+                    end
+                end)
+            end)
+        end
+
+    -- View Target
+
+        local viewingTarget = false
 
         ViewTarget_Button.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            local target = TargetedPlayer
-            if not target or not target.Character then return end
+            if not TargetedPlayer then return end
 
-            viewing = not viewing
+            viewingTarget = not viewingTarget
 
-            if viewing then
-                task.spawn(function()
-                    while Alive and viewing do
-                        pcall(function()
-                            if target.Character then
-                                local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
-                                if humanoid then
-                                    game.Workspace.CurrentCamera.CameraSubject = humanoid
-                                end
-                            end
-                        end)
-                        task.wait(0.1)
-                    end
-
-                    local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
-                    if localHumanoid then
-                        game.Workspace.CurrentCamera.CameraSubject = localHumanoid
-                    end
-                end)
+            if viewingTarget then
+                while viewingTarget do
+                    pcall(function()
+                        game.Workspace.CurrentCamera.CameraSubject =
+                            Players[TargetedPlayer].Character.Humanoid
+                    end)
+                    task.wait(0.5)
+                end
             else
-                local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
-                if localHumanoid then
-                    game.Workspace.CurrentCamera.CameraSubject = localHumanoid
+                game.Workspace.CurrentCamera.CameraSubject =
+                    plr.Character.Humanoid
+            end
+        end)
+
+    -- Focus Target
+
+        local focusingTarget = false
+
+        FocusTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
+
+            focusingTarget = not focusingTarget
+
+            if focusingTarget then
+                while focusingTarget do
+                    pcall(function()
+                        local target = Players[TargetedPlayer]
+                        TeleportTO(0, 0, 0, target)
+                        Push(target)
+                    end)
+                    task.wait(0.2)
                 end
             end
         end)
 
-    -- Focus Player
-    
-        FocusTarget_Button.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            local target = TargetedPlayer
-            if not target or not target.Character then return end
-            local root = GetRoot(plr)
-            if not root then return end
+    -- Teleport Target
 
-            focusing = not focusing
+    TeleportTarget_Button.MouseButton1Click:Connect(function()
+        if TargetedPlayer then
+            pcall(function()
+                TeleportTO(0, 0, 0, Players[TargetedPlayer], "safe")
+            end)
+        end
+    end)
 
-            if focusing then
-                task.spawn(function()
-                    while Alive and focusing do
-                        pcall(function()
-                            if not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
-                                task.wait(0.1)
-                                return
-                            end
+    -- Headsit Target
 
-                            local targetRoot = target.Character.HumanoidRootPart
-                            root.CFrame = targetRoot.CFrame + Vector3.new(0, 0, 0)
-                            root.Velocity = Vector3.new(0, 0, 0)
-                        end)
-                        task.wait(0.2)
-                    end
-                end)
-            end
-        end)
-
-    -- HEADSIT
+        local headsittingTarget = false
 
         HeadsitTarget_Button.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            if TargetedPlayer ~= nil then
-                headsitting = not headsitting
-                if headsitting then
-                    repeat
-                        pcall(function()
-                            if not GetRoot(plr):FindFirstChild("BreakVelocity") then
-                                pcall(function()
-                                    local TempV = Velocity_Asset:Clone()
-                                    TempV.Parent = GetRoot(plr)
-                                end)
-                            end
-                            local targethead = Players[TargetedPlayer].Character.Head
-                            plr.Character.Humanoid.Sit = true
-                            GetRoot(plr).CFrame = targethead.CFrame * CFrame.new(0,2,0)
-                            GetRoot(plr).Velocity = Vector3.new(0,0,0)
-                        end)
-                        task.wait()
-                    until alive == false
-                    if GetRoot(plr):FindFirstChild("BreakVelocity") then
-                        GetRoot(plr).BreakVelocity:Destroy()
-                    end
+            if not TargetedPlayer then return end
+
+            headsittingTarget = not headsittingTarget
+
+            if headsittingTarget then
+                while headsittingTarget do
+                    pcall(function()
+                        -- Ensure BreakVelocity exists
+                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                            local TempV = Velocity_Asset:Clone()
+                            TempV.Parent = GetRoot(plr)
+                        end
+
+                        local targetHead = Players[TargetedPlayer].Character.Head
+                        plr.Character.Humanoid.Sit = true
+                        GetRoot(plr).CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
+                        GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                    end)
+                    task.wait()
+                end
+
+                -- Cleanup
+                if GetRoot(plr):FindFirstChild("BreakVelocity") then
+                    GetRoot(plr).BreakVelocity:Destroy()
                 end
             end
         end)
-    
+
+    -- Backpack Target
+
+        local backpackingTarget = false
+
+        BackpackTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
+
+            backpackingTarget = not backpackingTarget
+
+            if backpackingTarget then
+                while backpackingTarget do
+                    pcall(function()
+                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                            local TempV = Velocity_Asset:Clone()
+                            TempV.Parent = GetRoot(plr)
+                        end
+
+                        local targetRoot = GetRoot(Players[TargetedPlayer])
+                        if targetRoot then
+                            plr.Character.Humanoid.Sit = true
+                            GetRoot(plr).CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.2) * CFrame.Angles(0, -3, 0)
+                            GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                        end
+                    end)
+                    task.wait()
+                end
+
+                if GetRoot(plr):FindFirstChild("BreakVelocity") then
+                    GetRoot(plr).BreakVelocity:Destroy()
+                end
+            end
+        end)
+
+    -- Stand Target
+
+        local standingTarget = false
+
+        StandTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
+
+            standingTarget = not standingTarget
+
+            if standingTarget then
+                PlayAnim(13823324057, 4, 0)
+
+                while standingTarget do
+                    pcall(function()
+                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                            local TempV = Velocity_Asset:Clone()
+                            TempV.Parent = GetRoot(plr)
+                        end
+
+                        local targetRoot = GetRoot(Players[TargetedPlayer])
+                        if targetRoot then
+                            GetRoot(plr).CFrame = targetRoot.CFrame * CFrame.new(-3, 1, 0)
+                            GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                        end
+                    end)
+                    task.wait()
+                end
+
+                StopAnim()
+
+                if GetRoot(plr):FindFirstChild("BreakVelocity") then
+                    GetRoot(plr).BreakVelocity:Destroy()
+                end
+            end
+        end)
+
+    -- Doggy Target
+
+        local doggingTarget = false
+
+        DoggyTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
+
+            doggingTarget = not doggingTarget
+
+            if doggingTarget then
+                PlayAnim(13694096724, 3.4, 0)
+
+                while doggingTarget do
+                    pcall(function()
+                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                            local TempV = Velocity_Asset:Clone()
+                            TempV.Parent = GetRoot(plr)
+                        end
+
+                        local targetRoot = Players[TargetedPlayer].Character:FindFirstChild("LowerTorso")
+                        if targetRoot then
+                            GetRoot(plr).CFrame = targetRoot.CFrame * CFrame.new(0, 0.23, 0)
+                            GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                        end
+                    end)
+                    task.wait()
+                end
+
+                StopAnim()
+
+                if GetRoot(plr):FindFirstChild("BreakVelocity") then
+                    GetRoot(plr).BreakVelocity:Destroy()
+                end
+            end
+        end)
+
+    -- Drag Target
+
+        local draggingTarget = false
+
+        DragTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
+
+            draggingTarget = not draggingTarget
+
+            if draggingTarget then
+                PlayAnim(10714360343, 0.5, 0)
+
+                while draggingTarget do
+                    pcall(function()
+                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                            local TempV = Velocity_Asset:Clone()
+                            TempV.Parent = GetRoot(plr)
+                        end
+
+                        local targetRoot = Players[TargetedPlayer].Character:FindFirstChild("RightHand")
+                        if targetRoot then
+                            GetRoot(plr).CFrame = targetRoot.CFrame * CFrame.new(0, -2.5, 1) * CFrame.Angles(-2, -3, 0)
+                            GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                        end
+                    end)
+                    task.wait()
+                end
+
+                StopAnim()
+
+                if GetRoot(plr):FindFirstChild("BreakVelocity") then
+                    GetRoot(plr).BreakVelocity:Destroy()
+                end
+            end
+        end)
+
+    -- Bang Target
+
+        local BangTarget = false
+
+        BangTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
+
+            BangTarget = not BangTarget
+            if BangTarget then
+                PlayAnim(5918726674, 0, 1)
+
+                while BangTarget do
+                    pcall(function()
+                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                            local TempV = Velocity_Asset:Clone()
+                            TempV.Parent = GetRoot(plr)
+                        end
+
+                        local targetRoot = GetRoot(Players[TargetedPlayer])
+                        if targetRoot then
+                            GetRoot(plr).CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.1)
+                            GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                        end
+                    end)
+                    task.wait()
+                end
+
+                StopAnim()
+
+                if GetRoot(plr):FindFirstChild("BreakVelocity") then
+                    GetRoot(plr).BreakVelocity:Destroy()
+                end
+            end
+        end)
+
+    -- Fling Target
+
+    -- Push Target
+
+    -- Player Removing
+
+    Players.PlayerRemoving:Connect(function(player)
+        pcall(function()
+            if player.Name == TargetedPlayer then
+                UpdateTarget(nil)
+
+                viewingTarget = false
+                focusingTarget = false
+                headsittingTarget = false
+                backpackingTarget = false
+                standingTarget = false
+                doggingTarget = false
+                draggingTarget = false
+                BangTarget = false
+                flingingTarget = false
+
+                Notify("Revo", "Targeted player left/rejoined.", 5)
+            end
+        end)
+    end)
+
 -- Animations
 
     local function StopAnim()
