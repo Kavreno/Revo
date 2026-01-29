@@ -1373,7 +1373,7 @@
         TargetName_Input.Position = UDim2.new(0, 150, 0, 8)
         TargetName_Input.Size = UDim2.new(0, 175, 0, 30)
         TargetName_Input.Font = Enum.Font.Gotham
-        TargetName_Input.PlaceholderText = "@target..."
+        TargetName_Input.PlaceholderText = "Target"
         TargetName_Input.Text = ""
         TargetName_Input.TextColor3 = Color3.fromRGB(0, 0, 0)
         TargetName_Input.TextSize = 14
@@ -1446,12 +1446,60 @@
             UserIDTargetLabel.Text = ("UserID: "..player.UserId.."\nDisplay: "..player.DisplayName.."\nJoined: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).." [Day/Month/Year]")
             TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
         else
-            TargetName_Input.Text = "@target..."
+            TargetName_Input.Text = "Target"
             UserIDTargetLabel.Text = "UserID: \nDisplay: \nJoined: "
             TargetImage.Image = "rbxassetid://10818605405"
             TargetedPlayer = nil
         end
     end
+
+    -- Target Input
+
+        local function FindPlayerByNameOrDisplay(name)
+            name = string.lower(name)
+
+            for _, p in ipairs(Players:GetPlayers()) do
+                local username = string.lower(p.Name)
+                local displayname = string.lower(p.DisplayName)
+
+                if username:sub(1,#name) == name or displayname:sub(1,#name) == name then
+                    return p
+                end
+            end
+
+            return nil
+        end
+
+        TargetName_Input.FocusLost:Connect(function()
+            local text = TargetName_Input.Text:gsub("@","")
+            if text == "" then
+                headsitting = false
+                backpacking = false
+                standing = false
+                viewing = false
+                local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+                if localHumanoid then
+                    game.Workspace.CurrentCamera.CameraSubject = localHumanoid
+                end
+                UpdateTarget(nil)
+                return
+            end
+
+            local player = FindPlayerByNameOrDisplay(text)
+            if player then
+                UpdateTarget(player)
+            else
+                headsitting = false
+                backpacking = false
+                focusing = false
+                viewing = false
+                local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+                if localHumanoid then
+                    game.Workspace.CurrentCamera.CameraSubject = localHumanoid
+                end
+                UpdateTarget(nil)
+            end
+        end)
 
     -- Target Tool
 
