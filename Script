@@ -1438,20 +1438,20 @@
         local FaceBangTarget_Button  = CreateTargetButton("Face Bang", UDim2.new(0, 210, 0, 370))
 
     -- Get Target
-    
-    local function UpdateTarget(player)
-        if (player ~= nil) then
-            TargetedPlayer = player.Name
-            TargetName_Input.Text = player.Name
-            UserIDTargetLabel.Text = ("UserID: "..player.UserId.."\nDisplay: "..player.DisplayName.."\nJoined: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).." [Day/Month/Year]")
-            TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
-        else
-            TargetName_Input.Text = "Target"
-            UserIDTargetLabel.Text = "UserID: \nDisplay: \nJoined: "
-            TargetImage.Image = "rbxassetid://10818605405"
-            TargetedPlayer = nil
+        
+        local function UpdateTarget(player)
+            if (player ~= nil) then
+                TargetedPlayer = player.Name
+                TargetName_Input.Text = player.Name
+                UserIDTargetLabel.Text = ("UserID: "..player.UserId.."\nDisplay: "..player.DisplayName.."\nJoined: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).." [Day/Month/Year]")
+                TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
+            else
+                TargetName_Input.Text = "Target"
+                UserIDTargetLabel.Text = "UserID: \nDisplay: \nJoined: "
+                TargetImage.Image = "rbxassetid://10818605405"
+                TargetedPlayer = nil
+            end
         end
-    end
 
     -- Target Input
 
@@ -1503,34 +1503,34 @@
 
     -- Target Tool
 
-    ClickTargetTool_Button.MouseButton1Click:Connect(function()
-        local GetTargetTool = Instance.new("Tool")
-        GetTargetTool.Name = "ClickTarget"
-        GetTargetTool.RequiresHandle = false
-        GetTargetTool.TextureId = "rbxassetid://2716591855"
-        GetTargetTool.ToolTip = "Select Target"
+        ClickTargetTool_Button.MouseButton1Click:Connect(function()
+            local GetTargetTool = Instance.new("Tool")
+            GetTargetTool.Name = "ClickTarget"
+            GetTargetTool.RequiresHandle = false
+            GetTargetTool.TextureId = "rbxassetid://2716591855"
+            GetTargetTool.ToolTip = "Select Target"
 
-        local function ActivateTool()
-            local root = GetRoot(plr)
-            local hit = mouse.Target
-            local person = nil
-            if hit and hit.Parent then
-                if hit.Parent:IsA("Model") then
-                    person = game.Players:GetPlayerFromCharacter(hit.Parent)
-                elseif hit.Parent:IsA("Accessory") then
-                    person = game.Players:GetPlayerFromCharacter(hit.Parent.Parent)
-                end
-                if person then
-                    UpdateTarget(person)
+            local function ActivateTool()
+                local root = GetRoot(plr)
+                local hit = mouse.Target
+                local person = nil
+                if hit and hit.Parent then
+                    if hit.Parent:IsA("Model") then
+                        person = game.Players:GetPlayerFromCharacter(hit.Parent)
+                    elseif hit.Parent:IsA("Accessory") then
+                        person = game.Players:GetPlayerFromCharacter(hit.Parent.Parent)
+                    end
+                    if person then
+                        UpdateTarget(person)
+                    end
                 end
             end
-        end
 
-        GetTargetTool.Activated:Connect(function()
-            ActivateTool()
+            GetTargetTool.Activated:Connect(function()
+                ActivateTool()
+            end)
+            GetTargetTool.Parent = plr.Backpack
         end)
-        GetTargetTool.Parent = plr.Backpack
-    end)
 
     -- Velocity Asset
 
