@@ -1328,8 +1328,8 @@
 
         local AnimScrollFrame = Instance.new("ScrollingFrame")
         AnimScrollFrame.Parent = TargetPage
-        AnimScrollFrame.Size = UDim2.new(1, -20, 1, -20)
-        AnimScrollFrame.Position = UDim2.new(0, 10, 0, 10)
+        AnimScrollFrame.Size = UDim2.new(1, 20, 1, 0)
+        AnimScrollFrame.Position = UDim2.new(0, 0, 0, 0)
         AnimScrollFrame.BackgroundTransparency = 1
         AnimScrollFrame.ScrollBarThickness = 0
         AnimScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -1342,8 +1342,8 @@
         local Target_Section = Instance.new("ScrollingFrame")
         Target_Section.Name = "Target_Section"
         Target_Section.Parent = TargetPage
-        Target_Section.Size = UDim2.new(1, -20, 1, -20)
-        Target_Section.Position = UDim2.new(0, 10, 0, 10)
+        Target_Section.Size = UDim2.new(1, 20, 1, 0)
+        Target_Section.Position = UDim2.new(0, 0, 0, 0)
         Target_Section.BackgroundTransparency = 1
         Target_Section.ScrollBarThickness = 0
         Target_Section.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -1356,7 +1356,7 @@
         TargetImage.Parent = Target_Section
         TargetImage.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
         TargetImage.BorderColor3 = Color3.fromRGB(100, 100, 100)
-        TargetImage.Position = UDim2.new(0, 25, 0, 0)
+        TargetImage.Position = UDim2.new(0, 5, 0, -5)
         TargetImage.Size = UDim2.new(0, 100, 0, 100)
         TargetImage.Image = "rbxassetid://10818605405"
 
@@ -1368,16 +1368,16 @@
         TargetName_Input.Name = "TargetName_Input"
         TargetName_Input.Parent = Target_Section
         TargetName_Input.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-        TargetName_Input.BackgroundTransparency = 0.3
+        TargetName_Input.BackgroundTransparency = 0.5
         TargetName_Input.BorderColor3 = Color3.fromRGB(100, 100, 100)
-        TargetName_Input.Position = UDim2.new(0, 150, 0, 8)
-        TargetName_Input.Size = UDim2.new(0, 175, 0, 30)
+        TargetName_Input.Position = UDim2.new(0, 105, 0, 10)
+        TargetName_Input.Size = UDim2.new(0, 200, 0, 30)
         TargetName_Input.Font = Enum.Font.Gotham
         TargetName_Input.PlaceholderText = "Target"
         TargetName_Input.Text = ""
         TargetName_Input.TextColor3 = Color3.fromRGB(0, 0, 0)
         TargetName_Input.TextSize = 14
-        TargetName_Input.ClearTextOnFocus = false
+        TargetName_Input.ClearTextOnFocus = true
 
         local TargetInputCorner = Instance.new("UICorner")
         TargetInputCorner.CornerRadius = UDim.new(0, 6)
@@ -1395,27 +1395,27 @@
         UserIDTargetLabel.Name = "UserIDTargetLabel"
         UserIDTargetLabel.Parent = Target_Section
         UserIDTargetLabel.BackgroundTransparency = 1
-        UserIDTargetLabel.Position = UDim2.new(0, 150, 0, 48)
+        UserIDTargetLabel.Position = UDim2.new(0, 105, 0, 48)
         UserIDTargetLabel.Size = UDim2.new(0, 300, 0, 55)
-        UserIDTargetLabel.Font = Enum.Font.Oswald
+        UserIDTargetLabel.Font = Enum.Font.Gotham
         UserIDTargetLabel.Text = "UserID:\nDisplay:\nJoined:"
         UserIDTargetLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-        UserIDTargetLabel.TextSize = 18
+        UserIDTargetLabel.TextSize = 16
         UserIDTargetLabel.TextXAlignment = Enum.TextXAlignment.Left
         UserIDTargetLabel.TextYAlignment = Enum.TextYAlignment.Top
 
         local function CreateTargetButton(text, pos)
             local btn = Instance.new("TextButton")
             btn.Parent = Target_Section
-            btn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-            btn.BackgroundTransparency = 0.5
+            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            btn.BackgroundTransparency = 0
             btn.BorderSizePixel = 0
             btn.Position = pos
-            btn.Size = UDim2.new(0, 150, 0, 30)
-            btn.Font = Enum.Font.Oswald
+            btn.Size = UDim2.new(0, 200, 0, 30)
+            btn.Font = Enum.Font.Gotham
             btn.Text = text
-            btn.TextColor3 = Color3.fromRGB(0, 0, 0)
-            btn.TextScaled = true
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.TextSize = 16
 
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0, 6)
@@ -1424,113 +1424,69 @@
             return btn
         end
 
-        local FlingTarget_Button     = CreateTargetButton("Fling",     UDim2.new(0, 25, 0, 120))
-        local ViewTarget_Button      = CreateTargetButton("View",      UDim2.new(0, 210, 0, 120))
-        local FocusTarget_Button     = CreateTargetButton("Focus",     UDim2.new(0, 25, 0, 170))
-        local BangTarget_Button      = CreateTargetButton("Bang",      UDim2.new(0, 210, 0, 170))
-        local StandTarget_Button     = CreateTargetButton("Stand",     UDim2.new(0, 25, 0, 220))
-        local HeadsitTarget_Button   = CreateTargetButton("Headsit",   UDim2.new(0, 210, 0, 220))
-        local DoggyTarget_Button     = CreateTargetButton("Doggy",     UDim2.new(0, 25, 0, 270))
-        local BackpackTarget_Button  = CreateTargetButton("Backpack", UDim2.new(0, 210, 0, 270))
-        local DragTarget_Button      = CreateTargetButton("Drag",      UDim2.new(0, 25, 0, 320))
-        local TeleportTarget_Button  = CreateTargetButton("Teleport",  UDim2.new(0, 210, 0, 320))
-        local PushTarget_Button      = CreateTargetButton("Push",      UDim2.new(0, 25, 0, 370))
-        local FaceBangTarget_Button  = CreateTargetButton("Face Bang", UDim2.new(0, 210, 0, 370))
+        local FlingTarget_Button     = CreateTargetButton("Fling",     UDim2.new(0, 5, 0, 120))
+        local ViewTarget_Button      = CreateTargetButton("View",      UDim2.new(0, 215, 0, 120))
+        local FocusTarget_Button     = CreateTargetButton("Focus",     UDim2.new(0, 5, 0, 155))
+        local BangTarget_Button      = CreateTargetButton("Bang",      UDim2.new(0, 215, 0, 155))
+        local StandTarget_Button     = CreateTargetButton("Stand",     UDim2.new(0, 5, 0, 190))
+        local HeadsitTarget_Button   = CreateTargetButton("Headsit",   UDim2.new(0, 215, 0, 190))
+        local DoggyTarget_Button     = CreateTargetButton("Doggy",     UDim2.new(0, 5, 0, 225))
+        local BackpackTarget_Button  = CreateTargetButton("Backpack", UDim2.new(0, 215, 0, 225))
+        local DragTarget_Button      = CreateTargetButton("Drag",      UDim2.new(0, 5, 0, 260))
+        local TeleportTarget_Button  = CreateTargetButton("Teleport",  UDim2.new(0, 215, 0, 260))
+        local PushTarget_Button      = CreateTargetButton("Push",      UDim2.new(0, 5, 0, 295))
+        local FaceBangTarget_Button  = CreateTargetButton("Face Bang", UDim2.new(0, 215, 0, 295))
 
     -- Get Target
-        
-        local function UpdateTarget(player)
-            if (player ~= nil) then
-                TargetedPlayer = player.Name
-                TargetName_Input.Text = player.Name
-                UserIDTargetLabel.Text = ("UserID: "..player.UserId.."\nDisplay: "..player.DisplayName.."\nJoined: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).." [Day/Month/Year]")
-                TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
-            else
-                TargetName_Input.Text = "Target"
-                UserIDTargetLabel.Text = "UserID: \nDisplay: \nJoined: "
-                TargetImage.Image = "rbxassetid://10818605405"
-                TargetedPlayer = nil
-            end
+    
+    local function UpdateTarget(player)
+        if (player ~= nil) then
+            TargetedPlayer = player.Name
+            TargetName_Input.Text = player.Name
+            UserIDTargetLabel.Text = ("UserID: "..player.UserId.."\nDisplay: "..player.DisplayName.."\nJoined: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).." [Day/Month/Year]")
+            TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
+        else
+            TargetName_Input.Text = "Target"
+            UserIDTargetLabel.Text = "UserID: \nDisplay: \nJoined: "
+            TargetImage.Image = "rbxassetid://10818605405"
+            TargetedPlayer = nil
         end
+    end
 
     -- Target Input
 
-        local function FindPlayerByNameOrDisplay(name)
-            name = string.lower(name)
 
-            for _, p in ipairs(Players:GetPlayers()) do
-                local username = string.lower(p.Name)
-                local displayname = string.lower(p.DisplayName)
-
-                if username:sub(1,#name) == name or displayname:sub(1,#name) == name then
-                    return p
-                end
-            end
-
-            return nil
-        end
-
-        TargetName_Input.FocusLost:Connect(function()
-            local text = TargetName_Input.Text:gsub("@","")
-            if text == "" then
-                headsitting = false
-                backpacking = false
-                standing = false
-                viewing = false
-                local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
-                if localHumanoid then
-                    game.Workspace.CurrentCamera.CameraSubject = localHumanoid
-                end
-                UpdateTarget(nil)
-                return
-            end
-
-            local player = FindPlayerByNameOrDisplay(text)
-            if player then
-                UpdateTarget(player)
-            else
-                headsitting = false
-                backpacking = false
-                focusing = false
-                viewing = false
-                local localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
-                if localHumanoid then
-                    game.Workspace.CurrentCamera.CameraSubject = localHumanoid
-                end
-                UpdateTarget(nil)
-            end
-        end)
 
     -- Target Tool
 
-        ClickTargetTool_Button.MouseButton1Click:Connect(function()
-            local GetTargetTool = Instance.new("Tool")
-            GetTargetTool.Name = "ClickTarget"
-            GetTargetTool.RequiresHandle = false
-            GetTargetTool.TextureId = "rbxassetid://2716591855"
-            GetTargetTool.ToolTip = "Select Target"
+    ClickTargetTool_Button.MouseButton1Click:Connect(function()
+        local GetTargetTool = Instance.new("Tool")
+        GetTargetTool.Name = "ClickTarget"
+        GetTargetTool.RequiresHandle = false
+        GetTargetTool.TextureId = "rbxassetid://2716591855"
+        GetTargetTool.ToolTip = "Select Target"
 
-            local function ActivateTool()
-                local root = GetRoot(plr)
-                local hit = mouse.Target
-                local person = nil
-                if hit and hit.Parent then
-                    if hit.Parent:IsA("Model") then
-                        person = game.Players:GetPlayerFromCharacter(hit.Parent)
-                    elseif hit.Parent:IsA("Accessory") then
-                        person = game.Players:GetPlayerFromCharacter(hit.Parent.Parent)
-                    end
-                    if person then
-                        UpdateTarget(person)
-                    end
+        local function ActivateTool()
+            local root = GetRoot(plr)
+            local hit = mouse.Target
+            local person = nil
+            if hit and hit.Parent then
+                if hit.Parent:IsA("Model") then
+                    person = game.Players:GetPlayerFromCharacter(hit.Parent)
+                elseif hit.Parent:IsA("Accessory") then
+                    person = game.Players:GetPlayerFromCharacter(hit.Parent.Parent)
+                end
+                if person then
+                    UpdateTarget(person)
                 end
             end
+        end
 
-            GetTargetTool.Activated:Connect(function()
-                ActivateTool()
-            end)
-            GetTargetTool.Parent = plr.Backpack
+        GetTargetTool.Activated:Connect(function()
+            ActivateTool()
         end)
+        GetTargetTool.Parent = plr.Backpack
+    end)
 
     -- Velocity Asset
 
@@ -1898,8 +1854,9 @@
     LeftColumn.Parent = AnimScrollFrame
 
     local LeftPadding = Instance.new("UIPadding")
-    LeftPadding.PaddingTop = UDim.new(0, 5)
+    LeftPadding.PaddingTop = UDim.new(0, 3)
     LeftPadding.Parent = LeftColumn
+
     local RightColumn = Instance.new("Frame")
     RightColumn.Size = UDim2.new(0.5, -horizontalOffset, 1, 0)
     RightColumn.Position = UDim2.new(0.5, horizontalOffset, 0, 0)
@@ -1907,16 +1864,16 @@
     RightColumn.Parent = AnimScrollFrame
 
     local RightPadding = Instance.new("UIPadding")
-    RightPadding.PaddingTop = UDim.new(0, 5)
+    RightPadding.PaddingTop = UDim.new(0, 3)
     RightPadding.Parent = RightColumn
 
     local LeftLayout = Instance.new("UIListLayout")
-    LeftLayout.Padding = UDim.new(0, 8)
+    LeftLayout.Padding = UDim.new(0, 5)
     LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     LeftLayout.Parent = LeftColumn
 
     local RightLayout = Instance.new("UIListLayout")
-    RightLayout.Padding = UDim.new(0, 8)
+    RightLayout.Padding = UDim.new(0, 5)
     RightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     RightLayout.Parent = RightColumn
 
