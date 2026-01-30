@@ -89,7 +89,14 @@
     local SavedCheckpoint = nil
 
     local TargetedPlayer = nil
-
+    local viewingTarget = false
+    local focusingTarget = false
+    local headsittingTarget = false
+    local backpackingTarget = false
+    local standingTarget = false
+    local doggingTarget = false
+    local draggingTarget = false
+    local BangTarget = false
 -- GUI
 
     local ScreenGui = Instance.new("ScreenGui")
@@ -317,35 +324,34 @@
 
 -- Destroy
 
+    local function SoftReset()
+        flying = false
+        dragging = false
+        isRewinding = false
+        recordingEnabled = false
+        viewingTarget = false
+        focusingTarget = false
+        headsittingTarget = false
+        backpackingTarget = false
+        standingTarget = false
+        doggingTarget = false
+        draggingTarget = false
+        BangTarget = false
+    end
+
     local function SelfDestruct()
         if not Alive then return end
         Alive = false
 
         -- Stop states
         plr.Character.Humanoid.WalkSpeed = 16
-        flying = false
-        dragging = false
-        isRewinding = false
-        recordingEnabled = false
+        SoftReset()
 
         -- Reset camera
         pcall(function()
             local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
             if hum then
                 workspace.CurrentCamera.CameraSubject = hum
-            end
-        end)
-
-        -- Clear welds / velocity
-        pcall(ClearAllPoses)
-        pcall(function()
-            local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                for _, v in ipairs(root:GetChildren()) do
-                    if v:IsA("BodyMover") or v.Name == "BreakVelocity" then
-                        v:Destroy()
-                    end
-                end
             end
         end)
 
@@ -1316,6 +1322,7 @@
         RightLayout.Parent = RightColumn
 
         local function UpdateCanvas()
+            if not Alive then return end
             if not AnimScrollFrame then return end
             if not LeftLayout or not RightLayout then return end
 
@@ -1327,13 +1334,13 @@
         end
 
         local AnimScrollFrame = Instance.new("ScrollingFrame")
-        AnimScrollFrame.Parent = TargetPage
         AnimScrollFrame.Size = UDim2.new(1, 20, 1, 0)
         AnimScrollFrame.Position = UDim2.new(0, 0, 0, 0)
         AnimScrollFrame.BackgroundTransparency = 1
         AnimScrollFrame.ScrollBarThickness = 0
         AnimScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
         AnimScrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+        AnimScrollFrame.Parent = TargetPage
 
         LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
         RightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
@@ -1341,7 +1348,6 @@
 
         local Target_Section = Instance.new("ScrollingFrame")
         Target_Section.Name = "Target_Section"
-        Target_Section.Parent = TargetPage
         Target_Section.Size = UDim2.new(1, 20, 1, 0)
         Target_Section.Position = UDim2.new(0, 0, 0, 0)
         Target_Section.BackgroundTransparency = 1
@@ -1350,15 +1356,16 @@
         Target_Section.AutomaticCanvasSize = Enum.AutomaticSize.Y
         Target_Section.ScrollingDirection = Enum.ScrollingDirection.Y
         Target_Section.ClipsDescendants = true
+        Target_Section.Parent = TargetPage
 
         local TargetImage = Instance.new("ImageLabel")
         TargetImage.Name = "TargetImage"
-        TargetImage.Parent = Target_Section
         TargetImage.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
         TargetImage.BorderColor3 = Color3.fromRGB(100, 100, 100)
-        TargetImage.Position = UDim2.new(0, 5, 0, -5)
+        TargetImage.Position = UDim2.new(0, 5, 0, 10)
         TargetImage.Size = UDim2.new(0, 100, 0, 100)
         TargetImage.Image = "rbxassetid://10818605405"
+        TargetImage.Parent = Target_Section
 
         local TargetImageCorner = Instance.new("UICorner")
         TargetImageCorner.CornerRadius = UDim.new(0, 8)
@@ -1366,18 +1373,18 @@
 
         local TargetName_Input = Instance.new("TextBox")
         TargetName_Input.Name = "TargetName_Input"
-        TargetName_Input.Parent = Target_Section
         TargetName_Input.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
         TargetName_Input.BackgroundTransparency = 0.5
         TargetName_Input.BorderColor3 = Color3.fromRGB(100, 100, 100)
-        TargetName_Input.Position = UDim2.new(0, 105, 0, 10)
+        TargetName_Input.Position = UDim2.new(0, 110, 0, 10)
         TargetName_Input.Size = UDim2.new(0, 200, 0, 30)
         TargetName_Input.Font = Enum.Font.Gotham
         TargetName_Input.PlaceholderText = "Target"
         TargetName_Input.Text = ""
-        TargetName_Input.TextColor3 = Color3.fromRGB(0, 0, 0)
+        TargetName_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
         TargetName_Input.TextSize = 14
         TargetName_Input.ClearTextOnFocus = true
+        TargetName_Input.Parent = Target_Section
 
         local TargetInputCorner = Instance.new("UICorner")
         TargetInputCorner.CornerRadius = UDim.new(0, 6)
@@ -1385,28 +1392,27 @@
 
         local ClickTargetTool_Button = Instance.new("ImageButton")
         ClickTargetTool_Button.Name = "ClickTargetTool_Button"
-        ClickTargetTool_Button.Parent = TargetName_Input
         ClickTargetTool_Button.BackgroundTransparency = 1
         ClickTargetTool_Button.Position = UDim2.new(1, 5, 0, 0)
         ClickTargetTool_Button.Size = UDim2.new(0, 30, 0, 30)
         ClickTargetTool_Button.Image = "rbxassetid://2716591855"
+        ClickTargetTool_Button.Parent = TargetName_Input
 
         local UserIDTargetLabel = Instance.new("TextLabel")
         UserIDTargetLabel.Name = "UserIDTargetLabel"
-        UserIDTargetLabel.Parent = Target_Section
         UserIDTargetLabel.BackgroundTransparency = 1
-        UserIDTargetLabel.Position = UDim2.new(0, 105, 0, 48)
+        UserIDTargetLabel.Position = UDim2.new(0, 110, 0, 61)
         UserIDTargetLabel.Size = UDim2.new(0, 300, 0, 55)
         UserIDTargetLabel.Font = Enum.Font.Gotham
         UserIDTargetLabel.Text = "UserID:\nDisplay:\nJoined:"
         UserIDTargetLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-        UserIDTargetLabel.TextSize = 16
+        UserIDTargetLabel.TextSize = 17
         UserIDTargetLabel.TextXAlignment = Enum.TextXAlignment.Left
         UserIDTargetLabel.TextYAlignment = Enum.TextYAlignment.Top
+        UserIDTargetLabel.Parent = Target_Section
 
         local function CreateTargetButton(text, pos)
             local btn = Instance.new("TextButton")
-            btn.Parent = Target_Section
             btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             btn.BackgroundTransparency = 0
             btn.BorderSizePixel = 0
@@ -1416,6 +1422,7 @@
             btn.Text = text
             btn.TextColor3 = Color3.fromRGB(255, 255, 255)
             btn.TextSize = 16
+            btn.Parent = Target_Section
 
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0, 6)
@@ -1431,7 +1438,7 @@
         local StandTarget_Button     = CreateTargetButton("Stand",     UDim2.new(0, 5, 0, 190))
         local HeadsitTarget_Button   = CreateTargetButton("Headsit",   UDim2.new(0, 215, 0, 190))
         local DoggyTarget_Button     = CreateTargetButton("Doggy",     UDim2.new(0, 5, 0, 225))
-        local BackpackTarget_Button  = CreateTargetButton("Backpack", UDim2.new(0, 215, 0, 225))
+        local BackpackTarget_Button  = CreateTargetButton("Backpack",  UDim2.new(0, 215, 0, 225))
         local DragTarget_Button      = CreateTargetButton("Drag",      UDim2.new(0, 5, 0, 260))
         local TeleportTarget_Button  = CreateTargetButton("Teleport",  UDim2.new(0, 215, 0, 260))
         local PushTarget_Button      = CreateTargetButton("Push",      UDim2.new(0, 5, 0, 295))
@@ -1439,54 +1446,83 @@
 
     -- Get Target
     
-    local function UpdateTarget(player)
-        if (player ~= nil) then
-            TargetedPlayer = player.Name
-            TargetName_Input.Text = player.Name
-            UserIDTargetLabel.Text = ("UserID: "..player.UserId.."\nDisplay: "..player.DisplayName.."\nJoined: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).." [Day/Month/Year]")
-            TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
-        else
-            TargetName_Input.Text = "Target"
-            UserIDTargetLabel.Text = "UserID: \nDisplay: \nJoined: "
-            TargetImage.Image = "rbxassetid://10818605405"
-            TargetedPlayer = nil
-        end
-    end
-
-    -- Target Input
-
-
-
-    -- Target Tool
-
-    ClickTargetTool_Button.MouseButton1Click:Connect(function()
-        local GetTargetTool = Instance.new("Tool")
-        GetTargetTool.Name = "ClickTarget"
-        GetTargetTool.RequiresHandle = false
-        GetTargetTool.TextureId = "rbxassetid://2716591855"
-        GetTargetTool.ToolTip = "Select Target"
-
-        local function ActivateTool()
-            local root = GetRoot(plr)
-            local hit = mouse.Target
-            local person = nil
-            if hit and hit.Parent then
-                if hit.Parent:IsA("Model") then
-                    person = game.Players:GetPlayerFromCharacter(hit.Parent)
-                elseif hit.Parent:IsA("Accessory") then
-                    person = game.Players:GetPlayerFromCharacter(hit.Parent.Parent)
-                end
-                if person then
-                    UpdateTarget(person)
-                end
+        local function UpdateTarget(player)
+            if (player ~= nil and player ~= "" and player ~= Players.LocalPlayer) then
+                TargetedPlayer = player.Name
+                TargetName_Input.Text = player.Name
+                UserIDTargetLabel.Text = ("UserID: "..player.UserId.."\nDisplay: "..player.DisplayName.."\nJoined: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).." [Day/Month/Year]")
+                TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
+            else
+                TargetName_Input.Text = "Target"
+                UserIDTargetLabel.Text = "UserID: \nDisplay: \nJoined: "
+                TargetImage.Image = "rbxassetid://10818605405"
+                TargetedPlayer = nil
             end
         end
 
-        GetTargetTool.Activated:Connect(function()
-            ActivateTool()
+    -- Target Input
+
+        local function FindPlayerByNameOrDisplay(name)
+            name = string.lower(name)
+
+            for _, p in ipairs(Players:GetPlayers()) do
+                local username = string.lower(p.Name)
+                local displayname = string.lower(p.DisplayName)
+
+                if username:sub(1,#name) == name or displayname:sub(1,#name) == name then
+                    return p
+                end
+            end
+
+            return nil
+        end
+
+        TargetName_Input.FocusLost:Connect(function()
+            local text = TargetName_Input.Text:gsub("@","")
+            local player = FindPlayerByNameOrDisplay(text)
+            if player and text ~= "" and player ~= Players.LocalPlayer then
+                UpdateTarget(player)
+                return
+            end
+
+            SoftReset()
+            localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+            if localHumanoid then
+                game.Workspace.CurrentCamera.CameraSubject = localHumanoid
+            end
+            UpdateTarget(nil)
         end)
-        GetTargetTool.Parent = plr.Backpack
-    end)
+
+    -- Target Tool
+
+        ClickTargetTool_Button.MouseButton1Click:Connect(function()
+            local GetTargetTool = Instance.new("Tool")
+            GetTargetTool.Name = "ClickTarget"
+            GetTargetTool.RequiresHandle = false
+            GetTargetTool.TextureId = "rbxassetid://2716591855"
+            GetTargetTool.ToolTip = "Select Target"
+
+            local function ActivateTool()
+                local root = GetRoot(plr)
+                local hit = mouse.Target
+                local person = nil
+                if hit and hit.Parent then
+                    if hit.Parent:IsA("Model") then
+                        person = game.Players:GetPlayerFromCharacter(hit.Parent)
+                    elseif hit.Parent:IsA("Accessory") then
+                        person = game.Players:GetPlayerFromCharacter(hit.Parent.Parent)
+                    end
+                    if person then
+                        UpdateTarget(person)
+                    end
+                end
+            end
+
+            GetTargetTool.Activated:Connect(function()
+                ActivateTool()
+            end)
+            GetTargetTool.Parent = plr.Backpack
+        end)
 
     -- Velocity Asset
 
@@ -1510,6 +1546,7 @@
     -- Play Animations
 
         local function PlayAnim(id,time,speed)
+            if not Alive then return end
             pcall(function()
                 plr.Character.Animate.Disabled = false
                 local hum = plr.Character.Humanoid
@@ -1535,8 +1572,6 @@
 
     -- View Target
 
-        local viewingTarget = false
-
         ViewTarget_Button.MouseButton1Click:Connect(function()
             if not TargetedPlayer then return end
 
@@ -1558,8 +1593,6 @@
 
     -- Focus Target
 
-        local focusingTarget = false
-
         FocusTarget_Button.MouseButton1Click:Connect(function()
             if not TargetedPlayer then return end
 
@@ -1579,17 +1612,15 @@
 
     -- Teleport Target
 
-    TeleportTarget_Button.MouseButton1Click:Connect(function()
-        if TargetedPlayer then
-            pcall(function()
-                TeleportTO(0, 0, 0, Players[TargetedPlayer], "safe")
-            end)
-        end
-    end)
+        TeleportTarget_Button.MouseButton1Click:Connect(function()
+            if TargetedPlayer then
+                pcall(function()
+                    TeleportTO(0, 0, 0, Players[TargetedPlayer], "safe")
+                end)
+            end
+        end)
 
     -- Headsit Target
-
-        local headsittingTarget = false
 
         HeadsitTarget_Button.MouseButton1Click:Connect(function()
             if not TargetedPlayer then return end
@@ -1622,8 +1653,6 @@
 
     -- Backpack Target
 
-        local backpackingTarget = false
-
         BackpackTarget_Button.MouseButton1Click:Connect(function()
             if not TargetedPlayer then return end
 
@@ -1655,7 +1684,6 @@
 
     -- Stand Target
 
-        local standingTarget = false
 
         StandTarget_Button.MouseButton1Click:Connect(function()
             if not TargetedPlayer then return end
@@ -1691,8 +1719,6 @@
 
     -- Doggy Target
 
-        local doggingTarget = false
-
         DoggyTarget_Button.MouseButton1Click:Connect(function()
             if not TargetedPlayer then return end
 
@@ -1727,8 +1753,6 @@
 
     -- Drag Target
 
-        local draggingTarget = false
-
         DragTarget_Button.MouseButton1Click:Connect(function()
             if not TargetedPlayer then return end
 
@@ -1762,8 +1786,6 @@
         end)
 
     -- Bang Target
-
-        local BangTarget = false
 
         BangTarget_Button.MouseButton1Click:Connect(function()
             if not TargetedPlayer then return end
@@ -1802,35 +1824,18 @@
 
     -- Player Removing
 
-    Players.PlayerRemoving:Connect(function(player)
-        pcall(function()
-            if player.Name == TargetedPlayer then
-                UpdateTarget(nil)
+        Players.PlayerRemoving:Connect(function(player)
+            pcall(function()
+                if player.Name == TargetedPlayer then
+                    UpdateTarget(nil)
+                    SoftReset()
 
-                viewingTarget = false
-                focusingTarget = false
-                headsittingTarget = false
-                backpackingTarget = false
-                standingTarget = false
-                doggingTarget = false
-                draggingTarget = false
-                BangTarget = false
-                flingingTarget = false
-
-                Notify("Revo", "Targeted player left/rejoined.", 5)
-            end
+                    Notify("Revo", "Targeted player left/rejoined.", 5)
+                end
+            end)
         end)
-    end)
 
 -- Animations
-
-    local function StopAnim()
-        plr.Character.Animate.Disabled = false
-        local animtrack = plr.Character.Humanoid:GetPlayingAnimationTracks()
-        for i, track in pairs (animtrack) do
-            track:Stop()
-        end
-    end
 
     local BorderOutline = Instance.new("UIStroke")
     BorderOutline.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -2700,7 +2705,7 @@
 
     local CreditsLabel = Instance.new("TextLabel")
     CreditsLabel.Size = UDim2.new(1, -20, 0, 30)
-    CreditsLabel.Position = UDim2.new(0, 10, 0, 10)
+    CreditsLabel.Position = UDim2.new(0, 10, 0, 0)
     CreditsLabel.BackgroundTransparency = 1
     CreditsLabel.Text = "Created by: Kavrenoo"
     CreditsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -2711,7 +2716,7 @@
 
     local VersionLabel = Instance.new("TextLabel")
     VersionLabel.Size = UDim2.new(1, -20, 0, 20)
-    VersionLabel.Position = UDim2.new(0, 10, 0, 45)
+    VersionLabel.Position = UDim2.new(0, 10, 0, 30)
     VersionLabel.BackgroundTransparency = 1
     VersionLabel.Text = "Version: 0.1"
     VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
