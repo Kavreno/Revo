@@ -97,7 +97,7 @@
     local doggingTarget = false
     local draggingTarget = false
     local BangTarget = false
-    
+
 -- GUI
 
     local ScreenGui = Instance.new("ScreenGui")
@@ -140,7 +140,7 @@
 -- Functions
 
     -- Create Menu Pages
-
+    
         local function CreatePage(name)
             local Page = Instance.new("Frame")
             Page.Size = UDim2.new(1, 0, 1, -42)
@@ -1327,6 +1327,7 @@
 -- Target
     
     -- Button Creation
+
         local LeftLayout = Instance.new("UIListLayout")
         LeftLayout.FillDirection = Enum.FillDirection.Vertical
         LeftLayout.Padding = UDim.new(0,5)
@@ -1648,7 +1649,6 @@
             if headsittingTarget then
                 while headsittingTarget do
                     pcall(function()
-                        -- Ensure BreakVelocity exists
                         if not GetRoot(plr):FindFirstChild("BreakVelocity") then
                             local TempV = Velocity_Asset:Clone()
                             TempV.Parent = GetRoot(plr)
@@ -1662,7 +1662,6 @@
                     task.wait()
                 end
 
-                -- Cleanup
                 if GetRoot(plr):FindFirstChild("BreakVelocity") then
                     GetRoot(plr).BreakVelocity:Destroy()
                 end
@@ -2462,6 +2461,7 @@
         end)
 
     -- Shaders
+    
         local ShadersButton = Instance.new("TextButton")
         ShadersButton.Size = UDim2.new(0, 200, 0, 30)
         ShadersButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5)
