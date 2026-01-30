@@ -1845,7 +1845,7 @@
     AnimScrollFrame.ScrollBarThickness = 0
     AnimScrollFrame.Parent = AnimationsPage
 
-    local horizontalOffset = 5
+    local horizontalOffset = 0
 
     local LeftColumn = Instance.new("Frame")
     LeftColumn.Size = UDim2.new(0.5, -horizontalOffset, 1, 0)
