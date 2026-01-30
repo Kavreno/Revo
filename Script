@@ -97,6 +97,7 @@
     local doggingTarget = false
     local draggingTarget = false
     local BangTarget = false
+    
 -- GUI
 
     local ScreenGui = Instance.new("ScreenGui")
@@ -139,6 +140,7 @@
 -- Functions
 
     -- Create Menu Pages
+
         local function CreatePage(name)
             local Page = Instance.new("Frame")
             Page.Size = UDim2.new(1, 0, 1, -42)
@@ -151,12 +153,28 @@
         end
 
     -- Sends Notification To User
+
         local function Notify(title, text, duration)
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = title,
                 Text = text,
                 Duration = duration or 5
             })
+        end
+
+    -- Add Commands
+
+        local Commands = {}
+
+        local function addcmd(name, callback)
+            Commands[name:lower()] = callback
+        end
+
+        local function runCommand(name, ...)
+            name = name:lower()
+            if Commands[name] then
+                Commands[name](...)
+            end
         end
 
 -- Nav Bar
