@@ -2461,7 +2461,7 @@
         end)
 
     -- Shaders
-    
+
         local ShadersButton = Instance.new("TextButton")
         ShadersButton.Size = UDim2.new(0, 200, 0, 30)
         ShadersButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5)
@@ -2732,9 +2732,20 @@
     CreditsLabel.TextXAlignment = Enum.TextXAlignment.Left
     CreditsLabel.Parent = CreditsPage
 
+    local DescriptionLabel = Instance.new("TextLabel")
+    DescriptionLabel.Size = UDim2.new(1, -20, 0, 30)
+    DescriptionLabel.Position = UDim2.new(0, 10, 0, 30)
+    DescriptionLabel.BackgroundTransparency = 1
+    DescriptionLabel.Text = "Just a remade systembroken script that is gonna be \ngetting more updates after I fix current bugs"
+    DescriptionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DescriptionLabel.Font = Enum.Font.Gotham
+    DescriptionLabel.TextSize = 16
+    DescriptionLabel.TextXAlignment = Enum.TextXAlignment.Left
+    DescriptionLabel.Parent = CreditsPage
+
     local VersionLabel = Instance.new("TextLabel")
     VersionLabel.Size = UDim2.new(1, -20, 0, 20)
-    VersionLabel.Position = UDim2.new(0, 10, 0, 30)
+    VersionLabel.Position = UDim2.new(0, 10, 0, 65)
     VersionLabel.BackgroundTransparency = 1
     VersionLabel.Text = "Version: 0.1"
     VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
