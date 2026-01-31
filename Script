@@ -2666,9 +2666,15 @@
             plr.Character.Humanoid:ChangeState(15)
         end)
 
-    -- Mic Up Base Plate Creation
+    -- Base Plate Creation
 
-        if game.PlaceId == 6884319169 then
+        local validPlaceIds = {
+        6884319169,
+        292628125,
+        }
+
+
+        if table.find(validPlaceIds, game.PlaceId) then
             if workspace:FindFirstChild("MicUpBaseplateFolder") then return end
 
             local folder = Instance.new("Folder")
