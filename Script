@@ -98,6 +98,19 @@
     local draggingTarget = false
     local BangTarget = false
 
+-- Gui Load Detection
+
+    local player = game.Players.LocalPlayer
+
+    if playerGui:FindFirstChild("RevoGUI") then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Revo",
+            Text = "GUI Already Loaded",
+            Duration = 5
+        })
+        return
+    end
+
 -- GUI
 
     local ScreenGui = Instance.new("ScreenGui")
@@ -164,17 +177,36 @@
 
     -- Add Commands
 
-        local Commands = {}
+            Commands = {}
+            Aliases = {}
 
-        local function addcmd(name, callback)
-            Commands[name:lower()] = callback
-        end
+            function addcmd(name, data)
+                Commands[name] = data
 
-        local function runCommand(name, ...)
-            name = name:lower()
-            if Commands[name] then
-                Commands[name](...)
+                if data.Aliases then
+                    for _, a in ipairs(data.Aliases) do
+                        Aliases[a] = name
+                    end
+                end
             end
+
+
+    -- Run Commands
+
+        function runCommand(text)
+            local split = string.split(text, " ")
+            local cmdName = split[1]:lower()
+            table.remove(split, 1)
+
+            cmdName = Aliases[cmdName] or cmdName
+            local cmd = Commands[cmdName]
+
+            if not cmd then
+                Notify("Revo", "Unknown command: "..cmdName, 3)
+                return
+            end
+
+            cmd.Run(split)
         end
 
 -- Nav Bar
@@ -328,11 +360,45 @@
 
 -- Home
 
+    local HomePage = CreatePage("Home")
+    HomePage.Visible = true
+
+    local HomeText = Instance.new("TextLabel")
+    HomeText.Size = UDim2.new(1, -20, 0, 60)
+    HomeText.Position = UDim2.new(0, 10, 0, 40)
+    HomeText.BackgroundTransparency = 1
+    HomeText.TextWrapped = true
+    HomeText.TextYAlignment = Enum.TextYAlignment.Top
+    HomeText.TextXAlignment = Enum.TextXAlignment.Left
+    HomeText.Text = "Hello "..plr.Name.."\nPress [V] To Open And Close GUI."
+    HomeText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    HomeText.Font = Enum.Font.Gotham
+    HomeText.TextSize = 16
+    HomeText.Parent = HomePage
+
+    local AnnouncementsText = Instance.new("TextLabel")
+    AnnouncementsText.Size = UDim2.new(1, -20, 0, 60)
+    AnnouncementsText.Position = UDim2.new(0, 10, 0, 120)
+    AnnouncementsText.BackgroundTransparency = 1
+    AnnouncementsText.TextWrapped = true
+    AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
+    AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
+    AnnouncementsText.Text = "First Relese Of Revo After Lots Of Breaking This Script Currently Has All System Brokens Features Adding More Soon. Currently Push And Fling Don't Work"
+    AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    AnnouncementsText.Font = Enum.Font.Gotham
+    AnnouncementsText.TextSize = 16
+    AnnouncementsText.Parent = HomePage
+
+
     HomeButton.MouseButton1Click:Connect(function()
         if not Alive then return end
+
         for _, page in pairs(Pages) do
             page.Visible = false
         end
+
+        HomePage.Visible = true
+
         for _, b in ipairs(ButtonBar:GetChildren()) do
             if b:IsA("TextButton") then
                 b.Visible = true
@@ -360,6 +426,18 @@
     local function SelfDestruct()
         if not Alive then return end
         Alive = false
+
+        -- Destroy Gui
+
+        if ScreenGui and ScreenGui.Parent then
+            local marker = ScreenGui:FindFirstChild("RevoActive")
+            if marker then
+                marker:Destroy()
+            end
+
+            ScreenGui:Destroy()
+            ScreenGui = nil
+        end
 
         -- Stop states
         plr.Character.Humanoid.WalkSpeed = 16
@@ -456,17 +534,28 @@
             WalkSpeed_Input:CaptureFocus()
         end)
 
+        addcmd("walkspeed", {
+            Aliases = {"ws", "speed"},
+            Description = "Sets walk speed",
+            Run = function(args)
+                local speed = tonumber(args[1]) or 16
+                local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+
+                if hum then
+                    hum.WalkSpeed = speed
+                    WalkSpeedButton.Text = "Walk Speed: "..speed
+                end
+            end
+        })
+
         WalkSpeed_Input.FocusLost:Connect(function()
-            pcall(function()
-                local Speed = WalkSpeed_Input.Text:gsub("%D", "")
-                if Speed == "" then
-                    Speed = 16
-                end
-                if plr.Character and plr.Character:FindFirstChild("Humanoid") then
-                    plr.Character.Humanoid.WalkSpeed = tonumber(Speed)
-                end
-                WalkSpeedButton.Text = "Walk Speed: "..Speed
-            end)
+            local Speed = WalkSpeed_Input.Text:gsub("%D", "")
+            if Speed == "" then
+                Speed = "16"
+            end
+
+            runCommand("walkspeed "..Speed)
+
             WalkSpeed_Input.Text = ""
             WalkSpeed_Input.Visible = false
             WalkSpeedButton.Visible = true
@@ -1430,6 +1519,13 @@
         UserIDTargetLabel.TextYAlignment = Enum.TextYAlignment.Top
         UserIDTargetLabel.Parent = Target_Section
 
+        local TargetPadding = Instance.new("UIPadding")
+        TargetPadding.PaddingTop = UDim.new(0, 0)
+        TargetPadding.PaddingBottom = UDim.new(0, 5)
+        TargetPadding.PaddingLeft = UDim.new(0, 0)
+        TargetPadding.PaddingRight = UDim.new(0, 0)
+        TargetPadding.Parent = Target_Section
+
         local function CreateTargetButton(text, pos)
             local btn = Instance.new("TextButton")
             btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
@@ -1551,6 +1647,10 @@
         Velocity_Asset.MaxTorque = Vector3.new(50000,50000,50000)
         Velocity_Asset.P = 1250
         Velocity_Asset.Name = "BreakVelocity"
+
+    -- Prediction Teleport
+
+
 
     -- Stop Animations
 
@@ -1837,7 +1937,11 @@
 
     -- Fling Target
 
+    
+
     -- Push Target
+
+
 
     -- Player Removing
 
@@ -2732,22 +2836,11 @@
     CreditsLabel.TextXAlignment = Enum.TextXAlignment.Left
     CreditsLabel.Parent = CreditsPage
 
-    local DescriptionLabel = Instance.new("TextLabel")
-    DescriptionLabel.Size = UDim2.new(1, -20, 0, 30)
-    DescriptionLabel.Position = UDim2.new(0, 10, 0, 30)
-    DescriptionLabel.BackgroundTransparency = 1
-    DescriptionLabel.Text = "Just a remade systembroken script that is gonna be \ngetting more updates after I fix current bugs"
-    DescriptionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    DescriptionLabel.Font = Enum.Font.Gotham
-    DescriptionLabel.TextSize = 16
-    DescriptionLabel.TextXAlignment = Enum.TextXAlignment.Left
-    DescriptionLabel.Parent = CreditsPage
-
     local VersionLabel = Instance.new("TextLabel")
     VersionLabel.Size = UDim2.new(1, -20, 0, 20)
-    VersionLabel.Position = UDim2.new(0, 10, 0, 65)
+    VersionLabel.Position = UDim2.new(0, 10, 0, 30)
     VersionLabel.BackgroundTransparency = 1
-    VersionLabel.Text = "Version: 0.1"
+    VersionLabel.Text = "Version: 1.0"
     VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     VersionLabel.Font = Enum.Font.Gotham
     VersionLabel.TextSize = 14
