@@ -28,10 +28,10 @@
     local StarterGui = game:GetService("StarterGui")
     local HttpService = game:GetService("HttpService")
     local TeleportService = game:GetService("TeleportService")
-    local Lighting = game:GetService("Lighting")
     local Light = game:GetService("Lighting")
 
     local LocalPlayer = Players.LocalPlayer
+    local player = game.Players.LocalPlayer
     local player = LocalPlayer
     local plr = LocalPlayer
     local mouse = plr:GetMouse()
@@ -99,8 +99,6 @@
     local BangTarget = false
 
 -- Gui Load Detection
-
-    local player = game.Players.LocalPlayer
 
     if playerGui:FindFirstChild("RevoGUI") then
         game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -189,7 +187,6 @@
                     end
                 end
             end
-
 
     -- Run Commands
 
@@ -329,35 +326,6 @@
         end
     end)
 
-    TitleBar.InputBegan:Connect(function(input)
-        if not Alive then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = MainFrame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    TitleBar.InputChanged:Connect(function(input)
-        if not Alive then return end
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            if dragging then
-                local delta = input.Position - dragStart
-                MainFrame.Position = UDim2.new(
-                    startPos.X.Scale,
-                    startPos.X.Offset + delta.X,
-                    startPos.Y.Scale,
-                    startPos.Y.Offset + delta.Y
-                )
-            end
-        end
-    end)
-
 -- Home
 
     local HomePage = CreatePage("Home")
@@ -383,12 +351,11 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "First Relese Of Revo After Lots Of Breaking This Script Currently Has All System Brokens Features Adding More Soon. Currently Push And Fling Don't Work"
+    AnnouncementsText.Text = "First Relese Of Revo After Lots Of Breaking This Script Currently Has All System Brokens Features Adding More Soon. Currently Push, Fling And Face Bang Don't Work"
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
     AnnouncementsText.Parent = HomePage
-
 
     HomeButton.MouseButton1Click:Connect(function()
         if not Alive then return end
@@ -428,7 +395,6 @@
         Alive = false
 
         -- Destroy Gui
-
         if ScreenGui and ScreenGui.Parent then
             local marker = ScreenGui:FindFirstChild("RevoActive")
             if marker then
@@ -479,18 +445,6 @@
         end)
     )
 
-    --GUI Open Close
-
-        UserInputService.InputBegan:Connect(function(input, gameProcessed)
-            if not Alive then return end
-            if gameProcessed then return end
-            if input.UserInputType == Enum.UserInputType.Keyboard then
-                if input.KeyCode == Enum.KeyCode.V then
-                    ScreenGui.Enabled = not ScreenGui.Enabled
-                end
-            end
-        end)
-
 -- Character
 
     -- Walk Speed
@@ -525,7 +479,7 @@
         WalkSpeedInputCorner.CornerRadius = UDim.new(0,6)
         WalkSpeedInputCorner.Parent = WalkSpeed_Input
 
-     --Walk Speed Function
+     -- Walk Speed Function
 
         WalkSpeedButton.MouseButton1Click:Connect(function()
             if not Alive then return end
@@ -637,12 +591,6 @@
             FlySpeedInputCorner.Parent = FlySpeed_Input
 
         -- Fly Key Function
-
-            UserInputService.InputEnded:Connect(function(input, gpe)
-                if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == TeleportToggleKey then
-                    teleportKeyHeld = false
-                end
-            end)
 
             FlyKeyButton.MouseButton1Click:Connect(function()
                 if not Alive then return end
@@ -811,30 +759,6 @@
                 if KeyDownFunction then KeyDownFunction:Disconnect() end
                 if KeyUpFunction then KeyUpFunction:Disconnect() end
             end
-
-            UserInputService.InputBegan:Connect(function(input, gpe)
-                if not Alive then return end
-                if gpe then return end
-                if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
-                if not FlyToggleKey then return end
-
-                if ignoreNextFlyToggle then
-                    ignoreNextFlyToggle = false
-                    return
-                end
-
-                if input.KeyCode == FlyToggleKey then
-                    flying = not flying
-                    if flying then
-                        ConnectFlyKeys()
-                        task.spawn(Fly())
-                    else
-                        DisconnectFlyKeys()
-                        ctrl = {f=0,b=0,l=0,r=0}
-                        lastctrl = {f=0,b=0,l=0,r=0}
-                    end
-                end
-            end)
 
     -- Teleport
 
@@ -1061,23 +985,6 @@
                 end)
             end
 
-            UserInputService.InputBegan:Connect(function(input, gpe)
-                if not Alive then return end
-                if gpe then return end
-                if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
-
-                if isRebinding then
-                    RewindToggleKey = input.KeyCode
-                    RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
-                    isRebinding = false
-                    return
-                end
-
-                if RewindToggleKey and input.KeyCode == RewindToggleKey then
-                    toggleRewind()
-                end
-            end)
-
             local globalInputConnection
 
             local function enableGlobalListener()
@@ -1259,49 +1166,15 @@
 
         -- Trip Function
 
-            UserInputService.InputBegan:Connect(function(input, gpe)
-                if not Alive then return end
-                if gpe then return end
-
-                if isTripRebinding then
-                    if input.UserInputType == Enum.UserInputType.Keyboard then
-                        if input.KeyCode == Enum.KeyCode.Backspace then
-                            TripKey = nil
-                            TripKeyButton.Text = "Trip Key: None"
-                        else
-                            TripKey = input.KeyCode
-                            TripKeyButton.Text = "Trip Key: " .. TripKey.Name
-                        end
-                        isTripRebinding = false
-                    elseif input.UserInputType == Enum.UserInputType.MouseButton1 or
-                        input.UserInputType == Enum.UserInputType.MouseButton2 or
-                        input.UserInputType == Enum.UserInputType.MouseButton3 then
-                        TripKey = nil
-                        TripKeyButton.Text = "Trip Key: None"
-                        isTripRebinding = false
-                    end
-                    return
-                end
-
-                if TripKey and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == TripKey then
-                    local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
-                    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                    if humanoid and root then
-                        humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
-                        root.Velocity = root.CFrame.LookVector * 30
-                    end
-                end
-            end)
-
             TripKeyButton.MouseButton1Click:Connect(function()
                 if not Alive then return end
                 TripKeyButton.Text = "Trip Key: Press any key..."
                 isTripRebinding = true
             end)
 
-    --Respawn
+    -- Respawn
 
-        --Respawn Key
+        -- Respawn Key
 
             local RespawnButton = Instance.new("TextButton")
             RespawnButton.Size = UDim2.new(0, 200, 0, 30)
@@ -1317,7 +1190,7 @@
             RespawnButtonCorner.CornerRadius = UDim.new(0,6)
             RespawnButtonCorner.Parent = RespawnButton
 
-        --Respawn Function
+        -- Respawn Function
 
             local function GetPing()
                 return (game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())/1000
@@ -1363,9 +1236,9 @@
                 end
             end)
 
-    --Save Checkpoint
+    -- Save Checkpoint
 
-        --Save Checpoint Button
+        -- Save Checpoint Button
 
             local SaveButton = Instance.new("TextButton")
             SaveButton.Size = UDim2.new(0, 200, 0, 30)
@@ -1381,16 +1254,16 @@
             SaveButtonCorner.CornerRadius = UDim.new(0, 6)
             SaveButtonCorner.Parent = SaveButton
 
-        --Save Checkpoint Function
+        -- Save Checkpoint Function
 
             SaveButton.MouseButton1Click:Connect(function()
                 SavedCheckpoint = GetRoot(plr).Position
                 Notify("Revo","Checkpoint saved.",5)
             end)
     
-    --Clear Checkpoint
+    -- Clear Checkpoint
 
-        --Clear Checkpoint Button
+        -- Clear Checkpoint Button
 
             local ClearButton = Instance.new("TextButton")
             ClearButton.Size = UDim2.new(0, 200, 0, 30)
@@ -2560,7 +2433,7 @@
             if serverId then
                 TeleportService:TeleportToPlaceInstance(PlaceId, serverId, player)
             else
-                warn("No available servers found to hop to.")
+                Notify("No available servers found to hop to.")
             end
         end)
 
@@ -2846,3 +2719,78 @@
     VersionLabel.TextSize = 14
     VersionLabel.TextXAlignment = Enum.TextXAlignment.Left
     VersionLabel.Parent = CreditsPage
+
+-- User Input Services
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not Alive then return end
+    if gameProcessed then return end
+    if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+
+    local key = input.KeyCode
+
+    -- GUI
+    
+    if key == Enum.KeyCode.V then
+        ScreenGui.Enabled = not ScreenGui.Enabled
+    end
+
+    -- Rewind
+
+    if isRebinding then
+        RewindToggleKey = key
+        RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
+        isRebinding = false
+        return
+    elseif key == RewindToggleKey then
+        toggleRewind()
+    end
+
+    -- Fly
+
+    if FlyToggleKey then
+        if ignoreNextFlyToggle then
+            ignoreNextFlyToggle = false
+        elseif key == FlyToggleKey then
+            flying = not flying
+            if flying then
+                ConnectFlyKeys()
+                task.spawn(Fly())
+            else
+                DisconnectFlyKeys()
+                ctrl = {f=0,b=0,l=0,r=0}
+                lastctrl = {f=0,b=0,l=0,r=0}
+            end
+        end
+    end
+
+    -- Trip
+
+    if isTripRebinding then
+        if key == Enum.KeyCode.Backspace then
+            TripKey = nil
+            TripKeyButton.Text = "Trip Key: None"
+        else
+            TripKey = key
+            TripKeyButton.Text = "Trip Key: " .. TripKey.Name
+        end
+        isTripRebinding = false
+        return
+    elseif TripKey and key == TripKey then
+        local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if humanoid and root then
+            humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+            root.Velocity = root.CFrame.LookVector * 30
+        end
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+    local key = input.KeyCode
+
+    if key == TeleportToggleKey then
+        teleportKeyHeld = false
+    end
+end)
