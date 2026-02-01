@@ -30,14 +30,11 @@
     local TeleportService = game:GetService("TeleportService")
     local Light = game:GetService("Lighting")
 
-    local LocalPlayer = Players.LocalPlayer
-    local player = game.Players.LocalPlayer
-    local player = LocalPlayer
-    local plr = LocalPlayer
-    local mouse = plr:GetMouse()
+    local player = Players.LocalPlayer
+    local mouse = player:GetMouse()
     local playerGui = player:WaitForChild("PlayerGui")
     local PlaceId = game.PlaceId
-    local humanoid = plr.Character:FindFirstChildOfClass("Humanoid")
+    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
 
     local Pages = {}
 
@@ -338,7 +335,7 @@
     HomeText.TextWrapped = true
     HomeText.TextYAlignment = Enum.TextYAlignment.Top
     HomeText.TextXAlignment = Enum.TextXAlignment.Left
-    HomeText.Text = "Hello "..plr.Name.."\nPress [V] To Open And Close GUI."
+    HomeText.Text = "Hello "..player.Name.."\nPress [V] To Open And Close GUI."
     HomeText.TextColor3 = Color3.fromRGB(255, 255, 255)
     HomeText.Font = Enum.Font.Gotham
     HomeText.TextSize = 16
@@ -378,6 +375,7 @@
     local function SoftReset()
         flying = false
         dragging = false
+        teleportKeyHeld = false
         isRewinding = false
         recordingEnabled = false
         viewingTarget = false
@@ -388,6 +386,10 @@
         doggingTarget = false
         draggingTarget = false
         BangTarget = false
+
+        isRebinding = false
+        isTripRebinding = false
+        ignoreNextFlyToggle = false
     end
 
     local function SelfDestruct()
@@ -406,12 +408,12 @@
         end
 
         -- Stop states
-        plr.Character.Humanoid.WalkSpeed = 16
+        player.Character.Humanoid.WalkSpeed = 16
         SoftReset()
 
         -- Reset camera
         pcall(function()
-            local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+            local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
             if hum then
                 workspace.CurrentCamera.CameraSubject = hum
             end
@@ -493,7 +495,7 @@
             Description = "Sets walk speed",
             Run = function(args)
                 local speed = tonumber(args[1]) or 16
-                local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+                local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 
                 if hum then
                     hum.WalkSpeed = speed
@@ -515,9 +517,9 @@
             WalkSpeedButton.Visible = true
         end)
 
-        plr.CharacterAdded:Connect(function()
-            if plr.Character and plr.Character:FindFirstChild("Humanoid") then
-                plr.Character.Humanoid.WalkSpeed = 16
+        player.CharacterAdded:Connect(function()
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                player.Character.Humanoid.WalkSpeed = 16
             end
 
             WalkSpeedButton.Text = "Walk Speed: 16"
@@ -674,10 +676,10 @@
                 flyThreadRunning = true
 
                 local torso
-                if plr.Character:FindFirstChild("UpperTorso") then
-                    torso = plr.Character.UpperTorso
-                elseif plr.Character:FindFirstChild("Torso") then
-                    torso = plr.Character.Torso
+                if player.Character:FindFirstChild("UpperTorso") then
+                    torso = player.Character.UpperTorso
+                elseif player.Character:FindFirstChild("Torso") then
+                    torso = player.Character.Torso
                 else
                     warn("No torso found!")
                     flyThreadRunning = false
@@ -695,7 +697,7 @@
                 bv.maxForce = Vector3.new(400000, 400000, 400000)
                 bv.Parent = torso
 
-                plr.Character.Humanoid.PlatformStand = true
+                player.Character.Humanoid.PlatformStand = true
 
                 local speed = 0
                 while Alive and flying and torso.Parent do
@@ -731,7 +733,7 @@
                 bg:Destroy()
                 bv:Destroy()
                 if humanoid then
-                    plr.Character.Humanoid.PlatformStand = false
+                    player.Character.Humanoid.PlatformStand = false
                 end
                 flyThreadRunning = false
             end
@@ -836,7 +838,7 @@
             end
 
             function clicktpFunc()
-                local char = plr.Character
+                local char = player.Character
                 if not char then return end
 
                 local rootPart = getRoot(char)
@@ -875,6 +877,7 @@
                 end
 
                 teleportCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if not Alive then return end
                     if gpe then return end
                     if not capturingTeleportKey then return end
 
@@ -1202,33 +1205,33 @@
                         task.spawn(function()
                             for i = 1,30 do
                                 task.wait()
-                                GetRoot(plr).Velocity = Vector3.new(0,0,0)
+                                GetRoot(player).Velocity = Vector3.new(0,0,0)
                                 if player == "pos" then
-                                    GetRoot(plr).CFrame = CFrame.new(posX,posY,posZ)
+                                    GetRoot(player).CFrame = CFrame.new(posX,posY,posZ)
                                 else
-                                    GetRoot(plr).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
+                                    GetRoot(player).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
                                 end
                             end
                         end)
                     else
-                        GetRoot(plr).Velocity = Vector3.new(0,0,0)
+                        GetRoot(player).Velocity = Vector3.new(0,0,0)
                         if player == "pos" then
-                            GetRoot(plr).CFrame = CFrame.new(posX,posY,posZ)
+                            GetRoot(player).CFrame = CFrame.new(posX,posY,posZ)
                         else
-                            GetRoot(plr).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
+                            GetRoot(player).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
                         end
                     end
                 end)
             end
 
             RespawnButton.MouseButton1Click:Connect(function()
-                local RsP = GetRoot(plr).Position
-                plr.Character.Humanoid.Health = 0
-                plr.CharacterAdded:wait(); task.wait(GetPing()+0.1)
+                local RsP = GetRoot(player).Position
+                player.Character.Humanoid.Health = 0
+                player.CharacterAdded:wait(); task.wait(GetPing()+0.1)
                 TeleportTO(RsP.X,RsP.Y,RsP.Z,"pos","safe")
             end)
 
-            plr.CharacterAdded:Connect(function(x)
+            player.CharacterAdded:Connect(function(x)
                 task.wait(GetPing()+0.1)
                 x:WaitForChild("Humanoid")
                 if SavedCheckpoint ~= nil then
@@ -1257,7 +1260,7 @@
         -- Save Checkpoint Function
 
             SaveButton.MouseButton1Click:Connect(function()
-                SavedCheckpoint = GetRoot(plr).Position
+                SavedCheckpoint = GetRoot(player).Position
                 Notify("Revo","Checkpoint saved.",5)
             end)
     
@@ -1474,7 +1477,7 @@
             end
 
             SoftReset()
-            localHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+            localHumanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
             if localHumanoid then
                 game.Workspace.CurrentCamera.CameraSubject = localHumanoid
             end
@@ -1491,7 +1494,7 @@
             GetTargetTool.ToolTip = "Select Target"
 
             local function ActivateTool()
-                local root = GetRoot(plr)
+                local root = GetRoot(player)
                 local hit = mouse.Target
                 local person = nil
                 if hit and hit.Parent then
@@ -1509,7 +1512,7 @@
             GetTargetTool.Activated:Connect(function()
                 ActivateTool()
             end)
-            GetTargetTool.Parent = plr.Backpack
+            GetTargetTool.Parent = player.Backpack
         end)
 
     -- Velocity Asset
@@ -1528,8 +1531,8 @@
     -- Stop Animations
 
         local function StopAnim()
-            plr.Character.Animate.Disabled = false
-            local animtrack = plr.Character.Humanoid:GetPlayingAnimationTracks()
+            player.Character.Animate.Disabled = false
+            local animtrack = player.Character.Humanoid:GetPlayingAnimationTracks()
             for i, track in pairs (animtrack) do
                 track:Stop()
             end
@@ -1540,13 +1543,13 @@
         local function PlayAnim(id,time,speed)
             if not Alive then return end
             pcall(function()
-                plr.Character.Animate.Disabled = false
-                local hum = plr.Character.Humanoid
+                player.Character.Animate.Disabled = false
+                local hum = player.Character.Humanoid
                 local animtrack = hum:GetPlayingAnimationTracks()
                 for i,track in pairs(animtrack) do
                     track:Stop()
                 end
-                plr.Character.Animate.Disabled = true
+                player.Character.Animate.Disabled = true
                 local Anim = Instance.new("Animation")
                 Anim.AnimationId = "rbxassetid://"..id
                 local loadanim = hum:LoadAnimation(Anim)
@@ -1554,7 +1557,7 @@
                 loadanim.TimePosition = time
                 loadanim:AdjustSpeed(speed)
                 loadanim.Stopped:Connect(function()
-                    plr.Character.Animate.Disabled = false
+                    player.Character.Animate.Disabled = false
                     for i, track in pairs (animtrack) do
                         track:Stop()
                     end
@@ -1579,7 +1582,7 @@
                 end
             else
                 game.Workspace.CurrentCamera.CameraSubject =
-                    plr.Character.Humanoid
+                    player.Character.Humanoid
             end
         end)
 
@@ -1622,21 +1625,21 @@
             if headsittingTarget then
                 while headsittingTarget do
                     pcall(function()
-                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
                             local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(plr)
+                            TempV.Parent = GetRoot(player)
                         end
 
                         local targetHead = Players[TargetedPlayer].Character.Head
-                        plr.Character.Humanoid.Sit = true
-                        GetRoot(plr).CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
-                        GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                        player.Character.Humanoid.Sit = true
+                        GetRoot(player).CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
+                        GetRoot(player).Velocity = Vector3.new(0, 0, 0)
                     end)
                     task.wait()
                 end
 
-                if GetRoot(plr):FindFirstChild("BreakVelocity") then
-                    GetRoot(plr).BreakVelocity:Destroy()
+                if GetRoot(player):FindFirstChild("BreakVelocity") then
+                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
         end)
@@ -1651,23 +1654,23 @@
             if backpackingTarget then
                 while backpackingTarget do
                     pcall(function()
-                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
                             local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(plr)
+                            TempV.Parent = GetRoot(player)
                         end
 
                         local targetRoot = GetRoot(Players[TargetedPlayer])
                         if targetRoot then
-                            plr.Character.Humanoid.Sit = true
-                            GetRoot(plr).CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.2) * CFrame.Angles(0, -3, 0)
-                            GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                            player.Character.Humanoid.Sit = true
+                            GetRoot(player).CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.2) * CFrame.Angles(0, -3, 0)
+                            GetRoot(player).Velocity = Vector3.new(0, 0, 0)
                         end
                     end)
                     task.wait()
                 end
 
-                if GetRoot(plr):FindFirstChild("BreakVelocity") then
-                    GetRoot(plr).BreakVelocity:Destroy()
+                if GetRoot(player):FindFirstChild("BreakVelocity") then
+                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
         end)
@@ -1685,15 +1688,15 @@
 
                 while standingTarget do
                     pcall(function()
-                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
                             local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(plr)
+                            TempV.Parent = GetRoot(player)
                         end
 
                         local targetRoot = GetRoot(Players[TargetedPlayer])
                         if targetRoot then
-                            GetRoot(plr).CFrame = targetRoot.CFrame * CFrame.new(-3, 1, 0)
-                            GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                            GetRoot(player).CFrame = targetRoot.CFrame * CFrame.new(-3, 1, 0)
+                            GetRoot(player).Velocity = Vector3.new(0, 0, 0)
                         end
                     end)
                     task.wait()
@@ -1701,8 +1704,8 @@
 
                 StopAnim()
 
-                if GetRoot(plr):FindFirstChild("BreakVelocity") then
-                    GetRoot(plr).BreakVelocity:Destroy()
+                if GetRoot(player):FindFirstChild("BreakVelocity") then
+                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
         end)
@@ -1719,15 +1722,15 @@
 
                 while doggingTarget do
                     pcall(function()
-                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
                             local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(plr)
+                            TempV.Parent = GetRoot(player)
                         end
 
                         local targetRoot = Players[TargetedPlayer].Character:FindFirstChild("LowerTorso")
                         if targetRoot then
-                            GetRoot(plr).CFrame = targetRoot.CFrame * CFrame.new(0, 0.23, 0)
-                            GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                            GetRoot(player).CFrame = targetRoot.CFrame * CFrame.new(0, 0.23, 0)
+                            GetRoot(player).Velocity = Vector3.new(0, 0, 0)
                         end
                     end)
                     task.wait()
@@ -1735,8 +1738,8 @@
 
                 StopAnim()
 
-                if GetRoot(plr):FindFirstChild("BreakVelocity") then
-                    GetRoot(plr).BreakVelocity:Destroy()
+                if GetRoot(player):FindFirstChild("BreakVelocity") then
+                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
         end)
@@ -1753,15 +1756,15 @@
 
                 while draggingTarget do
                     pcall(function()
-                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
                             local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(plr)
+                            TempV.Parent = GetRoot(player)
                         end
 
                         local targetRoot = Players[TargetedPlayer].Character:FindFirstChild("RightHand")
                         if targetRoot then
-                            GetRoot(plr).CFrame = targetRoot.CFrame * CFrame.new(0, -2.5, 1) * CFrame.Angles(-2, -3, 0)
-                            GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                            GetRoot(player).CFrame = targetRoot.CFrame * CFrame.new(0, -2.5, 1) * CFrame.Angles(-2, -3, 0)
+                            GetRoot(player).Velocity = Vector3.new(0, 0, 0)
                         end
                     end)
                     task.wait()
@@ -1769,8 +1772,8 @@
 
                 StopAnim()
 
-                if GetRoot(plr):FindFirstChild("BreakVelocity") then
-                    GetRoot(plr).BreakVelocity:Destroy()
+                if GetRoot(player):FindFirstChild("BreakVelocity") then
+                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
         end)
@@ -1786,15 +1789,15 @@
 
                 while BangTarget do
                     pcall(function()
-                        if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
                             local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(plr)
+                            TempV.Parent = GetRoot(player)
                         end
 
                         local targetRoot = GetRoot(Players[TargetedPlayer])
                         if targetRoot then
-                            GetRoot(plr).CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.1)
-                            GetRoot(plr).Velocity = Vector3.new(0, 0, 0)
+                            GetRoot(player).CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.1)
+                            GetRoot(player).Velocity = Vector3.new(0, 0, 0)
                         end
                     end)
                     task.wait()
@@ -1802,8 +1805,8 @@
 
                 StopAnim()
 
-                if GetRoot(plr):FindFirstChild("BreakVelocity") then
-                    GetRoot(plr).BreakVelocity:Destroy()
+                if GetRoot(player):FindFirstChild("BreakVelocity") then
+                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
         end)
@@ -2288,7 +2291,7 @@
 
         Btn.MouseButton1Click:Connect(function()
             if not Alive then return end
-            local Animate = plr.Character.Animate
+            local Animate = player.Character.Animate
             Animate.Disabled = true
             StopAnim()
             Animate.idle.Animation1.AnimationId = AnimationTable[animNumber][1]
@@ -2298,7 +2301,7 @@
             Animate.jump.JumpAnim.AnimationId = AnimationTable[animNumber][5]
             Animate.climb.ClimbAnim.AnimationId = AnimationTable[animNumber][6]
             Animate.fall.FallAnim.AnimationId = AnimationTable[animNumber][7]
-            plr.Character.Humanoid:ChangeState(3)
+            player.Character.Humanoid:ChangeState(3)
             Animate.Disabled = false
         end)
 
@@ -2645,25 +2648,25 @@
 
         local function ToggleRagdoll(bool)
             pcall(function()
-                plr.Character["Falling down"].Disabled = bool
-                plr.Character["Swimming"].Disabled = bool
-                plr.Character["StartRagdoll"].Disabled = bool
-                plr.Character["Pushed"].Disabled = bool
-                plr.Character["RagdollMe"].Disabled = bool
+                player.Character["Falling down"].Disabled = bool
+                player.Character["Swimming"].Disabled = bool
+                player.Character["StartRagdoll"].Disabled = bool
+                player.Character["Pushed"].Disabled = bool
+                player.Character["RagdollMe"].Disabled = bool
             end)
         end
         
         ExplodeButton.MouseButton1Click:Connect(function()
             ToggleRagdoll(false)
             task.wait()
-            plr.Character.Humanoid:ChangeState(0)
+            player.Character.Humanoid:ChangeState(0)
             local bav = Instance.new("BodyAngularVelocity")
-            bav.Parent = GetRoot(plr)
+            bav.Parent = GetRoot(player)
             bav.Name = "Spin"
             bav.MaxTorque = Vector3.new(0,math.huge,0)
             bav.AngularVelocity = Vector3.new(0,150,0)
             task.wait(3)
-            plr.Character.Humanoid:ChangeState(15)
+            player.Character.Humanoid:ChangeState(15)
         end)
 
     -- Base Plate Creation
@@ -2692,7 +2695,7 @@
                     part.CanCollide = true
                     part.Locked = true
                     part.Size = Vector3.new(TILE_SIZE, 1, TILE_SIZE)
-                    part.Position = Vector3.new(x * TILE_SIZE, -0.6, z * TILE_SIZE)
+                    part.Position = Vector3.new(x * TILE_SIZE, -0.7, z * TILE_SIZE)
                     part.Material = Enum.Material.Grass
                     part.Color = Color3.fromRGB(85, 175, 100)
                     part.TopSurface = Enum.SurfaceType.Smooth
@@ -2728,75 +2731,80 @@
 
 -- User Input Services
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not Alive then return end
-    if gameProcessed then return end
-    if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+TrackConnection(
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not Alive then return end
+        if gameProcessed then return end
+        if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
 
-    local key = input.KeyCode
+        local key = input.KeyCode
 
-    -- GUI
-    
-    if key == Enum.KeyCode.V then
-        ScreenGui.Enabled = not ScreenGui.Enabled
-    end
+        -- GUI
+        
+        if key == Enum.KeyCode.V then
+            ScreenGui.Enabled = not ScreenGui.Enabled
+        end
 
-    -- Rewind
+        -- Rewind
 
-    if isRebinding then
-        RewindToggleKey = key
-        RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
-        isRebinding = false
-        return
-    elseif key == RewindToggleKey then
-        toggleRewind()
-    end
+        if isRebinding then
+            RewindToggleKey = key
+            RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
+            isRebinding = false
+            return
+        elseif key == RewindToggleKey then
+            toggleRewind()
+        end
 
-    -- Fly
+        -- Fly
 
-    if FlyToggleKey then
-        if ignoreNextFlyToggle then
-            ignoreNextFlyToggle = false
-        elseif key == FlyToggleKey then
-            flying = not flying
-            if flying then
-                ConnectFlyKeys()
-                task.spawn(Fly())
-            else
-                DisconnectFlyKeys()
-                ctrl = {f=0,b=0,l=0,r=0}
-                lastctrl = {f=0,b=0,l=0,r=0}
+        if FlyToggleKey then
+            if ignoreNextFlyToggle then
+                ignoreNextFlyToggle = false
+            elseif key == FlyToggleKey then
+                flying = not flying
+                if flying then
+                    ConnectFlyKeys()
+                    task.spawn(Fly())
+                else
+                    DisconnectFlyKeys()
+                    ctrl = {f=0,b=0,l=0,r=0}
+                    lastctrl = {f=0,b=0,l=0,r=0}
+                end
             end
         end
-    end
 
-    -- Trip
+        -- Trip
 
-    if isTripRebinding then
-        if key == Enum.KeyCode.Backspace then
-            TripKey = nil
-            TripKeyButton.Text = "Trip Key: None"
-        else
-            TripKey = key
-            TripKeyButton.Text = "Trip Key: " .. TripKey.Name
+        if isTripRebinding then
+            if key == Enum.KeyCode.Backspace then
+                TripKey = nil
+                TripKeyButton.Text = "Trip Key: None"
+            else
+                TripKey = key
+                TripKeyButton.Text = "Trip Key: " .. TripKey.Name
+            end
+            isTripRebinding = false
+            return
+        elseif TripKey and key == TripKey then
+            local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
+            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if humanoid and root then
+                humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+                root.Velocity = root.CFrame.LookVector * 30
+            end
         end
-        isTripRebinding = false
-        return
-    elseif TripKey and key == TripKey then
-        local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
-        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if humanoid and root then
-            humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
-            root.Velocity = root.CFrame.LookVector * 30
+    end)
+)
+
+TrackConnection(
+    UserInputService.InputEnded:Connect(function(input)
+        if not Alive then return end
+        if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+        local key = input.KeyCode
+
+        if key == TeleportToggleKey then
+            teleportKeyHeld = false
         end
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
-    local key = input.KeyCode
-
-    if key == TeleportToggleKey then
-        teleportKeyHeld = false
-    end
-end)
+    end)
+)
