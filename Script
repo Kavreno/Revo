@@ -2731,80 +2731,80 @@
 
 -- User Input Services
 
-TrackConnection(
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not Alive then return end
-        if gameProcessed then return end
-        if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+    TrackConnection(
+        UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            if not Alive then return end
+            if gameProcessed then return end
+            if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
 
-        local key = input.KeyCode
+            local key = input.KeyCode
 
-        -- GUI
-        
-        if key == Enum.KeyCode.V then
-            ScreenGui.Enabled = not ScreenGui.Enabled
-        end
+            -- GUI
+            
+            if key == Enum.KeyCode.V then
+                ScreenGui.Enabled = not ScreenGui.Enabled
+            end
 
-        -- Rewind
+            -- Rewind
 
-        if isRebinding then
-            RewindToggleKey = key
-            RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
-            isRebinding = false
-            return
-        elseif key == RewindToggleKey then
-            toggleRewind()
-        end
+            if isRebinding then
+                RewindToggleKey = key
+                RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
+                isRebinding = false
+                return
+            elseif key == RewindToggleKey then
+                toggleRewind()
+            end
 
-        -- Fly
+            -- Fly
 
-        if FlyToggleKey then
-            if ignoreNextFlyToggle then
-                ignoreNextFlyToggle = false
-            elseif key == FlyToggleKey then
-                flying = not flying
-                if flying then
-                    ConnectFlyKeys()
-                    task.spawn(Fly())
-                else
-                    DisconnectFlyKeys()
-                    ctrl = {f=0,b=0,l=0,r=0}
-                    lastctrl = {f=0,b=0,l=0,r=0}
+            if FlyToggleKey then
+                if ignoreNextFlyToggle then
+                    ignoreNextFlyToggle = false
+                elseif key == FlyToggleKey then
+                    flying = not flying
+                    if flying then
+                        ConnectFlyKeys()
+                        task.spawn(Fly())
+                    else
+                        DisconnectFlyKeys()
+                        ctrl = {f=0,b=0,l=0,r=0}
+                        lastctrl = {f=0,b=0,l=0,r=0}
+                    end
                 end
             end
-        end
 
-        -- Trip
+            -- Trip
 
-        if isTripRebinding then
-            if key == Enum.KeyCode.Backspace then
-                TripKey = nil
-                TripKeyButton.Text = "Trip Key: None"
-            else
-                TripKey = key
-                TripKeyButton.Text = "Trip Key: " .. TripKey.Name
+            if isTripRebinding then
+                if key == Enum.KeyCode.Backspace then
+                    TripKey = nil
+                    TripKeyButton.Text = "Trip Key: None"
+                else
+                    TripKey = key
+                    TripKeyButton.Text = "Trip Key: " .. TripKey.Name
+                end
+                isTripRebinding = false
+                return
+            elseif TripKey and key == TripKey then
+                local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
+                local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if humanoid and root then
+                    humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+                    root.Velocity = root.CFrame.LookVector * 30
+                end
             end
-            isTripRebinding = false
-            return
-        elseif TripKey and key == TripKey then
-            local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
-            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if humanoid and root then
-                humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
-                root.Velocity = root.CFrame.LookVector * 30
+        end)
+    )
+
+    TrackConnection(
+        UserInputService.InputEnded:Connect(function(input)
+            if not Alive then return end
+            if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+            local key = input.KeyCode
+
+            if key == TeleportToggleKey then
+                teleportKeyHeld = false
             end
-        end
-    end)
-)
-
-TrackConnection(
-    UserInputService.InputEnded:Connect(function(input)
-        if not Alive then return end
-        if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
-        local key = input.KeyCode
-
-        if key == TeleportToggleKey then
-            teleportKeyHeld = false
-        end
-    end)
-)
+        end)
+    )
