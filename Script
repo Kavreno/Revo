@@ -203,6 +203,44 @@
             cmd.Run(split)
         end
 
+    -- Get Ping
+
+        local function GetPing()
+            return (game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())/1000
+        end
+
+    -- TeleportTO
+
+        local function TeleportToPosition(player, position, method)
+            local root = GetRoot(player)
+            if not root then return end
+
+            local function apply()
+                root.Velocity = Vector3.zero
+                root.AssemblyLinearVelocity = Vector3.zero
+                root.CFrame = CFrame.new(position)
+            end
+
+            if method == "safe" then
+                task.spawn(function()
+                    for _ = 1, 25 do
+                        task.wait()
+                        apply()
+                    end
+                end)
+            else
+                apply()
+            end
+        end
+
+        local function TeleportMeToPlayer(targetPlayer, method)
+            if not targetPlayer then return end
+            local targetRoot = GetRoot(targetPlayer)
+            if not targetRoot then return end
+
+            TeleportToPosition(player, targetRoot.Position + Vector3.new(0, 2, 0), method)
+        end
+
 -- Nav Bar
 
     local CharacterPage = CreatePage("Character")
@@ -1195,40 +1233,17 @@
 
         -- Respawn Function
 
-            local function GetPing()
-                return (game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())/1000
-            end
-
-            local function TeleportTO(posX,posY,posZ,player,method)
-                pcall(function()
-                    if method == "safe" then
-                        task.spawn(function()
-                            for i = 1,30 do
-                                task.wait()
-                                GetRoot(player).Velocity = Vector3.new(0,0,0)
-                                if player == "pos" then
-                                    GetRoot(player).CFrame = CFrame.new(posX,posY,posZ)
-                                else
-                                    GetRoot(player).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
-                                end
-                            end
-                        end)
-                    else
-                        GetRoot(player).Velocity = Vector3.new(0,0,0)
-                        if player == "pos" then
-                            GetRoot(player).CFrame = CFrame.new(posX,posY,posZ)
-                        else
-                            GetRoot(player).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
-                        end
-                    end
-                end)
-            end
-
             RespawnButton.MouseButton1Click:Connect(function()
-                local RsP = GetRoot(player).Position
+                local root = GetRoot(player)
+                if not root then return end
+
+                local savedPos = root.Position
                 player.Character.Humanoid.Health = 0
-                player.CharacterAdded:wait(); task.wait(GetPing()+0.1)
-                TeleportTO(RsP.X,RsP.Y,RsP.Z,"pos","safe")
+
+                player.CharacterAdded:Wait()
+                task.wait(GetPing() + 0.15)
+
+                TeleportToPosition(player, savedPos, "safe")
             end)
 
             player.CharacterAdded:Connect(function(x)
@@ -1594,24 +1609,26 @@
             focusingTarget = not focusingTarget
 
             if focusingTarget then
-                while focusingTarget do
-                    pcall(function()
-                        local target = Players[TargetedPlayer]
-                        TeleportTO(0, 0, 0, target)
-                        Push(target)
-                    end)
-                    task.wait(0.2)
-                end
+                task.spawn(function()
+                    while focusingTarget do
+                        local target = Players:FindFirstChild(TargetedPlayer)
+                        if target then
+                            TeleportMeToPlayer(target, "safe")
+                        end
+                        task.wait(0.2)
+                    end
+                end)
             end
         end)
 
     -- Teleport Target
 
         TeleportTarget_Button.MouseButton1Click:Connect(function()
-            if TargetedPlayer then
-                pcall(function()
-                    TeleportTO(0, 0, 0, Players[TargetedPlayer], "safe")
-                end)
+            if not TargetedPlayer then return end
+
+            local target = Players:FindFirstChild(TargetedPlayer)
+            if target then
+                TeleportMeToPlayer(target, "safe")
             end
         end)
 
