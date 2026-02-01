@@ -342,7 +342,7 @@
     HomeText.Parent = HomePage
 
     local AnnouncementsText = Instance.new("TextLabel")
-    AnnouncementsText.Size = UDim2.new(1, -20, 0, 60)
+    AnnouncementsText.Size = UDim2.new(1, -20, 0, 70)
     AnnouncementsText.Position = UDim2.new(0, 10, 0, 120)
     AnnouncementsText.BackgroundTransparency = 1
     AnnouncementsText.TextWrapped = true
