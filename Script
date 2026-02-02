@@ -278,6 +278,20 @@
     HomeCorner.CornerRadius = UDim.new(0,6)
     HomeCorner.Parent = HomeButton
 
+    local DestroyButton = Instance.new("TextButton")
+    DestroyButton.Size = UDim2.new(0, 120, 0, 30)
+    DestroyButton.Position = UDim2.new(0, 295, 0.5, -15)
+    DestroyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    DestroyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DestroyButton.Font = Enum.Font.Gotham
+    DestroyButton.TextSize = 14
+    DestroyButton.Text = "Destroy Instance"
+    DestroyButton.Parent = TitleBar
+
+    local DestroyCorner = Instance.new("UICorner")
+    DestroyCorner.CornerRadius = UDim.new(0,6)
+    DestroyCorner.Parent = DestroyButton
+
     local function CreateButton(name)
         local Btn = Instance.new("TextButton")
         Btn.Size = UDim2.new(0, 80, 1, 0)
@@ -372,7 +386,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "First Relese Of Revo After Lots Of Breaking This Script Currently Has All System Brokens Features Adding More Soon. PUSH, AND FLING DOSENT WORK!!! Had To Remove Destroy Button"
+    AnnouncementsText.Text = "First Relese Of Revo After Lots Of Breaking This Script Currently Has All System Brokens Features Adding More Soon. Script Might Be Slightly Broken Again Idk Why"
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
@@ -393,6 +407,83 @@
             end
         end
     end)
+
+-- Destroy
+
+    local function SoftReset()
+        flying = false
+        dragging = false
+        teleportKeyHeld = false
+        isRewinding = false
+        recordingEnabled = false
+        viewingTarget = false
+        focusingTarget = false
+        headsittingTarget = false
+        backpackingTarget = false
+        standingTarget = false
+        doggingTarget = false
+        draggingTarget = false
+        BangTarget = false
+
+        isRebinding = false
+        isTripRebinding = false
+        ignoreNextFlyToggle = false
+    end
+
+    local function SelfDestruct()
+        if not Alive then return end
+        Alive = false
+
+        -- Destroy Gui
+        if ScreenGui and ScreenGui.Parent then
+            local marker = ScreenGui:FindFirstChild("RevoActive")
+            if marker then
+                marker:Destroy()
+            end
+
+            ScreenGui:Destroy()
+            ScreenGui = nil
+        end
+
+        -- Stop states
+        player.Character.Humanoid.WalkSpeed = 16
+        SoftReset()
+
+        -- Reset camera
+        pcall(function()
+            local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                workspace.CurrentCamera.CameraSubject = hum
+            end
+        end)
+
+        -- Disconnect connections
+        for _, conn in ipairs(Connections) do
+            pcall(function()
+                conn:Disconnect()
+            end)
+        end
+        table.clear(Connections)
+
+        -- Kill threads
+        table.clear(Threads)
+
+        -- Destroy UI / instances
+        for _, inst in ipairs(CreatedInstances) do
+            pcall(function()
+                inst:Destroy()
+            end)
+        end
+        table.clear(CreatedInstances)
+    end
+
+    TrackConnection(
+        DestroyButton.MouseButton1Click:Connect(function()
+            MainFrame:Destroy()
+            SelfDestruct()
+            script:Destroy()
+        end)
+    )
 
 -- Character
 
