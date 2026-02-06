@@ -386,7 +386,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "First Relese Of Revo After Lots Of Breaking This Script Currently Has All System Brokens Features Adding More Soon. Destroy Button Is Broken."
+    AnnouncementsText.Text = "Unblock Me Ace You Monkey."
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
