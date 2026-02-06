@@ -96,14 +96,14 @@
 
 -- Gui Load Detection
 
-    if playerGui:FindFirstChild("RevoGUI") then
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "Revo",
-            Text = "GUI Already Loaded",
-            Duration = 5
-        })
-        return
-    end
+    -- if playerGui:FindFirstChild("RevoGUI") then
+    --     game:GetService("StarterGui"):SetCore("SendNotification", {
+    --         Title = "Revo",
+    --         Text = "GUI Already Loaded",
+    --         Duration = 5
+    --     })
+    --     return
+    -- end
 
 -- GUI
 
@@ -505,7 +505,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "Small Updating Making Rebinding Code Cleaner, Added GUI Rebinding And Cleaned Up Code Mainly"
+    AnnouncementsText.Text = "TARGET SECTION IS BROKEN TELEPORT AND FOCUS ONLY WORK"
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
@@ -1598,399 +1598,123 @@
 
     -- View Target
 
-            addcmd("viewtarget", {
-                Aliases = {"vt", "view"},
-                Run = function(args, speaker)
-                    if not TargetedPlayer then return end
+        ViewTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
+            viewingTarget = not viewingTarget
 
-                    local target = Players:FindFirstChild(TargetedPlayer)
-                    if not target or not target.Character then return end
-
-                    viewingTarget = not viewingTarget
-
-                    if viewingTarget then
-                        task.spawn(function()
-                            while viewingTarget do
-                                pcall(function()
-                                    game.Workspace.CurrentCamera.CameraSubject =
-                                        target.Character:FindFirstChild("Humanoid") or target.Character.PrimaryPart
-                                end)
-                                task.wait(0.2)
-                            end
-                        end)
-                    else
-                        if player.Character then
-                            game.Workspace.CurrentCamera.CameraSubject = player.Character:FindFirstChild("Humanoid") or player.Character.PrimaryPart
-                        end
-                    end
+            if viewingTarget then
+            while viewingTarget do
+                    pcall(function()
+                        game.Workspace.CurrentCamera.CameraSubject = Players[TargetedPlayer].Character.Humanoid
+                    end)
+                    task.wait(0.2)
                 end
-            })
-
-            BindButton(ViewTarget_Button, "viewtarget")
+            else
+                game.Workspace.CurrentCamera.CameraSubject = player.Character.Humanoid
+            end
+        end)
 
     -- Focus Target
 
-        addcmd("focustarget", {
-            Aliases = {"ft", "focus"},
-            Run = function(args, speaker)
-                if not TargetedPlayer then return end
+        FocusTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
 
-                local target = Players:FindFirstChild(TargetedPlayer)
-                if not target then return end
+            focusingTarget = not focusingTarget
 
-                focusingTarget = not focusingTarget
-
-                if focusingTarget then
-                    task.spawn(function()
-                        while focusingTarget do
-                            local currentTarget = Players:FindFirstChild(TargetedPlayer)
-                            if currentTarget then
-                                TeleportMeToPlayer(currentTarget, "safe")
-                            end
-                            task.wait(0.2)
+            if focusingTarget then
+                task.spawn(function()
+                    while focusingTarget do
+                        local targetPlayer = Players:FindFirstChild(TargetedPlayer)
+                        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            TeleportMeToPlayer(targetPlayer, "safe")
                         end
-                    end)
-                end
+                        task.wait(0.2)
+                    end
+                end)
             end
-        })
-
-        BindButton(FocusTarget_Button, "focustarget")
+        end)
 
     -- Teleport Target
 
-        addcmd("teleport", {
-            Aliases = {"tp", "tpto"},
-            Run = function(args, speaker)
-                if not TargetedPlayer then return end
+        TeleportTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
 
-                local target = Players:FindFirstChild(TargetedPlayer)
-                if target then
-                    TeleportMeToPlayer(target, "safe")
-                end
+            local target = Players:FindFirstChild(TargetedPlayer)
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                TeleportMeToPlayer(target, "safe")
             end
-        })
-
-        BindButton(TeleportTarget_Button, "teleport")    
+        end)
 
     -- Headsit Target
 
-        addcmd("headsittarget", {
-            Aliases = {"hsit", "sithead"},
-            Run = function(args, speaker)
-                if not TargetedPlayer then return end
 
-                local target = Players:FindFirstChild(TargetedPlayer)
-                if not target or not target.Character or not target.Character:FindFirstChild("Head") then return end
-
-                headsittingTarget = not headsittingTarget
-
-                if headsittingTarget then
-                    task.spawn(function()
-                        while headsittingTarget do
-                            pcall(function()
-                                local root = GetRoot(player)
-                                if root and not root:FindFirstChild("BreakVelocity") then
-                                    local tempV = Velocity_Asset:Clone()
-                                    tempV.Parent = root
-                                end
-
-                                local targetHead = target.Character.Head
-                                if targetHead then
-                                    player.Character.Humanoid.Sit = true
-                                    root.CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
-                                    root.Velocity = Vector3.new(0, 0, 0)
-                                end
-                            end)
-                            task.wait(0.2)
-                        end
-
-                        local root = GetRoot(player)
-                        if root and root:FindFirstChild("BreakVelocity") then
-                            root.BreakVelocity:Destroy()
-                        end
-                    end)
-                end
-            end
-        })
-
-        BindButton(HeadsitTarget_Button, "headsittarget")
 
     -- Backpack Target
 
-        addcmd("backpacktarget", {
-            Aliases = {"bpt", "backpack"},
-            Run = function(args, speaker)
-                if not TargetedPlayer then return end
 
-                local target = Players:FindFirstChild(TargetedPlayer)
-                if not target or not target.Character then return end
-
-                backpackingTarget = not backpackingTarget
-
-                if backpackingTarget then
-                    task.spawn(function()
-                        while backpackingTarget do
-                            pcall(function()
-                                local root = GetRoot(player)
-                                if root and not root:FindFirstChild("BreakVelocity") then
-                                    local tempV = Velocity_Asset:Clone()
-                                    tempV.Parent = root
-                                end
-
-                                local targetRoot = GetRoot(target)
-                                if targetRoot then
-                                    player.Character.Humanoid.Sit = true
-                                    root.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.2) * CFrame.Angles(0, -3, 0)
-                                    root.Velocity = Vector3.new(0, 0, 0)
-                                end
-                            end)
-                            task.wait(0.2)
-                        end
-
-                        local root = GetRoot(player)
-                        if root and root:FindFirstChild("BreakVelocity") then
-                            root.BreakVelocity:Destroy()
-                        end
-                    end)
-                end
-            end
-        })
-
-        BindButton(BackpackTarget_Button, "backpacktarget")
 
     -- Stand Target
 
-        addcmd("standtarget", {
-            Aliases = {"st", "stand"},
-            Run = function(args, speaker)
-                if not TargetedPlayer then return end
 
-                local target = Players:FindFirstChild(TargetedPlayer)
-                if not target or not target.Character then return end
-
-                standingTarget = not standingTarget
-
-                if standingTarget then
-                    PlayAnim(13823324057, 4, 0)
-
-                    task.spawn(function()
-                        while standingTarget do
-                            pcall(function()
-                                local root = GetRoot(player)
-                                if root and not root:FindFirstChild("BreakVelocity") then
-                                    local tempV = Velocity_Asset:Clone()
-                                    tempV.Parent = root
-                                end
-
-                                local targetRoot = GetRoot(target)
-                                if targetRoot then
-                                    root.CFrame = targetRoot.CFrame * CFrame.new(-3, 1, 0)
-                                    root.Velocity = Vector3.new(0, 0, 0)
-                                end
-                            end)
-                            task.wait(0.2)
-                        end
-
-                        StopAnim()
-
-                        local root = GetRoot(player)
-                        if root and root:FindFirstChild("BreakVelocity") then
-                            root.BreakVelocity:Destroy()
-                        end
-                    end)
-                end
-            end
-        })
-
-        BindButton(StandTarget_Button, "standtarget")
 
     -- Doggy Target
 
-        addcmd("doggytarget", {
-            Aliases = {"dg", "doggy"},
-            Run = function(args, speaker)
-                if not TargetedPlayer then return end
 
-                local target = Players:FindFirstChild(TargetedPlayer)
-                if not target or not target.Character then return end
-
-                doggingTarget = not doggingTarget
-
-                if doggingTarget then
-                    PlayAnim(13694096724, 3.4, 0)
-
-                    task.spawn(function()
-                        while doggingTarget do
-                            pcall(function()
-                                local root = GetRoot(player)
-                                if root and not root:FindFirstChild("BreakVelocity") then
-                                    local tempV = Velocity_Asset:Clone()
-                                    tempV.Parent = root
-                                end
-
-                                local targetRoot = target.Character:FindFirstChild("LowerTorso")
-                                if targetRoot then
-                                    root.CFrame = targetRoot.CFrame * CFrame.new(0, 0.23, 0)
-                                    root.Velocity = Vector3.new(0, 0, 0)
-                                end
-                            end)
-                            task.wait(0.2)
-                        end
-
-                        StopAnim()
-
-                        local root = GetRoot(player)
-                        if root and root:FindFirstChild("BreakVelocity") then
-                            root.BreakVelocity:Destroy()
-                        end
-                    end)
-                end
-            end
-        })
-
-        BindButton(DoggyTarget_Button, "doggytarget")
 
     -- Drag Target
 
-        addcmd("dragtarget", {
-            Aliases = {"drag", "dt"},
-            Run = function(args, speaker)
-                if not TargetedPlayer then return end
 
-                local target = Players:FindFirstChild(TargetedPlayer)
-                if not target or not target.Character then return end
-
-                draggingTarget = not draggingTarget
-
-                if draggingTarget then
-                    PlayAnim(10714360343, 0.5, 0)
-
-                    task.spawn(function()
-                        while draggingTarget do
-                            pcall(function()
-                                local root = GetRoot(player)
-                                if root and not root:FindFirstChild("BreakVelocity") then
-                                    local tempV = Velocity_Asset:Clone()
-                                    tempV.Parent = root
-                                end
-
-                                local targetRoot = target.Character:FindFirstChild("RightHand")
-                                if targetRoot then
-                                    root.CFrame = targetRoot.CFrame * CFrame.new(0, -2.5, 1) * CFrame.Angles(-2, -3, 0)
-                                    root.Velocity = Vector3.new(0, 0, 0)
-                                end
-                            end)
-                            task.wait(0.2)
-                        end
-
-                        StopAnim()
-
-                        local root = GetRoot(player)
-                        if root and root:FindFirstChild("BreakVelocity") then
-                            root.BreakVelocity:Destroy()
-                        end
-                    end)
-                end
-            end
-        })
-
-        BindButton(DragTarget_Button, "dragtarget")
 
     -- Bang Target
 
-        addcmd("bangtarget", {
-            Aliases = {"bang", "bt"},
-            Run = function(args, speaker)
-                if not TargetedPlayer then return end
 
-                local target = Players:FindFirstChild(TargetedPlayer)
-                if not target or not target.Character then return end
-
-                BangTarget = not BangTarget
-
-                if BangTarget then
-                    PlayAnim(5918726674, 0, 1)
-
-                    task.spawn(function()
-                        while BangTarget do
-                            pcall(function()
-                                local root = GetRoot(player)
-                                if root and not root:FindFirstChild("BreakVelocity") then
-                                    local tempV = Velocity_Asset:Clone()
-                                    tempV.Parent = root
-                                end
-
-                                local targetRoot = GetRoot(target)
-                                if targetRoot then
-                                    root.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.1)
-                                    root.Velocity = Vector3.new(0, 0, 0)
-                                end
-                            end)
-                            task.wait(0.2)
-                        end
-
-                        StopAnim()
-
-                        local root = GetRoot(player)
-                        if root and root:FindFirstChild("BreakVelocity") then
-                            root.BreakVelocity:Destroy()
-                        end
-                    end)
-                end
-            end
-        })
-
-        BindButton(BangTarget_Button, "bangtarget")
 
     -- Fling Target DOSENT WORK
 
-        -- addcmd("flingtarget", {
-        --     Aliases = {"fling", "ft"},
-        --     Run = function(args, speaker)
-        --         if not TargetedPlayer then return end
+        FlingTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
 
-        --         local target = Players:FindFirstChild(TargetedPlayer)
-        --         if not target or not target.Character then return end
+            local target = Players:FindFirstChild(TargetedPlayer)
+            if not target or not target.Character then return end
 
-        --         flingingtarget = true
-        --         local oldPos = GetRoot(player).Position
+            flingingTarget = true
+            local root = GetRoot(player)
+            if not root then return end
+            local oldPos = root.Position
 
-        --         task.spawn(function()
-        --             repeat
-        --                 task.wait(0.2)
-        --                 pcall(function()
-        --                     PredictionTP(target, "safe")
-        --                 end)
-        --                 task.wait(0.2)
-        --             until not flingingtarget
-        --         end)
+            task.spawn(function()
+                repeat
+                    task.wait(0.2)
+                    pcall(function()
+                        PredictionTP(target, "safe")
+                    end)
+                    task.wait(0.2)
+                until not flingingTarget
+            end)
 
-        --         TeleportToPosition(oldPos.X, oldPos.Y, oldPos.Z, "pos", "safe")
-        --         flingingtarget = false
-        --     end
-        -- })
+            TeleportToPosition(oldPos.X, oldPos.Y, oldPos.Z, "pos", "safe")
 
-        -- BindButton(FlingTarget_Button, "flingtarget")
+            flingingTarget = false
+        end)
 
     -- Push Target MIGHT WORK
 
-        addcmd("pushtarget", {
-            Aliases = {"push", "pt"},
-            Run = function(args, speaker)
-                if not TargetedPlayer then return end
+        PushTarget_Button.MouseButton1Click:Connect(function()
+            if not TargetedPlayer then return end
 
-                local target = Players:FindFirstChild(TargetedPlayer)
-                if not target or not target.Character then return end
+            local target = Players:FindFirstChild(TargetedPlayer)
+            if not target or not target.Character then return end
 
-                local pushPos = GetRoot(player).CFrame
-                PredictionTP(target)
-                task.wait(GetPing() + 0.05)
-                Push(target)
-                GetRoot(player).CFrame = pushPos
-            end
-        })
+            local pushPos = GetRoot(player).CFrame
 
-        BindButton(PushTarget_Button, "pushtarget")
+            PredictionTP(target)
+
+            task.wait(GetPing() + 0.05)
+
+            Push(target)
+
+            GetRoot(player).CFrame = pushPos
+        end)
 
     -- Face Bang Target
 
@@ -2010,7 +1734,7 @@
                     doggingTarget       = false
                     draggingTarget      = false
                     BangTarget          = false
-                    flingingtarget      = false
+                    flingingTarget      = false
 
                     Notify("Revo", "Targeted player left/rejoined.", 5)
                 end
