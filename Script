@@ -389,7 +389,7 @@
     AnnouncementsText.Text = "Unblock Me Ace You Monkey."
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
-    AnnouncementsText.TextSize = 16
+    AnnouncementsText.TextSize = 50
     AnnouncementsText.Parent = HomePage
 
     HomeButton.MouseButton1Click:Connect(function()
