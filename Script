@@ -1,99 +1,98 @@
--- Self Destruct
-
-    local Alive = true
-    local Connections = {}
-    local Threads = {}
-    local CreatedInstances = {}
-
-    local function TrackConnection(conn)
-        table.insert(Connections, conn)
-        return conn
-    end
-
-    local function TrackInstance(inst)
-        table.insert(CreatedInstances, inst)
-        return inst
-    end
-
-    local function TrackThread(thread)
-        table.insert(Threads, thread)
-        return thread
-    end
-
 -- Variables
 
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
+    -- Services
+
+    local Players          = game:GetService("Players")
+    local RunService       = game:GetService("RunService")
     local UserInputService = game:GetService("UserInputService")
-    local StarterGui = game:GetService("StarterGui")
-    local HttpService = game:GetService("HttpService")
-    local TeleportService = game:GetService("TeleportService")
-    local Light = game:GetService("Lighting")
+    local StarterGui       = game:GetService("StarterGui")
+    local HttpService      = game:GetService("HttpService")
+    local TeleportService  = game:GetService("TeleportService")
+    local Lighting         = game:GetService("Lighting")
 
-    local player = Players.LocalPlayer
-    local mouse = player:GetMouse()
-    local playerGui = player:WaitForChild("PlayerGui")
-    local PlaceId = game.PlaceId
-    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    -- References
 
-    local Pages = {}
+    local player     = Players.LocalPlayer
+    local mouse      = player:GetMouse()
+    local playerGui  = player:WaitForChild("PlayerGui")
+    local PlaceId    = game.PlaceId
+    local humanoid   = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 
-    local flying = false
-    local flyThreadRunning = false
-    local ignoreNextFlyToggle = false
-    local FlySpeed = 50
-    local FlyToggleKey = nil
+    -- GUI
 
-    local ctrl = { f = 0, b = 0, l = 0, r = 0 }
-    local lastctrl = { f = 0, b = 0, l = 0, r = 0 }
+    local Pages                   = {}
+    local GUIKey                  = Enum.KeyCode.V
+    local dragging                = false
+    local dragStart               = nil
+    local startPos                = nil
+    local capturingGUIKey         = false
+    local guiCaptureConnection    = nil
+    local globalGUIConnection     = nil
 
-    local globalTeleportConnection
-    local teleportKeyHeld = false
-    local teleportCaptureConnection = nil
-    local capturingTeleportKey = false
+    -- Target
 
-    local dragging = false
-    local dragStart = nil
-    local startPos = nil
+    local TargetedPlayer      = nil
+    local viewingTarget       = false
+    local focusingTarget      = false
+    local headsittingTarget   = false
+    local backpackingTarget   = false
+    local standingTarget      = false
+    local doggingTarget       = false
+    local draggingTarget      = false
+    local BangTarget          = false
+    local flingingTarget      = false
 
-    local capturingKey = false
-    local captureConnection = nil
-    local KeyDownFunction = nil
-    local KeyUpFunction = nil
+    -- Shaders
 
     local shadersOn = false
 
-    local TripKey = nil
-    local isTripRebinding = false
+    -- Fly
 
-    local REWIND_STEP = 1
-    local RECORD_FPS = 25
-    local RECORD_INTERVAL = 1 / RECORD_FPS
-    local REWIND_DURATION = 300
-    local MAX_FRAMES = RECORD_FPS * REWIND_DURATION
-    local REWIND_SPEED = 0.001
+    local FlyToggleKey           = nil
+    local flying                 = false
+    local flyThreadRunning       = false
+    local capturingFlyKey        = false
+    local flyCaptureConnection   = nil
+    local globalFlyConnection    = nil
+    local ignoreNextFlyToggle    = true
+    local FlySpeed               = 50
+    local ctrl                   = { f = 0, b = 0, l = 0, r = 0 }
+    local lastctrl               = { f = 0, b = 0, l = 0, r = 0 }
 
-    local RewindToggleKey = nil
-    local isRewinding = false
-    local recordingEnabled = true
-    local isRebinding = false
+    -- Rewind
 
-    local rewindHistory = table.create(MAX_FRAMES)
-    local writeIndex = 1
-    local storedFrames = 0
-    local lastRecordTime = 0
+    local RewindToggleKey            = nil
+    local rewinding                  = false
+    local recordingEnabled           = true
+    local REWIND_STEP                = 1
+    local RECORD_FPS                 = 25
+    local RECORD_INTERVAL            = 1 / RECORD_FPS
+    local REWIND_DURATION            = 300
+    local MAX_FRAMES                 = RECORD_FPS * REWIND_DURATION
+    local REWIND_SPEED               = 0.001
+    local rewindHistory              = table.create(MAX_FRAMES)
+    local writeIndex                 = 1
+    local storedFrames               = 0
+    local lastRecordTime             = 0
+    local capturingRewindKey         = false
+    local rewindCaptureConnection    = nil
+    local ignoreNextRewindToggle     = true
+    local globalRewindConnection     = nil
 
-    local SavedCheckpoint = nil
+    -- Teleport
 
-    local TargetedPlayer = nil
-    local viewingTarget = false
-    local focusingTarget = false
-    local headsittingTarget = false
-    local backpackingTarget = false
-    local standingTarget = false
-    local doggingTarget = false
-    local draggingTarget = false
-    local BangTarget = false
+    local TeleportToggleKey         = nil
+    local teleportKeyHeld           = false
+    local capturingTeleportKey      = false
+    local teleportCaptureConnection = nil
+    local globalTeleportConnection  = nil
+
+    -- Trip
+
+    local TripKey                  = nil
+    local capturingTripKey         = false
+    local tripCaptureConnection    = nil
+    local globalTripConnection     = nil
 
 -- Gui Load Detection
 
@@ -108,6 +107,13 @@
 
 -- GUI
 
+    local function AddCorner(instance, radius)
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = radius or UDim.new(0, 10)
+        corner.Parent = instance
+        return corner
+    end
+
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "RevoGUI"
     ScreenGui.ResetOnSpawn = false
@@ -120,10 +126,7 @@
     MainFrame.BorderSizePixel = 0
     MainFrame.Visible = true
     MainFrame.Parent = ScreenGui
-
-    local MainCorner = Instance.new("UICorner")
-    MainCorner.CornerRadius = UDim.new(0, 10)
-    MainCorner.Parent = MainFrame
+    AddCorner(MainFrame)
 
     local TitleBar = Instance.new("Frame")
     TitleBar.Size = UDim2.new(1, 0, 0, 42)
@@ -131,10 +134,7 @@
     TitleBar.BorderSizePixel = 0
     TitleBar.Active = true
     TitleBar.Parent = MainFrame
-
-    local TitleCorner = Instance.new("UICorner")
-    TitleCorner.CornerRadius = UDim.new(0, 10)
-    TitleCorner.Parent = TitleBar
+    AddCorner(TitleBar)
 
     local Title = Instance.new("TextLabel")
     Title.Size = UDim2.new(1, 0, 1, 0)
@@ -170,20 +170,29 @@
             })
         end
 
+    -- Get Root
+
+        local function GetRoot(player)
+            if player.Character then
+                return player.Character:FindFirstChild("HumanoidRootPart")
+            end
+            return nil
+        end
+
     -- Add Commands
 
-            Commands = {}
-            Aliases = {}
+        Commands = {}
+        Aliases = {}
 
-            function addcmd(name, data)
-                Commands[name] = data
+        function addcmd(name, data)
+            Commands[name] = data
 
-                if data.Aliases then
-                    for _, a in ipairs(data.Aliases) do
-                        Aliases[a] = name
-                    end
+            if data.Aliases then
+                for _, a in ipairs(data.Aliases) do
+                    Aliases[a] = name
                 end
             end
+        end
 
     -- Run Commands
 
@@ -196,11 +205,19 @@
             local cmd = Commands[cmdName]
 
             if not cmd then
-                Notify("Revo", "Unknown command: "..cmdName, 3)
+                Notify("Revo", "Unknown Command: "..cmdName, 3)
                 return
             end
 
             cmd.Run(split)
+        end
+
+    -- Bind Button
+
+        function BindButton(button, cmdName)
+            button.MouseButton1Click:Connect(function()
+                runCommand(cmdName)
+            end)
         end
 
     -- Get Ping
@@ -241,6 +258,131 @@
             TeleportToPosition(player, targetRoot.Position + Vector3.new(0, 2, 0), method)
         end
 
+    -- Toggle Ragdoll
+
+        local function ToggleRagdoll(bool)
+            pcall(function()
+                player.Character["Falling down"].Disabled = bool
+                player.Character["Swimming"].Disabled = bool
+                player.Character["StartRagdoll"].Disabled = bool
+                player.Character["Pushed"].Disabled = bool
+                player.Character["RagdollMe"].Disabled = bool
+            end)
+        end
+
+    -- Velocity Asset
+
+        local Velocity_Asset = Instance.new("BodyAngularVelocity")
+        Velocity_Asset.AngularVelocity = Vector3.new(0,0,0)
+        Velocity_Asset.MaxTorque = Vector3.new(50000,50000,50000)
+        Velocity_Asset.P = 1250
+        Velocity_Asset.Name = "BreakVelocity"
+
+    -- Stop Animations
+
+        local function StopAnim()
+            player.Character.Animate.Disabled = false
+            local animtrack = player.Character.Humanoid:GetPlayingAnimationTracks()
+            for i, track in pairs (animtrack) do
+                track:Stop()
+            end
+        end
+
+    -- Play Animations
+
+        local function PlayAnim(id,time,speed)
+            pcall(function()
+                player.Character.Animate.Disabled = false
+                local hum = player.Character.Humanoid
+                local animtrack = hum:GetPlayingAnimationTracks()
+                for i,track in pairs(animtrack) do
+                    track:Stop()
+                end
+                player.Character.Animate.Disabled = true
+                local Anim = Instance.new("Animation")
+                Anim.AnimationId = "rbxassetid://"..id
+                local loadanim = hum:LoadAnimation(Anim)
+                loadanim:Play()
+                loadanim.TimePosition = time
+                loadanim:AdjustSpeed(speed)
+                loadanim.Stopped:Connect(function()
+                    player.Character.Animate.Disabled = false
+                    for i, track in pairs (animtrack) do
+                        track:Stop()
+                    end
+                end)
+            end)
+        end
+
+    -- Prediction Teleport
+
+        local function PredictionTP(player,method)
+            local root = GetRoot(player)
+            local pos = root.Position
+            local vel = root.Velocity
+            GetRoot(player).CFrame = CFrame.new((pos.X)+(vel.X)*(GetPing()*3.5),(pos.Y)+(vel.Y)*(GetPing()*2),(pos.Z)+(vel.Z)*(GetPing()*3.5))
+            if method == "safe" then
+                task.wait()
+                GetRoot(player).CFrame = CFrame.new(pos)
+                task.wait()
+                GetRoot(player).CFrame = CFrame.new((pos.X)+(vel.X)*(GetPing()*3.5),(pos.Y)+(vel.Y)*(GetPing()*2),(pos.Z)+(vel.Z)*(GetPing()*3.5))
+            end
+        end
+
+    -- Get Push
+
+        local function GetPush()
+            local TempPush = nil
+            pcall(function()
+                if player.Backpack:FindFirstChild("Push") then
+                    PushTool = player.Backpack.Push
+                    PushTool.Parent = player.Character
+                    TempPush = PushTool
+                end
+                for i,v in pairs(Players:GetPlayers()) do
+                    if v.Character:FindFirstChild("Push") then
+                        TempPush = v.Character.Push
+                    end
+                end
+            end)
+            return TempPush
+        end
+
+    -- Push
+
+        local function Push(Target)
+            local Push = GetPush()
+            local FixTool = nil
+            if Push ~= nil then
+                local args = {[1] = Target.Character}
+                GetPush().PushTool:FireServer(unpack(args))
+            end
+            if player.Character:FindFirstChild("Push") then
+                player.Character.Push.Parent = player.Backpack
+            end
+            if player.Character:FindFirstChild("ModdedPush") then
+                FixTool = player.Character:FindFirstChild("ModdedPush")
+                FixTool.Parent = player.Backpack
+                FixTool.Parent = player.Character
+            end
+            if player.Character:FindFirstChild("ClickTarget") then
+                FixTool = player.Character:FindFirstChild("ClickTarget")
+                FixTool.Parent = player.Backpack
+                FixTool.Parent = player.Character
+            end
+            if player.Character:FindFirstChild("potion") then
+                FixTool = player.Character:FindFirstChild("potion")
+                FixTool.Parent = player.Backpack
+                FixTool.Parent = player.Character
+            end
+        end
+
+    -- Lerp
+
+        local function lerpCFrame(a, b, t)
+            return a:Lerp(b, t)
+        end
+
 -- Nav Bar
 
     local CharacterPage = CreatePage("Character")
@@ -273,24 +415,7 @@
     HomeButton.TextSize = 14
     HomeButton.Text = "Home"
     HomeButton.Parent = TitleBar
-
-    local HomeCorner = Instance.new("UICorner")
-    HomeCorner.CornerRadius = UDim.new(0,6)
-    HomeCorner.Parent = HomeButton
-
-    local DestroyButton = Instance.new("TextButton")
-    DestroyButton.Size = UDim2.new(0, 120, 0, 30)
-    DestroyButton.Position = UDim2.new(0, 295, 0.5, -15)
-    DestroyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    DestroyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    DestroyButton.Font = Enum.Font.Gotham
-    DestroyButton.TextSize = 14
-    DestroyButton.Text = "Destroy Instance"
-    DestroyButton.Parent = TitleBar
-
-    local DestroyCorner = Instance.new("UICorner")
-    DestroyCorner.CornerRadius = UDim.new(0,6)
-    DestroyCorner.Parent = DestroyButton
+    AddCorner(HomeButton)
 
     local function CreateButton(name)
         local Btn = Instance.new("TextButton")
@@ -301,13 +426,9 @@
         Btn.Font = Enum.Font.Gotham
         Btn.TextSize = 14
         Btn.Parent = ButtonBar
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0,6)
-        Corner.Parent = Btn
+        AddCorner(Btn)
 
         Btn.MouseButton1Click:Connect(function()
-            if not Alive then return end
             for _, page in pairs(Pages) do
                 page.Visible = false
             end
@@ -333,7 +454,6 @@
 -- Title Bar
 
     TitleBar.InputBegan:Connect(function(input)
-        if not Alive then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
@@ -347,7 +467,6 @@
     end)
 
     TitleBar.InputChanged:Connect(function(input)
-        if not Alive then return end
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             if dragging then
                 local delta = input.Position - dragStart
@@ -386,14 +505,13 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "Unblock Me Ace You Monkey."
+    AnnouncementsText.Text = "Small Updating Making Rebinding Code Cleaner, Added GUI Rebinding And Cleaned Up Code Mainly"
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
-    AnnouncementsText.TextSize = 50
+    AnnouncementsText.TextSize = 16
     AnnouncementsText.Parent = HomePage
 
     HomeButton.MouseButton1Click:Connect(function()
-        if not Alive then return end
 
         for _, page in pairs(Pages) do
             page.Visible = false
@@ -408,304 +526,143 @@
         end
     end)
 
--- Destroy
-
-    local function SoftReset()
-        flying = false
-        dragging = false
-        teleportKeyHeld = false
-        isRewinding = false
-        recordingEnabled = false
-        viewingTarget = false
-        focusingTarget = false
-        headsittingTarget = false
-        backpackingTarget = false
-        standingTarget = false
-        doggingTarget = false
-        draggingTarget = false
-        BangTarget = false
-
-        isRebinding = false
-        isTripRebinding = false
-        ignoreNextFlyToggle = false
+    local function updateHomeText()
+        HomeText.Text = "Hello "..player.Name.."\nPress ["..(GUIKey and GUIKey.Name or "None").."] To Open And Close GUI."
     end
-
-    local function SelfDestruct()
-        if not Alive then return end
-        Alive = false
-
-        -- Destroy Gui
-        if ScreenGui and ScreenGui.Parent then
-            local marker = ScreenGui:FindFirstChild("RevoActive")
-            if marker then
-                marker:Destroy()
-            end
-
-            ScreenGui:Destroy()
-            ScreenGui = nil
-        end
-
-        -- Stop states
-        player.Character.Humanoid.WalkSpeed = 16
-        SoftReset()
-
-        -- Reset camera
-        pcall(function()
-            local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-            if hum then
-                workspace.CurrentCamera.CameraSubject = hum
-            end
-        end)
-
-        -- Disconnect connections
-        for _, conn in ipairs(Connections) do
-            pcall(function()
-                conn:Disconnect()
-            end)
-        end
-        table.clear(Connections)
-
-        -- Kill threads
-        table.clear(Threads)
-
-        -- Destroy UI / instances
-        for _, inst in ipairs(CreatedInstances) do
-            pcall(function()
-                inst:Destroy()
-            end)
-        end
-        table.clear(CreatedInstances)
-    end
-
-    TrackConnection(
-        DestroyButton.MouseButton1Click:Connect(function()
-            MainFrame:Destroy()
-            SelfDestruct()
-            script:Destroy()
-        end)
-    )
 
 -- Character
 
-    -- Walk Speed
+    --Walk Speed
 
-        local WalkSpeedButton = Instance.new("TextButton")
-        WalkSpeedButton.Size = UDim2.new(0, 200, 0, 30)
-        WalkSpeedButton.Position = UDim2.new(0, 5, 0, 3)
-        WalkSpeedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        WalkSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        WalkSpeedButton.Font = Enum.Font.Gotham
-        WalkSpeedButton.TextSize = 16
-        WalkSpeedButton.Text = "Walk Speed: 16"
-        WalkSpeedButton.Parent = CharacterPage
+        -- Walk Speed Button
 
-        local WalkSpeedCorner = Instance.new("UICorner")
-        WalkSpeedCorner.CornerRadius = UDim.new(0,6)
-        WalkSpeedCorner.Parent = WalkSpeedButton
-
-        local WalkSpeed_Input = Instance.new("TextBox")
-        WalkSpeed_Input.Size = WalkSpeedButton.Size
-        WalkSpeed_Input.Position = WalkSpeedButton.Position
-        WalkSpeed_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        WalkSpeed_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
-        WalkSpeed_Input.Font = Enum.Font.Gotham
-        WalkSpeed_Input.TextSize = 16
-        WalkSpeed_Input.PlaceholderText = "Enter walk speed"
-        WalkSpeed_Input.Visible = false
-        WalkSpeed_Input.ClearTextOnFocus = true
-        WalkSpeed_Input.Parent = CharacterPage
-
-        local WalkSpeedInputCorner = Instance.new("UICorner")
-        WalkSpeedInputCorner.CornerRadius = UDim.new(0,6)
-        WalkSpeedInputCorner.Parent = WalkSpeed_Input
-
-     -- Walk Speed Function
-
-        WalkSpeedButton.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            WalkSpeedButton.Visible = false
-            WalkSpeed_Input.Visible = true
-            WalkSpeed_Input:CaptureFocus()
-        end)
-
-        addcmd("walkspeed", {
-            Aliases = {"ws", "speed"},
-            Description = "Sets walk speed",
-            Run = function(args)
-                local speed = tonumber(args[1]) or 16
-                local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-
-                if hum then
-                    hum.WalkSpeed = speed
-                    WalkSpeedButton.Text = "Walk Speed: "..speed
-                end
-            end
-        })
-
-        WalkSpeed_Input.FocusLost:Connect(function()
-            local Speed = WalkSpeed_Input.Text:gsub("%D", "")
-            if Speed == "" then
-                Speed = "16"
-            end
-
-            runCommand("walkspeed "..Speed)
-
-            WalkSpeed_Input.Text = ""
-            WalkSpeed_Input.Visible = false
-            WalkSpeedButton.Visible = true
-        end)
-
-        player.CharacterAdded:Connect(function()
-            if player.Character and player.Character:FindFirstChild("Humanoid") then
-                player.Character.Humanoid.WalkSpeed = 16
-            end
-
+            local WalkSpeedButton = Instance.new("TextButton")
+            WalkSpeedButton.Size = UDim2.new(0, 200, 0, 30)
+            WalkSpeedButton.Position = UDim2.new(0, 5, 0, 5)
+            WalkSpeedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            WalkSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            WalkSpeedButton.Font = Enum.Font.Gotham
+            WalkSpeedButton.TextSize = 16
             WalkSpeedButton.Text = "Walk Speed: 16"
-        end)
+            WalkSpeedButton.Parent = CharacterPage
+            AddCorner(WalkSpeedButton)
+
+            local WalkSpeed_Input = Instance.new("TextBox")
+            WalkSpeed_Input.Size = WalkSpeedButton.Size
+            WalkSpeed_Input.Position = WalkSpeedButton.Position
+            WalkSpeed_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            WalkSpeed_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+            WalkSpeed_Input.Font = Enum.Font.Gotham
+            WalkSpeed_Input.TextSize = 16
+            WalkSpeed_Input.PlaceholderText = "Enter walk speed"
+            WalkSpeed_Input.Visible = false
+            WalkSpeed_Input.ClearTextOnFocus = true
+            WalkSpeed_Input.Parent = CharacterPage
+            AddCorner(WalkSpeed_Input)
+
+        -- Walk Speed Function
+    
+            WalkSpeedButton.MouseButton1Click:Connect(function()
+                WalkSpeedButton.Visible = false
+                WalkSpeed_Input.Visible = true
+                WalkSpeed_Input:CaptureFocus()
+            end)
+
+            WalkSpeed_Input.FocusLost:Connect(function()
+                pcall(function()
+                    local Speed = WalkSpeed_Input.Text:gsub("%D", "")
+                    if Speed == "" then Speed = 16 end
+
+                    local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        hum.WalkSpeed = tonumber(Speed)
+                        WalkSpeedButton.Text = "Walk Speed: " .. Speed
+                    end
+                end)
+
+                WalkSpeed_Input.Text = ""
+                WalkSpeed_Input.Visible = false
+                WalkSpeedButton.Visible = true
+            end)
 
     -- Fly
 
         -- Fly Key
 
-            local FlyKeyButton = Instance.new("TextButton")
-            FlyKeyButton.Size = UDim2.new(0, 200, 0, 30)
-            FlyKeyButton.Position = UDim2.new(0, 215, 0, 3 + 30 + 5)
-            FlyKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            FlyKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            FlyKeyButton.Font = Enum.Font.Gotham
-            FlyKeyButton.TextSize = 16
-            FlyKeyButton.Text = "Fly Key: "..(FlyToggleKey and FlyToggleKey.Name or "None")
-            FlyKeyButton.Parent = CharacterPage
+            -- Fly Key Button
 
-            local FlyKeyCorner = Instance.new("UICorner")
-            FlyKeyCorner.CornerRadius = UDim.new(0,6)
-            FlyKeyCorner.Parent = FlyKeyButton
+                local FlyKeyButton = Instance.new("TextButton")
+                FlyKeyButton.Size = UDim2.new(0, 200, 0, 30)
+                FlyKeyButton.Position = UDim2.new(0, 215, 0, 40)
+                FlyKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                FlyKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                FlyKeyButton.Font = Enum.Font.Gotham
+                FlyKeyButton.TextSize = 16
+                FlyKeyButton.Text = "Fly Key: "..(FlyKey and FlyKey.Name or "None")
+                FlyKeyButton.Parent = CharacterPage
+                AddCorner(FlyKeyButton)
 
-            local FlyKey_Input = Instance.new("TextBox")
-            FlyKey_Input.Size = FlyKeyButton.Size
-            FlyKey_Input.Position = FlyKeyButton.Position
-            FlyKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            FlyKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
-            FlyKey_Input.Font = Enum.Font.Gotham
-            FlyKey_Input.TextSize = 16
-            FlyKey_Input.PlaceholderText = "Press a key..."
-            FlyKey_Input.Visible = false
-            FlyKey_Input.ClearTextOnFocus = true
-            FlyKey_Input.Text = ""
-            FlyKey_Input.Parent = CharacterPage
-
-            local FlyKeyInputCorner = Instance.new("UICorner")
-            FlyKeyInputCorner.CornerRadius = UDim.new(0,6)
-            FlyKeyInputCorner.Parent = FlyKey_Input
+                local FlyKey_Input = Instance.new("TextBox")
+                FlyKey_Input.Size = FlyKeyButton.Size
+                FlyKey_Input.Position = FlyKeyButton.Position
+                FlyKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                FlyKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+                FlyKey_Input.Font = Enum.Font.Gotham
+                FlyKey_Input.TextSize = 16
+                FlyKey_Input.PlaceholderText = "Press Any Key"
+                FlyKey_Input.Visible = false
+                FlyKey_Input.ClearTextOnFocus = true
+                FlyKey_Input.Text = ""
+                FlyKey_Input.Parent = CharacterPage
+                AddCorner(FlyKey_Input)
 
         -- Fly Speed
+
+            -- Fly Speed Button
         
-            local FlySpeedButton = Instance.new("TextButton")
-            FlySpeedButton.Size = UDim2.new(0, 200, 0, 30)
-            FlySpeedButton.Position = UDim2.new(1, -205, 0, 3)
-            FlySpeedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            FlySpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            FlySpeedButton.Font = Enum.Font.Gotham
-            FlySpeedButton.TextSize = 16
-            FlySpeedButton.Text = "Fly Speed: "..FlySpeed
-            FlySpeedButton.Parent = CharacterPage
+                local FlySpeedButton = Instance.new("TextButton")
+                FlySpeedButton.Size = UDim2.new(0, 200, 0, 30)
+                FlySpeedButton.Position = UDim2.new(1, -205, 0, 5)
+                FlySpeedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                FlySpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                FlySpeedButton.Font = Enum.Font.Gotham
+                FlySpeedButton.TextSize = 16
+                FlySpeedButton.Text = "Fly Speed: "..FlySpeed
+                FlySpeedButton.Parent = CharacterPage
+                AddCorner(FlySpeedButton)
 
-            local FlySpeedCorner = Instance.new("UICorner")
-            FlySpeedCorner.CornerRadius = UDim.new(0,6)
-            FlySpeedCorner.Parent = FlySpeedButton
-
-            local FlySpeed_Input = Instance.new("TextBox")
-            FlySpeed_Input.Size = FlySpeedButton.Size
-            FlySpeed_Input.Position = FlySpeedButton.Position
-            FlySpeed_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            FlySpeed_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
-            FlySpeed_Input.Font = Enum.Font.Gotham
-            FlySpeed_Input.TextSize = 16
-            FlySpeed_Input.PlaceholderText = "Enter fly speed"
-            FlySpeed_Input.Visible = false
-            FlySpeed_Input.ClearTextOnFocus = true
-            FlySpeed_Input.Parent = CharacterPage
-
-            local FlySpeedInputCorner = Instance.new("UICorner")
-            FlySpeedInputCorner.CornerRadius = UDim.new(0,6)
-            FlySpeedInputCorner.Parent = FlySpeed_Input
-
-        -- Fly Key Function
-
-            FlyKeyButton.MouseButton1Click:Connect(function()
-                if not Alive then return end
-                FlyKeyButton.Visible = false
-                FlyKey_Input.Visible = true
-                FlyKey_Input.Text = "Press any key..."
-                capturingKey = true
-
-                if captureConnection then
-                    captureConnection:Disconnect()
-                end
-
-                captureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
-                    if not Alive then return end
-                    if gpe then return end
-                    if not capturingKey then return end
-
-                    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Backspace then
-                        FlyToggleKey = nil
-                        FlyKeyButton.Text = "Fly Key: None"
-                    elseif input.UserInputType == Enum.UserInputType.Keyboard then
-                        FlyToggleKey = input.KeyCode
-                        FlyKeyButton.Text = "Fly Key: " .. FlyToggleKey.Name
-                        ignoreNextFlyToggle = true
-                    elseif input.UserInputType == Enum.UserInputType.MouseButton1 or
-                        input.UserInputType == Enum.UserInputType.MouseButton2 or
-                        input.UserInputType == Enum.UserInputType.MouseButton3 then
-                        FlyToggleKey = nil
-                        FlyKeyButton.Text = "Fly Key: None"
-                    end
-
-                    FlyKey_Input.Visible = false
-                    FlyKeyButton.Visible = true
-                    capturingKey = false
-
-                    captureConnection:Disconnect()
-                    captureConnection = nil
-                end)
-
-                FlyKey_Input.FocusLost:Connect(function()
-                    if capturingKey then
-                        FlyToggleKey = nil
-                        FlyKeyButton.Text = "Fly Key: None"
-                        FlyKey_Input.Visible = false
-                        FlyKeyButton.Visible = true
-                        capturingKey = false
-
-                        if captureConnection then
-                            captureConnection:Disconnect()
-                            captureConnection = nil
-                        end
-                    end
-                end)
-            end)
-
-        -- Fly Speed Function
-
-            FlySpeedButton.MouseButton1Click:Connect(function()
-                if not Alive then return end
-                FlySpeedButton.Visible = false
-                FlySpeed_Input.Visible = true
-                FlySpeed_Input:CaptureFocus()
-            end)
-
-            FlySpeed_Input.FocusLost:Connect(function()
-                pcall(function()
-                    local Speed = FlySpeed_Input.Text:gsub("%D", "")
-                    if Speed == "" then Speed = 50 end
-                    FlySpeed = tonumber(Speed)
-                    FlySpeedButton.Text = "Fly Speed: "..FlySpeed
-                end)
-                FlySpeed_Input.Text = ""
+                local FlySpeed_Input = Instance.new("TextBox")
+                FlySpeed_Input.Size = FlySpeedButton.Size
+                FlySpeed_Input.Position = FlySpeedButton.Position
+                FlySpeed_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                FlySpeed_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+                FlySpeed_Input.Font = Enum.Font.Gotham
+                FlySpeed_Input.TextSize = 16
+                FlySpeed_Input.PlaceholderText = "Enter fly speed"
                 FlySpeed_Input.Visible = false
-                FlySpeedButton.Visible = true
-            end)
+                FlySpeed_Input.ClearTextOnFocus = true
+                FlySpeed_Input.Parent = CharacterPage
+                AddCorner(FlySpeed_Input)
+            
+            -- Fly Speed Function
+
+                FlySpeedButton.MouseButton1Click:Connect(function()
+                    FlySpeedButton.Visible = false
+                    FlySpeed_Input.Visible = true
+                    FlySpeed_Input:CaptureFocus()
+                end)
+
+                FlySpeed_Input.FocusLost:Connect(function()
+                    pcall(function()
+                        local Speed = FlySpeed_Input.Text:gsub("%D", "")
+                        if Speed == "" then Speed = 50 end
+                        FlySpeed = tonumber(Speed)
+                        FlySpeedButton.Text = "Fly Speed: "..FlySpeed
+                    end)
+                    FlySpeed_Input.Text = ""
+                    FlySpeed_Input.Visible = false
+                    FlySpeedButton.Visible = true
+                end)
 
         -- Fly Function
 
@@ -719,7 +676,6 @@
                 elseif player.Character:FindFirstChild("Torso") then
                     torso = player.Character.Torso
                 else
-                    warn("No torso found!")
                     flyThreadRunning = false
                     return
                 end
@@ -738,7 +694,7 @@
                 player.Character.Humanoid.PlatformStand = true
 
                 local speed = 0
-                while Alive and flying and torso.Parent do
+                while flying and torso.Parent do
                     task.wait()
 
                     if humanoid then
@@ -799,87 +755,133 @@
                 if KeyDownFunction then KeyDownFunction:Disconnect() end
                 if KeyUpFunction then KeyUpFunction:Disconnect() end
             end
+            
+        -- Fly Key Function
 
-    -- Teleport
+            local function enableGlobalFlyListener()
+                if globalFlyConnection then return end
 
-        -- Teleport Key
-
-        local TeleportKeyButton = Instance.new("TextButton")
-        TeleportKeyButton.Size = UDim2.new(0, 200, 0, 30)
-        TeleportKeyButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5)
-        TeleportKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        TeleportKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TeleportKeyButton.Font = Enum.Font.Gotham
-        TeleportKeyButton.TextSize = 16
-        TeleportKeyButton.Text = "Teleport Key: "..(TeleportToggleKey and TeleportToggleKey.Name or "None")
-        TeleportKeyButton.Parent = CharacterPage
-
-        local TeleportKeyCorner = Instance.new("UICorner")
-        TeleportKeyCorner.CornerRadius = UDim.new(0,6)
-        TeleportKeyCorner.Parent = TeleportKeyButton
-
-        local TeleportKey_Input = Instance.new("TextBox")
-        TeleportKey_Input.Size = TeleportKeyButton.Size
-        TeleportKey_Input.Position = TeleportKeyButton.Position
-        TeleportKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        TeleportKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TeleportKey_Input.Font = Enum.Font.Gotham
-        TeleportKey_Input.TextSize = 16
-        TeleportKey_Input.PlaceholderText = "Press a key..."
-        TeleportKey_Input.Visible = false
-        TeleportKey_Input.ClearTextOnFocus = true
-        TeleportKey_Input.Text = ""
-        TeleportKey_Input.Parent = CharacterPage
-
-        local TeleportKeyInputCorner = Instance.new("UICorner")
-        TeleportKeyInputCorner.CornerRadius = UDim.new(0,6)
-        TeleportKeyInputCorner.Parent = TeleportKey_Input
-
-        -- Teleport Function
-
-            local function enableGlobalTeleportListener()
-                if globalTeleportConnection then return end
-                globalTeleportConnection = UserInputService.InputBegan:Connect(function(input, gpe)
-                    if not Alive then return end
+                globalFlyConnection = UserInputService.InputBegan:Connect(function(input, gpe)
                     if gpe then return end
-                    if capturingTeleportKey then return end
+                    if capturingFlyKey then return end -- still ignore inputs while capturing
 
-                    if TeleportToggleKey and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == TeleportToggleKey then
-                        teleportKeyHeld = true
-                    end
+                    if FlyToggleKey
+                    and input.UserInputType == Enum.UserInputType.Keyboard
+                    and input.KeyCode == FlyToggleKey then
 
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 and teleportKeyHeld then
-                        clicktpFunc()
+                        flying = not flying
+
+                        if flying then
+                            ConnectFlyKeys()
+                            task.spawn(Fly)
+                        else
+                            DisconnectFlyKeys()
+                            ctrl = {f=0,b=0,l=0,r=0}
+                            lastctrl = {f=0,b=0,l=0,r=0}
+                        end
                     end
                 end)
             end
 
-            enableGlobalTeleportListener()
+            enableGlobalFlyListener()
 
-            local function cancelTeleportCapture()
-                TeleportToggleKey = nil
-                TeleportKeyButton.Text = "Teleport Key: None"
-                TeleportKey_Input.Visible = false
-                TeleportKeyButton.Visible = true
-                capturingTeleportKey = false
+            local function cancelFlyCapture()
+                FlyToggleKey = nil
+                FlyKeyButton.Text = "Fly Key: None"
 
-                enableGlobalTeleportListener()
+                FlyKey_Input.Visible = false
+                FlyKeyButton.Visible = true
 
-                if teleportCaptureConnection then
-                    teleportCaptureConnection:Disconnect()
-                    teleportCaptureConnection = nil
+                capturingFlyKey = false
+
+                if flyCaptureConnection then
+                    flyCaptureConnection:Disconnect()
+                    flyCaptureConnection = nil
                 end
+
+                enableGlobalFlyListener()
             end
 
-            local function getRoot(character)
-                return character:FindFirstChild("HumanoidRootPart")
-            end
+            FlyKeyButton.MouseButton1Click:Connect(function()
+                FlyKeyButton.Visible = false
+                FlyKey_Input.Visible = true
+                FlyKey_Input.Text = "Press Any Key"
 
-            function clicktpFunc()
+                capturingFlyKey = true
+
+                if globalFlyConnection then
+                    globalFlyConnection:Disconnect()
+                    globalFlyConnection = nil
+                end
+
+                if flyCaptureConnection then
+                    flyCaptureConnection:Disconnect()
+                end
+
+                flyCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if gpe then return end
+                    if not capturingFlyKey then return end
+
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        if input.KeyCode == Enum.KeyCode.Backspace then
+                            cancelFlyCapture()
+                        else
+                            FlyToggleKey = input.KeyCode
+                            FlyKeyButton.Text = "Fly Key: " .. FlyToggleKey.Name
+
+                            FlyKey_Input.Visible = false
+                            FlyKeyButton.Visible = true
+                            capturingFlyKey = false
+
+                            flyCaptureConnection:Disconnect()
+                            flyCaptureConnection = nil
+
+                            enableGlobalFlyListener()
+                        end
+                    elseif input.UserInputType == Enum.UserInputType.MouseButton1
+                        or input.UserInputType == Enum.UserInputType.MouseButton2
+                        or input.UserInputType == Enum.UserInputType.MouseButton3 then
+                        cancelFlyCapture()
+                    end
+                end)
+            end)
+
+    -- Teleport
+
+        -- Teleport Key Button
+
+            local TeleportKeyButton = Instance.new("TextButton")
+            TeleportKeyButton.Size = UDim2.new(0, 200, 0, 30)
+            TeleportKeyButton.Position = UDim2.new(0, 5, 0, 40)
+            TeleportKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            TeleportKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TeleportKeyButton.Font = Enum.Font.Gotham
+            TeleportKeyButton.TextSize = 16
+            TeleportKeyButton.Text = "Teleport Key: "..(TeleportKey and TeleportKey.Name or "None")
+            TeleportKeyButton.Parent = CharacterPage
+            AddCorner(TeleportKeyButton)
+
+            local TeleportKey_Input = Instance.new("TextBox")
+            TeleportKey_Input.Size = TeleportKeyButton.Size
+            TeleportKey_Input.Position = TeleportKeyButton.Position
+            TeleportKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            TeleportKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TeleportKey_Input.Font = Enum.Font.Gotham
+            TeleportKey_Input.TextSize = 16
+            TeleportKey_Input.PlaceholderText = "Press Any Key"
+            TeleportKey_Input.Visible = false
+            TeleportKey_Input.ClearTextOnFocus = true
+            TeleportKey_Input.Text = ""
+            TeleportKey_Input.Parent = CharacterPage
+            AddCorner(TeleportKey_Input)
+        
+        -- Teleport Function     
+        
+            local function clicktpFunc()
                 local char = player.Character
                 if not char then return end
 
-                local rootPart = getRoot(char)
+                local rootPart = GetRoot(player)
                 if not rootPart then return end
 
                 local humanoid = char:FindFirstChildOfClass("Humanoid")
@@ -899,10 +901,52 @@
                 humanoid.AutoRotate = true
             end
 
+        -- Teleport Key
+
+            local function enableGlobalTeleportListener()
+                if globalTeleportConnection then return end
+
+                globalTeleportConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if gpe then return end
+                    if capturingTeleportKey then return end
+
+                    if TeleportToggleKey
+                    and input.UserInputType == Enum.UserInputType.Keyboard
+                    and input.KeyCode == TeleportToggleKey then
+                        teleportKeyHeld = true
+                    end
+
+                    if input.UserInputType == Enum.UserInputType.MouseButton1
+                    and teleportKeyHeld then
+                        clicktpFunc()
+                    end
+                end)
+            end
+
+            enableGlobalTeleportListener()
+
+            local function cancelTeleportCapture()
+                TeleportToggleKey = nil
+                TeleportKeyButton.Text = "Teleport Key: None"
+
+                TeleportKey_Input.Visible = false
+                TeleportKeyButton.Visible = true
+
+                capturingTeleportKey = false
+
+                if teleportCaptureConnection then
+                    teleportCaptureConnection:Disconnect()
+                    teleportCaptureConnection = nil
+                end
+
+                enableGlobalTeleportListener()
+            end
+
             TeleportKeyButton.MouseButton1Click:Connect(function()
                 TeleportKeyButton.Visible = false
                 TeleportKey_Input.Visible = true
-                TeleportKey_Input.Text = "Press any key..."
+                TeleportKey_Input.Text = "Press Any Key"
+
                 capturingTeleportKey = true
 
                 if globalTeleportConnection then
@@ -915,7 +959,6 @@
                 end
 
                 teleportCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
-                    if not Alive then return end
                     if gpe then return end
                     if not capturingTeleportKey then return end
 
@@ -925,50 +968,65 @@
                         else
                             TeleportToggleKey = input.KeyCode
                             TeleportKeyButton.Text = "Teleport Key: " .. TeleportToggleKey.Name
+
                             TeleportKey_Input.Visible = false
                             TeleportKeyButton.Visible = true
                             capturingTeleportKey = false
 
-                            enableGlobalTeleportListener()
-
                             teleportCaptureConnection:Disconnect()
                             teleportCaptureConnection = nil
+
+                            enableGlobalTeleportListener()
                         end
 
-                    elseif input.UserInputType == Enum.UserInputType.MouseButton1 or
-                        input.UserInputType == Enum.UserInputType.MouseButton2 or
-                        input.UserInputType == Enum.UserInputType.MouseButton3 then
+                    elseif input.UserInputType == Enum.UserInputType.MouseButton1
+                        or input.UserInputType == Enum.UserInputType.MouseButton2
+                        or input.UserInputType == Enum.UserInputType.MouseButton3 then
                         cancelTeleportCapture()
                     end
                 end)
             end)
 
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+                if input.KeyCode == TeleportToggleKey then
+                    teleportKeyHeld = false
+                end
+            end)
+
+
     -- Rewind
 
-        -- Rewind Key
+        -- Rewind Key Button
 
             local RewindKeyButton = Instance.new("TextButton")
             RewindKeyButton.Size = UDim2.new(0, 200, 0, 30)
-            RewindKeyButton.Position = UDim2.new(0, 215, 0, 3 + 30 + 5 + 30 + 5)
+            RewindKeyButton.Position = UDim2.new(0, 215, 0, 75)
             RewindKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             RewindKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             RewindKeyButton.Font = Enum.Font.Gotham
             RewindKeyButton.TextSize = 16
-            RewindKeyButton.Text = "Rewind Key: None"
+            RewindKeyButton.Text = "Rewind Key: "..(rewindkey and rewindkey.Name or "None")
             RewindKeyButton.Parent = CharacterPage
+            AddCorner(RewindKeyButton)
 
-            local ButtonCorner = Instance.new("UICorner")
-            ButtonCorner.CornerRadius = UDim.new(0, 6)
-            ButtonCorner.Parent = RewindKeyButton
+            local RewindKey_Input = Instance.new("TextBox")
+            RewindKey_Input.Size = RewindKeyButton.Size
+            RewindKey_Input.Position = RewindKeyButton.Position
+            RewindKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            RewindKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+            RewindKey_Input.Font = Enum.Font.Gotham
+            RewindKey_Input.TextSize = 16
+            RewindKey_Input.PlaceholderText = "Press Any Key"
+            RewindKey_Input.Visible = false
+            RewindKey_Input.ClearTextOnFocus = true
+            RewindKey_Input.Text = ""
+            RewindKey_Input.Parent = CharacterPage
+            AddCorner(RewindKey_Input)
 
         -- Rewind Function
 
-            local function lerpCFrame(a, b, t)
-                return a:Lerp(b, t)
-            end
-
-            RunService.Heartbeat:Connect(function()
-                if not Alive then return end
+           RunService.Heartbeat:Connect(function()
                 if not recordingEnabled then return end
                 local now = os.clock()
                 if now - lastRecordTime < RECORD_INTERVAL then return end
@@ -986,10 +1044,10 @@
             end)
 
             local function toggleRewind()
-                isRewinding = not isRewinding
-                recordingEnabled = not isRewinding
+                rewinding = not rewinding
+                recordingEnabled = not rewinding
 
-                if not isRewinding then return end
+                if not rewinding then return end
 
                 task.spawn(function()
                     local char = player.Character
@@ -999,8 +1057,7 @@
 
                     local lastRewindTime = 0
 
-                    while Alive and isRewinding and storedFrames > 0 do
-                        if not Alive then return end
+                    while rewinding and storedFrames > 0 do
                         local now = os.clock()
                         if now - lastRewindTime >= REWIND_SPEED then
                             lastRewindTime = now
@@ -1021,171 +1078,177 @@
                         RunService.Heartbeat:Wait()
                     end
 
-                    isRewinding = false
+                    rewinding = false
                     recordingEnabled = true
                 end)
             end
 
-            local globalInputConnection
+        -- Rewind Key Function
 
-            local function enableGlobalListener()
-                if globalInputConnection then return end
-                globalInputConnection = UserInputService.InputBegan:Connect(function(input, gpe)
-                    if not Alive then return end
+            local function enableGlobalRewindListener()
+                if globalRewindConnection then return end
+
+                globalRewindConnection = UserInputService.InputBegan:Connect(function(input, gpe)
                     if gpe then return end
-                    if isRebinding then return end
-                    if RewindToggleKey and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == RewindToggleKey then
+                    if capturingRewindKey then return end
+
+                    if RewindToggleKey
+                    and input.UserInputType == Enum.UserInputType.Keyboard
+                    and input.KeyCode == RewindToggleKey then
                         toggleRewind()
                     end
                 end)
             end
 
-            RewindKeyButton.MouseButton1Click:Connect(function()
-                if not Alive then return end
-                isRebinding = true
-                RewindKeyButton.Text = "Press any key..."
-                RewindKeyButton.Visible = true
-
-                if globalInputConnection then
-                    globalInputConnection:Disconnect()
-                    globalInputConnection = nil
-                end
-
-                rewindCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
-                    if not Alive then return end
-                    if gpe then return end
-                    if not isRebinding then return end
-
-                    if input.UserInputType == Enum.UserInputType.Keyboard and not input.KeyCode == Enum.KeyCode.Backspace then
-                        RewindToggleKey = input.KeyCode
-                        RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
-                        isRebinding = false
-
-                        enableGlobalListener()
-
-                        rewindCaptureConnection:Disconnect()
-                        rewindCaptureConnection = nil
-
-                        return
-                    elseif input.UserInputType == not Enum.UserInputType.Keyboard then
-                        RewindKeyButton.Text = "Rewind Ket"
-                    end
-                    
-                    cancelRewindCapture()
-
-                end)
-
-                if rewindCaptureConnection then
-                    rewindCaptureConnection:Disconnect()
-                end
-
-            end)
-
-            enableGlobalListener()
-
+            enableGlobalRewindListener()       
+            
             local function cancelRewindCapture()
                 RewindToggleKey = nil
                 RewindKeyButton.Text = "Rewind Key: None"
-                RewindKeyButton.Visible = true
-                isRebinding = false
 
-                enableGlobalListener()
+                RewindKey_Input.Visible = false
+                RewindKeyButton.Visible = true
+
+                capturingRewindKey = false
 
                 if rewindCaptureConnection then
                     rewindCaptureConnection:Disconnect()
                     rewindCaptureConnection = nil
                 end
+
+                enableGlobalRewindListener()
             end
+
+            RewindKeyButton.MouseButton1Click:Connect(function()
+                RewindKeyButton.Visible = false
+                RewindKey_Input.Visible = true
+                RewindKey_Input.Text = "Press Any Key"
+
+                capturingRewindKey = true
+
+                if globalRewindConnection then
+                    globalRewindConnection:Disconnect()
+                    globalRewindConnection = nil
+                end
+
+                if rewindCaptureConnection then
+                    rewindCaptureConnection:Disconnect()
+                end
+
+                rewindCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if gpe then return end
+                    if not capturingRewindKey then return end
+
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        if input.KeyCode == Enum.KeyCode.Backspace then
+                            cancelRewindCapture()
+                        else
+                            RewindToggleKey = input.KeyCode
+                            RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
+
+                            RewindKey_Input.Visible = false
+                            RewindKeyButton.Visible = true
+                            capturingRewindKey = false
+
+                            rewindCaptureConnection:Disconnect()
+                            rewindCaptureConnection = nil
+
+                            enableGlobalRewindListener()
+                        end
+
+                    elseif input.UserInputType == Enum.UserInputType.MouseButton1
+                        or input.UserInputType == Enum.UserInputType.MouseButton2
+                        or input.UserInputType == Enum.UserInputType.MouseButton3 then
+                        cancelRewindCapture()
+                    end
+                end)
+            end)
 
     -- Jerk
 
-            -- Jerk Button
+        -- Jerk Button Button
         
             local JerkButton = Instance.new("TextButton")
             JerkButton.Size = UDim2.new(0, 200, 0, 30)
-            JerkButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5 + 30 + 5)
+            JerkButton.Position = UDim2.new(0, 5, 0, 75)
             JerkButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             JerkButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             JerkButton.Font = Enum.Font.Gotham
             JerkButton.TextSize = 16
             JerkButton.Text = "Jerk"
             JerkButton.Parent = CharacterPage
+            AddCorner(JerkButton)
 
-            local JerkButtonCorner = Instance.new("UICorner")
-            JerkButtonCorner.CornerRadius = UDim.new(0,6)
-            JerkButtonCorner.Parent = JerkButton
+        -- Jerk Command
 
-        -- Jerk Function
+            addcmd("jerk", {
+                Aliases = {"jork", "jo"},
+                Run = function()
 
-            local function runJerk()
-                local character = player.Character or player.CharacterAdded:Wait()
-                local humanoid = character:WaitForChild("Humanoid")
-                local backpack = player:WaitForChild("Backpack")
+                    local character = player.Character or player.CharacterAdded:Wait()
+                    local humanoid = character:WaitForChild("Humanoid")
+                    local backpack = player:WaitForChild("Backpack")
 
-                if backpack:FindFirstChild("Jerk Off") then return end
+                    if backpack:FindFirstChild("Jerk Off") then return end
 
-                local tool = Instance.new("Tool")
-                tool.Name = "Jerk Off"
-                tool.ToolTip = ";)"
-                tool.RequiresHandle = false
-                tool.Parent = backpack
+                    local tool = Instance.new("Tool")
+                    tool.Name = "Jerk Off"
+                    tool.ToolTip = ";)"
+                    tool.RequiresHandle = false
+                    tool.Parent = backpack
 
-                local jorkin = false
-                local track
+                    local jorkin = false
+                    local track
 
-                local function stopTomfoolery()
-                    jorkin = false
-                    if track then
-                        track:Stop()
-                        track = nil
+                    local function stopTomfoolery()
+                        jorkin = false
+                        if track then
+                            track:Stop()
+                            track = nil
+                        end
                     end
-                end
 
-                tool.Equipped:Connect(function()
-                    if not Alive then return end
-                    jorkin = true
-                end)
+                    tool.Equipped:Connect(function()
+                        jorkin = true
+                    end)
 
-                tool.Unequipped:Connect(stopTomfoolery)
-                humanoid.Died:Connect(stopTomfoolery)
-                if not Alive then return end
+                    tool.Unequipped:Connect(stopTomfoolery)
+                    humanoid.Died:Connect(stopTomfoolery)
 
-                task.spawn(function()
-                    while Alive and task.wait() do
-                        if jorkin then
-                            local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
+                    task.spawn(function()
+                        while task.wait() do
+                            if jorkin then
+                                local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
 
-                        if not track then
-                            local anim = Instance.new("Animation")
-                            anim.AnimationId = isR15
-                                and "rbxassetid://698251653"
-                                or  "rbxassetid://72042024"
+                                if not track then
+                                    local anim = Instance.new("Animation")
+                                    anim.AnimationId = isR15
+                                        and "rbxassetid://698251653"
+                                        or  "rbxassetid://72042024"
 
-                            track = humanoid:LoadAnimation(anim)
-                        end
+                                    track = humanoid:LoadAnimation(anim)
+                                end
 
-                        track:Play()
-                        track:AdjustSpeed(isR15 and 0.7 or 0.65)
-                        track.TimePosition = 0.6
+                                track:Play()
+                                track:AdjustSpeed(isR15 and 0.7 or 0.65)
+                                track.TimePosition = 0.6
 
-                        task.wait(0.1)
-                        while Alive and track and track.TimePosition < (isR15 and 0.7 or 0.65) do
-                            task.wait(0.1)
-                        end
+                                task.wait(0.1)
+                                while Alive and track and track.TimePosition < (isR15 and 0.7 or 0.65) do
+                                    task.wait(0.1)
+                                end
 
-                            if track then
-                                track:Stop()
-                                track = nil
+                                if track then
+                                    track:Stop()
+                                    track = nil
+                                end
                             end
                         end
-                    end
-                end)
-            end
+                    end)
+                end
+            })
 
-            JerkButton.MouseButton1Click:Connect(function()
-                if not Alive then return end
-	            runJerk()
-            end)
+            BindButton(JerkButton, "jerk")
 
     -- Trip
 
@@ -1193,121 +1256,128 @@
 
             local TripKeyButton = Instance.new("TextButton")
             TripKeyButton.Size = UDim2.new(0, 200, 0, 30)
-            TripKeyButton.Position = UDim2.new(0, 215, 0, RewindKeyButton.Position.Y.Offset + RewindKeyButton.Size.Y.Offset + 5)
+            TripKeyButton.Position = UDim2.new(0, 215, 0, 110)
             TripKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             TripKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             TripKeyButton.Font = Enum.Font.Gotham
             TripKeyButton.TextSize = 16
-            TripKeyButton.Text = "Trip Key: None"
+            TripKeyButton.Text = "Trip Key: "..(TripKey and TripKey.Name or "None")
             TripKeyButton.Parent = CharacterPage
+            AddCorner(TripKeyButton)
 
-            local TripButtonCorner = Instance.new("UICorner")
-            TripButtonCorner.CornerRadius = UDim.new(0, 6)
-            TripButtonCorner.Parent = TripKeyButton
+            local TripKey_Input = Instance.new("TextBox")
+            TripKey_Input.Size = TripKeyButton.Size
+            TripKey_Input.Position = TripKeyButton.Position
+            TripKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            TripKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TripKey_Input.Font = Enum.Font.Gotham
+            TripKey_Input.TextSize = 16
+            TripKey_Input.PlaceholderText = "Press Any Key"
+            TripKey_Input.Visible = false
+            TripKey_Input.ClearTextOnFocus = true
+            TripKey_Input.Text = ""
+            TripKey_Input.Parent = CharacterPage
+            AddCorner(TripKey_Input)
 
         -- Trip Function
 
-            TripKeyButton.MouseButton1Click:Connect(function()
-                if not Alive then return end
-                TripKeyButton.Text = "Trip Key: Press any key..."
-                isTripRebinding = true
-            end)
+            local function tripPlayer()
+                local character = player.Character
+                if not character then return end
 
-    -- Respawn
-
-        -- Respawn Key
-
-            local RespawnButton = Instance.new("TextButton")
-            RespawnButton.Size = UDim2.new(0, 200, 0, 30)
-            RespawnButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5 + 30 + 5 + 30 + 5)
-            RespawnButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            RespawnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            RespawnButton.Font = Enum.Font.Gotham
-            RespawnButton.TextSize = 16
-            RespawnButton.Text = "Respawn"
-            RespawnButton.Parent = CharacterPage
-
-            local RespawnButtonCorner = Instance.new("UICorner")
-            RespawnButtonCorner.CornerRadius = UDim.new(0,6)
-            RespawnButtonCorner.Parent = RespawnButton
-
-        -- Respawn Function
-
-            RespawnButton.MouseButton1Click:Connect(function()
-                local root = GetRoot(player)
-                if not root then return end
-
-                local savedPos = root.Position
-                player.Character.Humanoid.Health = 0
-
-                player.CharacterAdded:Wait()
-                task.wait(GetPing() + 0.15)
-
-                TeleportToPosition(player, savedPos, "safe")
-            end)
-
-            player.CharacterAdded:Connect(function(x)
-                task.wait(GetPing()+0.1)
-                x:WaitForChild("Humanoid")
-                if SavedCheckpoint ~= nil then
-                    TeleportTO(SavedCheckpoint.X,SavedCheckpoint.Y,SavedCheckpoint.Z,"pos","safe")
+                local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+                local root = character:FindFirstChild("HumanoidRootPart")
+                if humanoid and root then
+                    humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+                    root.Velocity = root.CFrame.LookVector * 30
                 end
+            end
+        
+        -- Trip Key Function
+
+            local function enableGlobalTripListener()
+                if globalTripConnection then return end
+
+                globalTripConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if gpe then return end
+                    if capturingTripKey then return end
+
+                    if TripKey
+                    and input.UserInputType == Enum.UserInputType.Keyboard
+                    and input.KeyCode == TripKey then
+                        tripPlayer()
+                    end
+                end)
+            end
+
+            enableGlobalTripListener()
+
+            local function cancelTripCapture()
+                TripKey = nil
+                TripKeyButton.Text = "Trip Key: None"
+
+                TripKey_Input.Visible = false
+                TripKeyButton.Visible = true
+
+                capturingTripKey = false
+
+                if tripCaptureConnection then
+                    tripCaptureConnection:Disconnect()
+                    tripCaptureConnection = nil
+                end
+
+                enableGlobalTripListener()
+            end
+
+            TripKeyButton.MouseButton1Click:Connect(function()
+                TripKeyButton.Visible = false
+                TripKey_Input.Visible = true
+                TripKey_Input.Text = "Press Any Key"
+
+                capturingTripKey = true
+
+                if globalTripConnection then
+                    globalTripConnection:Disconnect()
+                    globalTripConnection = nil
+                end
+
+                if tripCaptureConnection then
+                    tripCaptureConnection:Disconnect()
+                end
+
+                tripCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if gpe then return end
+                    if not capturingTripKey then return end
+
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        if input.KeyCode == Enum.KeyCode.Backspace then
+                            cancelTripCapture()
+                        else
+                            TripKey = input.KeyCode
+                            TripKeyButton.Text = "Trip Key: " .. TripKey.Name
+
+                            TripKey_Input.Visible = false
+                            TripKeyButton.Visible = true
+                            capturingTripKey = false
+
+                            tripCaptureConnection:Disconnect()
+                            tripCaptureConnection = nil
+
+                            enableGlobalTripListener()
+                        end
+
+                    elseif input.UserInputType == Enum.UserInputType.MouseButton1
+                        or input.UserInputType == Enum.UserInputType.MouseButton2
+                        or input.UserInputType == Enum.UserInputType.MouseButton3 then
+                        cancelTripCapture()
+                    end
+                end)
             end)
 
-    -- Save Checkpoint
-
-        -- Save Checpoint Button
-
-            local SaveButton = Instance.new("TextButton")
-            SaveButton.Size = UDim2.new(0, 200, 0, 30)
-            SaveButton.Position = UDim2.new(0, 5, 0, RespawnButton.Position.Y.Offset + RespawnButton.Size.Y.Offset + 5)
-            SaveButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            SaveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            SaveButton.Font = Enum.Font.Gotham
-            SaveButton.TextSize = 16
-            SaveButton.Text = "Save Checkpoint"
-            SaveButton.Parent = CharacterPage
-
-            local SaveButtonCorner = Instance.new("UICorner")
-            SaveButtonCorner.CornerRadius = UDim.new(0, 6)
-            SaveButtonCorner.Parent = SaveButton
-
-        -- Save Checkpoint Function
-
-            SaveButton.MouseButton1Click:Connect(function()
-                SavedCheckpoint = GetRoot(player).Position
-                Notify("Revo","Checkpoint saved.",5)
-            end)
-    
-    -- Clear Checkpoint
-
-        -- Clear Checkpoint Button
-
-            local ClearButton = Instance.new("TextButton")
-            ClearButton.Size = UDim2.new(0, 200, 0, 30)
-            ClearButton.Position = UDim2.new(0, 215, 0, TripKeyButton.Position.Y.Offset + TripKeyButton.Size.Y.Offset + 5)
-            ClearButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            ClearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            ClearButton.Font = Enum.Font.Gotham
-            ClearButton.TextSize = 16
-            ClearButton.Text = "Clear Checkpoint"
-            ClearButton.Parent = CharacterPage
-
-            local ClearButtonCorner = Instance.new("UICorner")
-            ClearButtonCorner.CornerRadius = UDim.new(0, 6)
-            ClearButtonCorner.Parent = ClearButton
-
-        -- Clear Checkpoint Function
-
-            ClearButton.MouseButton1Click:Connect(function()
-                SavedCheckpoint = nil
-                Notify("Revo","Checkpoint cleared.",5)
-            end)
-    
 -- Target
-    
-    -- Button Creation
 
+    -- Button Creation
+    
         local LeftLayout = Instance.new("UIListLayout")
         LeftLayout.FillDirection = Enum.FillDirection.Vertical
         LeftLayout.Padding = UDim.new(0,5)
@@ -1321,7 +1391,6 @@
         RightLayout.Parent = RightColumn
 
         local function UpdateCanvas()
-            if not Alive then return end
             if not AnimScrollFrame then return end
             if not LeftLayout or not RightLayout then return end
 
@@ -1365,37 +1434,7 @@
         TargetImage.Size = UDim2.new(0, 100, 0, 100)
         TargetImage.Image = "rbxassetid://10818605405"
         TargetImage.Parent = Target_Section
-
-        local TargetImageCorner = Instance.new("UICorner")
-        TargetImageCorner.CornerRadius = UDim.new(0, 8)
-        TargetImageCorner.Parent = TargetImage
-
-        local TargetName_Input = Instance.new("TextBox")
-        TargetName_Input.Name = "TargetName_Input"
-        TargetName_Input.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-        TargetName_Input.BackgroundTransparency = 0.5
-        TargetName_Input.BorderColor3 = Color3.fromRGB(100, 100, 100)
-        TargetName_Input.Position = UDim2.new(0, 110, 0, 10)
-        TargetName_Input.Size = UDim2.new(0, 200, 0, 30)
-        TargetName_Input.Font = Enum.Font.Gotham
-        TargetName_Input.PlaceholderText = "Target"
-        TargetName_Input.Text = ""
-        TargetName_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TargetName_Input.TextSize = 14
-        TargetName_Input.ClearTextOnFocus = true
-        TargetName_Input.Parent = Target_Section
-
-        local TargetInputCorner = Instance.new("UICorner")
-        TargetInputCorner.CornerRadius = UDim.new(0, 6)
-        TargetInputCorner.Parent = TargetName_Input
-
-        local ClickTargetTool_Button = Instance.new("ImageButton")
-        ClickTargetTool_Button.Name = "ClickTargetTool_Button"
-        ClickTargetTool_Button.BackgroundTransparency = 1
-        ClickTargetTool_Button.Position = UDim2.new(1, 5, 0, 0)
-        ClickTargetTool_Button.Size = UDim2.new(0, 30, 0, 30)
-        ClickTargetTool_Button.Image = "rbxassetid://2716591855"
-        ClickTargetTool_Button.Parent = TargetName_Input
+        AddCorner(TargetImage)
 
         local UserIDTargetLabel = Instance.new("TextLabel")
         UserIDTargetLabel.Name = "UserIDTargetLabel"
@@ -1429,10 +1468,7 @@
             btn.TextColor3 = Color3.fromRGB(255, 255, 255)
             btn.TextSize = 16
             btn.Parent = Target_Section
-
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 6)
-            corner.Parent = btn
+            AddCorner(btn)
 
             return btn
         end
@@ -1450,7 +1486,25 @@
         local PushTarget_Button      = CreateTargetButton("Push",      UDim2.new(0, 5, 0, 295))
         local FaceBangTarget_Button  = CreateTargetButton("Face Bang", UDim2.new(0, 215, 0, 295))
 
-    -- Get Target
+    -- Target Name
+
+        local TargetName_Input = Instance.new("TextBox")
+        TargetName_Input.Name = "TargetName_Input"
+        TargetName_Input.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        TargetName_Input.BackgroundTransparency = 0.5
+        TargetName_Input.BorderColor3 = Color3.fromRGB(100, 100, 100)
+        TargetName_Input.Position = UDim2.new(0, 110, 0, 10)
+        TargetName_Input.Size = UDim2.new(0, 200, 0, 30)
+        TargetName_Input.Font = Enum.Font.Gotham
+        TargetName_Input.PlaceholderText = "Target"
+        TargetName_Input.Text = ""
+        TargetName_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TargetName_Input.TextSize = 14
+        TargetName_Input.ClearTextOnFocus = true
+        TargetName_Input.Parent = Target_Section
+        AddCorner(TargetName_Input)
+
+    -- Update Target
     
         local function UpdateTarget(player)
             if (player ~= nil and player ~= "" and player ~= Players.LocalPlayer) then
@@ -1466,383 +1520,497 @@
             end
         end
 
-    -- Target Input
+    -- Find Player
 
-        local function FindPlayerByNameOrDisplay(name)
-            name = string.lower(name)
-
-            for _, p in ipairs(Players:GetPlayers()) do
-                local username = string.lower(p.Name)
-                local displayname = string.lower(p.DisplayName)
-
-                if username:sub(1,#name) == name or displayname:sub(1,#name) == name then
-                    return p
+        local function GetPlayer(UserDisplay)
+            if UserDisplay ~= "" then
+                for i,v in pairs(Players:GetPlayers()) do
+                    if v.Name:lower():match(UserDisplay) or v.DisplayName:lower():match(UserDisplay) then
+                        return v
+                    end
                 end
+                return nil
+            else
+                return nil
             end
-
-            return nil
         end
 
         TargetName_Input.FocusLost:Connect(function()
-            local text = TargetName_Input.Text:gsub("@","")
-            local player = FindPlayerByNameOrDisplay(text)
-            if player and text ~= "" and player ~= Players.LocalPlayer then
+            local text = TargetName_Input.Text:gsub("@", "")
+
+            if text == "" then
+                UpdateTarget(nil)
+                return
+            end
+
+            local player = GetPlayer(text)
+
+            if player and player ~= Players.LocalPlayer then
                 UpdateTarget(player)
                 return
             end
 
-            SoftReset()
-            localHumanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-            if localHumanoid then
-                game.Workspace.CurrentCamera.CameraSubject = localHumanoid
-            end
             UpdateTarget(nil)
         end)
 
     -- Target Tool
 
-        ClickTargetTool_Button.MouseButton1Click:Connect(function()
-            local GetTargetTool = Instance.new("Tool")
-            GetTargetTool.Name = "ClickTarget"
-            GetTargetTool.RequiresHandle = false
-            GetTargetTool.TextureId = "rbxassetid://2716591855"
-            GetTargetTool.ToolTip = "Select Target"
+        -- Target Tool Button
 
-            local function ActivateTool()
-                local root = GetRoot(player)
-                local hit = mouse.Target
-                local person = nil
-                if hit and hit.Parent then
-                    if hit.Parent:IsA("Model") then
-                        person = game.Players:GetPlayerFromCharacter(hit.Parent)
-                    elseif hit.Parent:IsA("Accessory") then
-                        person = game.Players:GetPlayerFromCharacter(hit.Parent.Parent)
-                    end
-                    if person then
-                        UpdateTarget(person)
+            local ClickTargetTool_Button = Instance.new("ImageButton")
+            ClickTargetTool_Button.Name = "ClickTargetTool_Button"
+            ClickTargetTool_Button.BackgroundTransparency = 1
+            ClickTargetTool_Button.Position = UDim2.new(1, 5, 0, 0)
+            ClickTargetTool_Button.Size = UDim2.new(0, 30, 0, 30)
+            ClickTargetTool_Button.Image = "rbxassetid://2716591855"
+            ClickTargetTool_Button.Parent = TargetName_Input
+
+        -- Target Tool Function
+
+            ClickTargetTool_Button.MouseButton1Click:Connect(function()
+                local GetTargetTool = Instance.new("Tool")
+                GetTargetTool.Name = "ClickTarget"
+                GetTargetTool.RequiresHandle = false
+                GetTargetTool.TextureId = "rbxassetid://2716591855"
+                GetTargetTool.ToolTip = "Select Target"
+
+                local function ActivateTool()
+                    local root = GetRoot(player)
+                    local hit = mouse.Target
+                    local person = nil
+                    if hit and hit.Parent then
+                        if hit.Parent:IsA("Model") then
+                            person = game.Players:GetPlayerFromCharacter(hit.Parent)
+                        elseif hit.Parent:IsA("Accessory") then
+                            person = game.Players:GetPlayerFromCharacter(hit.Parent.Parent)
+                        end
+                        if person then
+                            UpdateTarget(person)
+                        end
                     end
                 end
-            end
 
-            GetTargetTool.Activated:Connect(function()
-                ActivateTool()
-            end)
-            GetTargetTool.Parent = player.Backpack
-        end)
-
-    -- Velocity Asset
-
-        local Velocity_Asset = Instance.new("BodyAngularVelocity")
-
-        Velocity_Asset.AngularVelocity = Vector3.new(0,0,0)
-        Velocity_Asset.MaxTorque = Vector3.new(50000,50000,50000)
-        Velocity_Asset.P = 1250
-        Velocity_Asset.Name = "BreakVelocity"
-
-    -- Prediction Teleport
-
-
-
-    -- Stop Animations
-
-        local function StopAnim()
-            player.Character.Animate.Disabled = false
-            local animtrack = player.Character.Humanoid:GetPlayingAnimationTracks()
-            for i, track in pairs (animtrack) do
-                track:Stop()
-            end
-        end
-
-    -- Play Animations
-
-        local function PlayAnim(id,time,speed)
-            if not Alive then return end
-            pcall(function()
-                player.Character.Animate.Disabled = false
-                local hum = player.Character.Humanoid
-                local animtrack = hum:GetPlayingAnimationTracks()
-                for i,track in pairs(animtrack) do
-                    track:Stop()
-                end
-                player.Character.Animate.Disabled = true
-                local Anim = Instance.new("Animation")
-                Anim.AnimationId = "rbxassetid://"..id
-                local loadanim = hum:LoadAnimation(Anim)
-                loadanim:Play()
-                loadanim.TimePosition = time
-                loadanim:AdjustSpeed(speed)
-                loadanim.Stopped:Connect(function()
-                    player.Character.Animate.Disabled = false
-                    for i, track in pairs (animtrack) do
-                        track:Stop()
-                    end
+                GetTargetTool.Activated:Connect(function()
+                    ActivateTool()
                 end)
+                GetTargetTool.Parent = player.Backpack
             end)
-        end
 
     -- View Target
 
-        ViewTarget_Button.MouseButton1Click:Connect(function()
-            if not TargetedPlayer then return end
+            addcmd("viewtarget", {
+                Aliases = {"vt", "view"},
+                Run = function(args, speaker)
+                    if not TargetedPlayer then return end
 
-            viewingTarget = not viewingTarget
+                    local target = Players:FindFirstChild(TargetedPlayer)
+                    if not target or not target.Character then return end
 
-            if viewingTarget then
-                while viewingTarget do
-                    pcall(function()
-                        game.Workspace.CurrentCamera.CameraSubject =
-                            Players[TargetedPlayer].Character.Humanoid
-                    end)
-                    task.wait(0.5)
+                    viewingTarget = not viewingTarget
+
+                    if viewingTarget then
+                        task.spawn(function()
+                            while viewingTarget do
+                                pcall(function()
+                                    game.Workspace.CurrentCamera.CameraSubject =
+                                        target.Character:FindFirstChild("Humanoid") or target.Character.PrimaryPart
+                                end)
+                                task.wait(0.2)
+                            end
+                        end)
+                    else
+                        if player.Character then
+                            game.Workspace.CurrentCamera.CameraSubject = player.Character:FindFirstChild("Humanoid") or player.Character.PrimaryPart
+                        end
+                    end
                 end
-            else
-                game.Workspace.CurrentCamera.CameraSubject =
-                    player.Character.Humanoid
-            end
-        end)
+            })
+
+            BindButton(ViewTarget_Button, "viewtarget")
 
     -- Focus Target
 
-        FocusTarget_Button.MouseButton1Click:Connect(function()
-            if not TargetedPlayer then return end
+        addcmd("focustarget", {
+            Aliases = {"ft", "focus"},
+            Run = function(args, speaker)
+                if not TargetedPlayer then return end
 
-            focusingTarget = not focusingTarget
+                local target = Players:FindFirstChild(TargetedPlayer)
+                if not target then return end
 
-            if focusingTarget then
-                task.spawn(function()
-                    while focusingTarget do
-                        local target = Players:FindFirstChild(TargetedPlayer)
-                        if target then
-                            TeleportMeToPlayer(target, "safe")
+                focusingTarget = not focusingTarget
+
+                if focusingTarget then
+                    task.spawn(function()
+                        while focusingTarget do
+                            local currentTarget = Players:FindFirstChild(TargetedPlayer)
+                            if currentTarget then
+                                TeleportMeToPlayer(currentTarget, "safe")
+                            end
+                            task.wait(0.2)
                         end
-                        task.wait(0.2)
-                    end
-                end)
+                    end)
+                end
             end
-        end)
+        })
+
+        BindButton(FocusTarget_Button, "focustarget")
 
     -- Teleport Target
 
-        TeleportTarget_Button.MouseButton1Click:Connect(function()
-            if not TargetedPlayer then return end
+        addcmd("teleport", {
+            Aliases = {"tp", "tpto"},
+            Run = function(args, speaker)
+                if not TargetedPlayer then return end
 
-            local target = Players:FindFirstChild(TargetedPlayer)
-            if target then
-                TeleportMeToPlayer(target, "safe")
+                local target = Players:FindFirstChild(TargetedPlayer)
+                if target then
+                    TeleportMeToPlayer(target, "safe")
+                end
             end
-        end)
+        })
+
+        BindButton(TeleportTarget_Button, "teleport")    
 
     -- Headsit Target
 
-        HeadsitTarget_Button.MouseButton1Click:Connect(function()
-            if not TargetedPlayer then return end
+        addcmd("headsittarget", {
+            Aliases = {"hsit", "sithead"},
+            Run = function(args, speaker)
+                if not TargetedPlayer then return end
 
-            headsittingTarget = not headsittingTarget
+                local target = Players:FindFirstChild(TargetedPlayer)
+                if not target or not target.Character or not target.Character:FindFirstChild("Head") then return end
 
-            if headsittingTarget then
-                while headsittingTarget do
-                    pcall(function()
-                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
-                            local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(player)
+                headsittingTarget = not headsittingTarget
+
+                if headsittingTarget then
+                    task.spawn(function()
+                        while headsittingTarget do
+                            pcall(function()
+                                local root = GetRoot(player)
+                                if root and not root:FindFirstChild("BreakVelocity") then
+                                    local tempV = Velocity_Asset:Clone()
+                                    tempV.Parent = root
+                                end
+
+                                local targetHead = target.Character.Head
+                                if targetHead then
+                                    player.Character.Humanoid.Sit = true
+                                    root.CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
+                                    root.Velocity = Vector3.new(0, 0, 0)
+                                end
+                            end)
+                            task.wait(0.2)
                         end
 
-                        local targetHead = Players[TargetedPlayer].Character.Head
-                        player.Character.Humanoid.Sit = true
-                        GetRoot(player).CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
-                        GetRoot(player).Velocity = Vector3.new(0, 0, 0)
+                        local root = GetRoot(player)
+                        if root and root:FindFirstChild("BreakVelocity") then
+                            root.BreakVelocity:Destroy()
+                        end
                     end)
-                    task.wait()
-                end
-
-                if GetRoot(player):FindFirstChild("BreakVelocity") then
-                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
-        end)
+        })
+
+        BindButton(HeadsitTarget_Button, "headsittarget")
 
     -- Backpack Target
 
-        BackpackTarget_Button.MouseButton1Click:Connect(function()
-            if not TargetedPlayer then return end
+        addcmd("backpacktarget", {
+            Aliases = {"bpt", "backpack"},
+            Run = function(args, speaker)
+                if not TargetedPlayer then return end
 
-            backpackingTarget = not backpackingTarget
+                local target = Players:FindFirstChild(TargetedPlayer)
+                if not target or not target.Character then return end
 
-            if backpackingTarget then
-                while backpackingTarget do
-                    pcall(function()
-                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
-                            local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(player)
+                backpackingTarget = not backpackingTarget
+
+                if backpackingTarget then
+                    task.spawn(function()
+                        while backpackingTarget do
+                            pcall(function()
+                                local root = GetRoot(player)
+                                if root and not root:FindFirstChild("BreakVelocity") then
+                                    local tempV = Velocity_Asset:Clone()
+                                    tempV.Parent = root
+                                end
+
+                                local targetRoot = GetRoot(target)
+                                if targetRoot then
+                                    player.Character.Humanoid.Sit = true
+                                    root.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.2) * CFrame.Angles(0, -3, 0)
+                                    root.Velocity = Vector3.new(0, 0, 0)
+                                end
+                            end)
+                            task.wait(0.2)
                         end
 
-                        local targetRoot = GetRoot(Players[TargetedPlayer])
-                        if targetRoot then
-                            player.Character.Humanoid.Sit = true
-                            GetRoot(player).CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.2) * CFrame.Angles(0, -3, 0)
-                            GetRoot(player).Velocity = Vector3.new(0, 0, 0)
+                        local root = GetRoot(player)
+                        if root and root:FindFirstChild("BreakVelocity") then
+                            root.BreakVelocity:Destroy()
                         end
                     end)
-                    task.wait()
-                end
-
-                if GetRoot(player):FindFirstChild("BreakVelocity") then
-                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
-        end)
+        })
+
+        BindButton(BackpackTarget_Button, "backpacktarget")
 
     -- Stand Target
 
+        addcmd("standtarget", {
+            Aliases = {"st", "stand"},
+            Run = function(args, speaker)
+                if not TargetedPlayer then return end
 
-        StandTarget_Button.MouseButton1Click:Connect(function()
-            if not TargetedPlayer then return end
+                local target = Players:FindFirstChild(TargetedPlayer)
+                if not target or not target.Character then return end
 
-            standingTarget = not standingTarget
+                standingTarget = not standingTarget
 
-            if standingTarget then
-                PlayAnim(13823324057, 4, 0)
+                if standingTarget then
+                    PlayAnim(13823324057, 4, 0)
 
-                while standingTarget do
-                    pcall(function()
-                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
-                            local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(player)
+                    task.spawn(function()
+                        while standingTarget do
+                            pcall(function()
+                                local root = GetRoot(player)
+                                if root and not root:FindFirstChild("BreakVelocity") then
+                                    local tempV = Velocity_Asset:Clone()
+                                    tempV.Parent = root
+                                end
+
+                                local targetRoot = GetRoot(target)
+                                if targetRoot then
+                                    root.CFrame = targetRoot.CFrame * CFrame.new(-3, 1, 0)
+                                    root.Velocity = Vector3.new(0, 0, 0)
+                                end
+                            end)
+                            task.wait(0.2)
                         end
 
-                        local targetRoot = GetRoot(Players[TargetedPlayer])
-                        if targetRoot then
-                            GetRoot(player).CFrame = targetRoot.CFrame * CFrame.new(-3, 1, 0)
-                            GetRoot(player).Velocity = Vector3.new(0, 0, 0)
+                        StopAnim()
+
+                        local root = GetRoot(player)
+                        if root and root:FindFirstChild("BreakVelocity") then
+                            root.BreakVelocity:Destroy()
                         end
                     end)
-                    task.wait()
-                end
-
-                StopAnim()
-
-                if GetRoot(player):FindFirstChild("BreakVelocity") then
-                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
-        end)
+        })
+
+        BindButton(StandTarget_Button, "standtarget")
 
     -- Doggy Target
 
-        DoggyTarget_Button.MouseButton1Click:Connect(function()
-            if not TargetedPlayer then return end
+        addcmd("doggytarget", {
+            Aliases = {"dg", "doggy"},
+            Run = function(args, speaker)
+                if not TargetedPlayer then return end
 
-            doggingTarget = not doggingTarget
+                local target = Players:FindFirstChild(TargetedPlayer)
+                if not target or not target.Character then return end
 
-            if doggingTarget then
-                PlayAnim(13694096724, 3.4, 0)
+                doggingTarget = not doggingTarget
 
-                while doggingTarget do
-                    pcall(function()
-                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
-                            local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(player)
+                if doggingTarget then
+                    PlayAnim(13694096724, 3.4, 0)
+
+                    task.spawn(function()
+                        while doggingTarget do
+                            pcall(function()
+                                local root = GetRoot(player)
+                                if root and not root:FindFirstChild("BreakVelocity") then
+                                    local tempV = Velocity_Asset:Clone()
+                                    tempV.Parent = root
+                                end
+
+                                local targetRoot = target.Character:FindFirstChild("LowerTorso")
+                                if targetRoot then
+                                    root.CFrame = targetRoot.CFrame * CFrame.new(0, 0.23, 0)
+                                    root.Velocity = Vector3.new(0, 0, 0)
+                                end
+                            end)
+                            task.wait(0.2)
                         end
 
-                        local targetRoot = Players[TargetedPlayer].Character:FindFirstChild("LowerTorso")
-                        if targetRoot then
-                            GetRoot(player).CFrame = targetRoot.CFrame * CFrame.new(0, 0.23, 0)
-                            GetRoot(player).Velocity = Vector3.new(0, 0, 0)
+                        StopAnim()
+
+                        local root = GetRoot(player)
+                        if root and root:FindFirstChild("BreakVelocity") then
+                            root.BreakVelocity:Destroy()
                         end
                     end)
-                    task.wait()
-                end
-
-                StopAnim()
-
-                if GetRoot(player):FindFirstChild("BreakVelocity") then
-                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
-        end)
+        })
+
+        BindButton(DoggyTarget_Button, "doggytarget")
 
     -- Drag Target
 
-        DragTarget_Button.MouseButton1Click:Connect(function()
-            if not TargetedPlayer then return end
+        addcmd("dragtarget", {
+            Aliases = {"drag", "dt"},
+            Run = function(args, speaker)
+                if not TargetedPlayer then return end
 
-            draggingTarget = not draggingTarget
+                local target = Players:FindFirstChild(TargetedPlayer)
+                if not target or not target.Character then return end
 
-            if draggingTarget then
-                PlayAnim(10714360343, 0.5, 0)
+                draggingTarget = not draggingTarget
 
-                while draggingTarget do
-                    pcall(function()
-                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
-                            local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(player)
+                if draggingTarget then
+                    PlayAnim(10714360343, 0.5, 0)
+
+                    task.spawn(function()
+                        while draggingTarget do
+                            pcall(function()
+                                local root = GetRoot(player)
+                                if root and not root:FindFirstChild("BreakVelocity") then
+                                    local tempV = Velocity_Asset:Clone()
+                                    tempV.Parent = root
+                                end
+
+                                local targetRoot = target.Character:FindFirstChild("RightHand")
+                                if targetRoot then
+                                    root.CFrame = targetRoot.CFrame * CFrame.new(0, -2.5, 1) * CFrame.Angles(-2, -3, 0)
+                                    root.Velocity = Vector3.new(0, 0, 0)
+                                end
+                            end)
+                            task.wait(0.2)
                         end
 
-                        local targetRoot = Players[TargetedPlayer].Character:FindFirstChild("RightHand")
-                        if targetRoot then
-                            GetRoot(player).CFrame = targetRoot.CFrame * CFrame.new(0, -2.5, 1) * CFrame.Angles(-2, -3, 0)
-                            GetRoot(player).Velocity = Vector3.new(0, 0, 0)
+                        StopAnim()
+
+                        local root = GetRoot(player)
+                        if root and root:FindFirstChild("BreakVelocity") then
+                            root.BreakVelocity:Destroy()
                         end
                     end)
-                    task.wait()
-                end
-
-                StopAnim()
-
-                if GetRoot(player):FindFirstChild("BreakVelocity") then
-                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
-        end)
+        })
+
+        BindButton(DragTarget_Button, "dragtarget")
 
     -- Bang Target
 
-        BangTarget_Button.MouseButton1Click:Connect(function()
-            if not TargetedPlayer then return end
+        addcmd("bangtarget", {
+            Aliases = {"bang", "bt"},
+            Run = function(args, speaker)
+                if not TargetedPlayer then return end
 
-            BangTarget = not BangTarget
-            if BangTarget then
-                PlayAnim(5918726674, 0, 1)
+                local target = Players:FindFirstChild(TargetedPlayer)
+                if not target or not target.Character then return end
 
-                while BangTarget do
-                    pcall(function()
-                        if not GetRoot(player):FindFirstChild("BreakVelocity") then
-                            local TempV = Velocity_Asset:Clone()
-                            TempV.Parent = GetRoot(player)
+                BangTarget = not BangTarget
+
+                if BangTarget then
+                    PlayAnim(5918726674, 0, 1)
+
+                    task.spawn(function()
+                        while BangTarget do
+                            pcall(function()
+                                local root = GetRoot(player)
+                                if root and not root:FindFirstChild("BreakVelocity") then
+                                    local tempV = Velocity_Asset:Clone()
+                                    tempV.Parent = root
+                                end
+
+                                local targetRoot = GetRoot(target)
+                                if targetRoot then
+                                    root.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.1)
+                                    root.Velocity = Vector3.new(0, 0, 0)
+                                end
+                            end)
+                            task.wait(0.2)
                         end
 
-                        local targetRoot = GetRoot(Players[TargetedPlayer])
-                        if targetRoot then
-                            GetRoot(player).CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.1)
-                            GetRoot(player).Velocity = Vector3.new(0, 0, 0)
+                        StopAnim()
+
+                        local root = GetRoot(player)
+                        if root and root:FindFirstChild("BreakVelocity") then
+                            root.BreakVelocity:Destroy()
                         end
                     end)
-                    task.wait()
-                end
-
-                StopAnim()
-
-                if GetRoot(player):FindFirstChild("BreakVelocity") then
-                    GetRoot(player).BreakVelocity:Destroy()
                 end
             end
-        end)
+        })
 
-    -- Fling Target
+        BindButton(BangTarget_Button, "bangtarget")
 
-    
+    -- Fling Target DOSENT WORK
 
-    -- Push Target
+        -- addcmd("flingtarget", {
+        --     Aliases = {"fling", "ft"},
+        --     Run = function(args, speaker)
+        --         if not TargetedPlayer then return end
+
+        --         local target = Players:FindFirstChild(TargetedPlayer)
+        --         if not target or not target.Character then return end
+
+        --         flingingtarget = true
+        --         local oldPos = GetRoot(player).Position
+
+        --         task.spawn(function()
+        --             repeat
+        --                 task.wait(0.2)
+        --                 pcall(function()
+        --                     PredictionTP(target, "safe")
+        --                 end)
+        --                 task.wait(0.2)
+        --             until not flingingtarget
+        --         end)
+
+        --         TeleportToPosition(oldPos.X, oldPos.Y, oldPos.Z, "pos", "safe")
+        --         flingingtarget = false
+        --     end
+        -- })
+
+        -- BindButton(FlingTarget_Button, "flingtarget")
+
+    -- Push Target MIGHT WORK
+
+        addcmd("pushtarget", {
+            Aliases = {"push", "pt"},
+            Run = function(args, speaker)
+                if not TargetedPlayer then return end
+
+                local target = Players:FindFirstChild(TargetedPlayer)
+                if not target or not target.Character then return end
+
+                local pushPos = GetRoot(player).CFrame
+                PredictionTP(target)
+                task.wait(GetPing() + 0.05)
+                Push(target)
+                GetRoot(player).CFrame = pushPos
+            end
+        })
+
+        BindButton(PushTarget_Button, "pushtarget")
+
+    -- Face Bang Target
 
 
 
-    -- Player Removing
+    -- Remove Target
 
         Players.PlayerRemoving:Connect(function(player)
             pcall(function()
                 if player.Name == TargetedPlayer then
                     UpdateTarget(nil)
-                    SoftReset()
+                    viewingTarget       = false
+                    focusingTarget      = false
+                    headsittingTarget   = false
+                    backpackingTarget   = false
+                    standingTarget      = false
+                    doggingTarget       = false
+                    draggingTarget      = false
+                    BangTarget          = false
+                    flingingtarget      = false
 
                     Notify("Revo", "Targeted player left/rejoined.", 5)
                 end
@@ -1851,12 +2019,6 @@
 
 -- Animations
 
-    local BorderOutline = Instance.new("UIStroke")
-    BorderOutline.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    BorderOutline.Color = Color3.fromRGB(50, 50, 50)
-    BorderOutline.Thickness = 2
-    BorderOutline.Parent = TargetBorder
-
     local AnimScrollFrame = Instance.new("ScrollingFrame")
     AnimScrollFrame.Size = UDim2.new(1, 0, 1, 0)
     AnimScrollFrame.Position = UDim2.new(0, 0, 0, 0)
@@ -1864,11 +2026,9 @@
     AnimScrollFrame.ScrollBarThickness = 0
     AnimScrollFrame.Parent = AnimationsPage
 
-    local horizontalOffset = 0
-
     local LeftColumn = Instance.new("Frame")
-    LeftColumn.Size = UDim2.new(0.5, -horizontalOffset, 1, 0)
-    LeftColumn.Position = UDim2.new(0, horizontalOffset, 0, 0)
+    LeftColumn.Size = UDim2.new(0.5, 0, 1, 0)
+    LeftColumn.Position = UDim2.new(0, 0, 0, 0)
     LeftColumn.BackgroundTransparency = 1
     LeftColumn.Parent = AnimScrollFrame
 
@@ -1877,8 +2037,8 @@
     LeftPadding.Parent = LeftColumn
 
     local RightColumn = Instance.new("Frame")
-    RightColumn.Size = UDim2.new(0.5, -horizontalOffset, 1, 0)
-    RightColumn.Position = UDim2.new(0.5, horizontalOffset, 0, 0)
+    RightColumn.Size = UDim2.new(0.5, 0, 1, 0)
+    RightColumn.Position = UDim2.new(0.5, 0, 0, 0)
     RightColumn.BackgroundTransparency = 1
     RightColumn.Parent = AnimScrollFrame
 
@@ -1909,388 +2069,391 @@
     LeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
     RightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
 
-    local AnimationTable = {
+    -- Animation Assets
 
-        -- Order:
-        --     idle1
-        --     idle2
-        --     walk
-        --     run
-        --     jump
-        --     climb
-        --     fall
+        local AnimationTable = {
 
-        {
-            -- Bold Animation
-            "http://www.roblox.com/asset/?id=16738333868", 
-            "http://www.roblox.com/asset/?id=16738334710",
-            "http://www.roblox.com/asset/?id=16738340646",
-            "http://www.roblox.com/asset/?id=16738337225",
-            "http://www.roblox.com/asset/?id=16738336650",
-            "http://www.roblox.com/asset/?id=16738332169",
-            "http://www.roblox.com/asset/?id=16738333171",
-        },
-        {
-            -- Rthro Animation
-            "http://www.roblox.com/asset/?id=10921259953", 
-            "http://www.roblox.com/asset/?id=10921258489",
-            "http://www.roblox.com/asset/?id=10921269718",
-            "http://www.roblox.com/asset/?id=10921261968",
-            "http://www.roblox.com/asset/?id=10921263860",
-            "http://www.roblox.com/asset/?id=10921257536",
-            "http://www.roblox.com/asset/?id=10921262864",
-        },
-        {
-            -- Vampire Animation
-            "http://www.roblox.com/asset/?id=1083445855", 
-            "http://www.roblox.com/asset/?id=1083450166",
-            "http://www.roblox.com/asset/?id=1083473930",
-            "http://www.roblox.com/asset/?id=1083462077",
-            "http://www.roblox.com/asset/?id=1083455352",
-            "http://www.roblox.com/asset/?id=1083439238",
-            "http://www.roblox.com/asset/?id=1083443587",
-        },
-        {
-            -- Hero Animation
-            "http://www.roblox.com/asset/?id=616111295", 
-            "http://www.roblox.com/asset/?id=616113536",
-            "http://www.roblox.com/asset/?id=616122287",
-            "http://www.roblox.com/asset/?id=616117076",
-            "http://www.roblox.com/asset/?id=616115533",
-            "http://www.roblox.com/asset/?id=616104706",
-            "http://www.roblox.com/asset/?id=616108001",
-        },
-        {
-            -- Zombie Classic Animation
-            "http://www.roblox.com/asset/?id=616158929", 
-            "http://www.roblox.com/asset/?id=616160636",
-            "http://www.roblox.com/asset/?id=616168032",
-            "http://www.roblox.com/asset/?id=616163682",
-            "http://www.roblox.com/asset/?id=616161997",
-            "http://www.roblox.com/asset/?id=616156119",
-            "http://www.roblox.com/asset/?id=616157476",
-        },
-        {
-            -- Mage Animation
-            "http://www.roblox.com/asset/?id=707742142", 
-            "http://www.roblox.com/asset/?id=707855907",
-            "http://www.roblox.com/asset/?id=707897309",
-            "http://www.roblox.com/asset/?id=707861613",
-            "http://www.roblox.com/asset/?id=707853694",
-            "http://www.roblox.com/asset/?id=707826056",
-            "http://www.roblox.com/asset/?id=707829716",
-        },
-        {
-            -- Ghost Animation
-            "http://www.roblox.com/asset/?id=616006778", 
-            "http://www.roblox.com/asset/?id=616008087",
-            "http://www.roblox.com/asset/?id=616010382",
-            "http://www.roblox.com/asset/?id=616013216",
-            "http://www.roblox.com/asset/?id=616008936",
-            "http://www.roblox.com/asset/?id=616003713",
-            "http://www.roblox.com/asset/?id=616005863",
-        },
-        {
-            -- Elder Animation
-            "http://www.roblox.com/asset/?id=845397899", 
-            "http://www.roblox.com/asset/?id=845400520",
-            "http://www.roblox.com/asset/?id=845403856",
-            "http://www.roblox.com/asset/?id=845386501",
-            "http://www.roblox.com/asset/?id=845398858",
-            "http://www.roblox.com/asset/?id=845392038",
-            "http://www.roblox.com/asset/?id=845396048",
-        },
-        {
-            -- Levitation Animation
-            "http://www.roblox.com/asset/?id=616006778", 
-            "http://www.roblox.com/asset/?id=616008087",
-            "http://www.roblox.com/asset/?id=616013216",
-            "http://www.roblox.com/asset/?id=616010382",
-            "http://www.roblox.com/asset/?id=616008936",
-            "http://www.roblox.com/asset/?id=616003713",
-            "http://www.roblox.com/asset/?id=616005863",
-        },
-        {
-            -- Astronaut Animation
-            "http://www.roblox.com/asset/?id=891621366", 
-            "http://www.roblox.com/asset/?id=891633237",
-            "http://www.roblox.com/asset/?id=891667138",
-            "http://www.roblox.com/asset/?id=891636393",
-            "http://www.roblox.com/asset/?id=891627522",
-            "http://www.roblox.com/asset/?id=891609353",
-            "http://www.roblox.com/asset/?id=891617961",
-        },
-        {
-            -- Ninja Animation
-            "http://www.roblox.com/asset/?id=656117400", 
-            "http://www.roblox.com/asset/?id=656118341",
-            "http://www.roblox.com/asset/?id=656121766",
-            "http://www.roblox.com/asset/?id=656118852",
-            "http://www.roblox.com/asset/?id=656117878",
-            "http://www.roblox.com/asset/?id=656114359",
-            "http://www.roblox.com/asset/?id=656115606",
-        },
-        {
-            -- Werewolf Animation
-            "http://www.roblox.com/asset/?id=1083195517", 
-            "http://www.roblox.com/asset/?id=1083214717",
-            "http://www.roblox.com/asset/?id=1083178339",
-            "http://www.roblox.com/asset/?id=1083216690",
-            "http://www.roblox.com/asset/?id=1083218792",
-            "http://www.roblox.com/asset/?id=1083182000",
-            "http://www.roblox.com/asset/?id=1083189019",
-        },
-        {
-            -- Cartoon Animation
-            "http://www.roblox.com/asset/?id=742637544", 
-            "http://www.roblox.com/asset/?id=742638445",
-            "http://www.roblox.com/asset/?id=742640026",
-            "http://www.roblox.com/asset/?id=742638842",
-            "http://www.roblox.com/asset/?id=742637942",
-            "http://www.roblox.com/asset/?id=742636889",
-            "http://www.roblox.com/asset/?id=742637151",
-        },
-        {
-            -- Pirate Animation
-            "http://www.roblox.com/asset/?id=750781874", 
-            "http://www.roblox.com/asset/?id=750782770",
-            "http://www.roblox.com/asset/?id=750785693",
-            "http://www.roblox.com/asset/?id=750783738",
-            "http://www.roblox.com/asset/?id=750782230",
-            "http://www.roblox.com/asset/?id=750779899",
-            "http://www.roblox.com/asset/?id=750780242",
-        },
-        {
-            -- Sneaky Animation
-            "http://www.roblox.com/asset/?id=1132473842", 
-            "http://www.roblox.com/asset/?id=1132477671",
-            "http://www.roblox.com/asset/?id=1132510133",
-            "http://www.roblox.com/asset/?id=1132494274",
-            "http://www.roblox.com/asset/?id=1132489853",
-            "http://www.roblox.com/asset/?id=1132461372",
-            "http://www.roblox.com/asset/?id=1132469004",
-        },
-        {
-            -- Toy Animation
-            "http://www.roblox.com/asset/?id=782841498", 
-            "http://www.roblox.com/asset/?id=782845736",
-            "http://www.roblox.com/asset/?id=782843345",
-            "http://www.roblox.com/asset/?id=782842708",
-            "http://www.roblox.com/asset/?id=782847020",
-            "http://www.roblox.com/asset/?id=782843869",
-            "http://www.roblox.com/asset/?id=782846423",
-        },
-        {
-            -- Knight Animation
-            "http://www.roblox.com/asset/?id=657595757", 
-            "http://www.roblox.com/asset/?id=657568135",
-            "http://www.roblox.com/asset/?id=657552124",
-            "http://www.roblox.com/asset/?id=657564596",
-            "http://www.roblox.com/asset/?id=658409194",
-            "http://www.roblox.com/asset/?id=658360781",
-            "http://www.roblox.com/asset/?id=657600338",
-        },
-        {
-            -- Confident Animation
-            "http://www.roblox.com/asset/?id=1069977950", 
-            "http://www.roblox.com/asset/?id=1069987858",
-            "http://www.roblox.com/asset/?id=1070017263",
-            "http://www.roblox.com/asset/?id=1070001516",
-            "http://www.roblox.com/asset/?id=1069984524",
-            "http://www.roblox.com/asset/?id=1069946257",
-            "http://www.roblox.com/asset/?id=1069973677",
-        },
-        {
-            -- Popstar Animation
-            "http://www.roblox.com/asset/?id=1212900985", 
-            "http://www.roblox.com/asset/?id=1212900985",
-            "http://www.roblox.com/asset/?id=1212980338",
-            "http://www.roblox.com/asset/?id=1212980348",
-            "http://www.roblox.com/asset/?id=1212954642",
-            "http://www.roblox.com/asset/?id=1213044953",
-            "http://www.roblox.com/asset/?id=1212900995",
-        },
-        {
-            -- Princess Animation
-            "http://www.roblox.com/asset/?id=941003647", 
-            "http://www.roblox.com/asset/?id=941013098",
-            "http://www.roblox.com/asset/?id=941028902",
-            "http://www.roblox.com/asset/?id=941015281",
-            "http://www.roblox.com/asset/?id=941008832",
-            "http://www.roblox.com/asset/?id=940996062",
-            "http://www.roblox.com/asset/?id=941000007",
-        },
-        {
-            -- Cowboy Animation
-            "http://www.roblox.com/asset/?id=1014390418", 
-            "http://www.roblox.com/asset/?id=1014398616",
-            "http://www.roblox.com/asset/?id=1014421541",
-            "http://www.roblox.com/asset/?id=1014401683",
-            "http://www.roblox.com/asset/?id=1014394726",
-            "http://www.roblox.com/asset/?id=1014380606",
-            "http://www.roblox.com/asset/?id=1014384571",
-        },
-        {
-            -- Patrol Animation
-            "http://www.roblox.com/asset/?id=1149612882", 
-            "http://www.roblox.com/asset/?id=1150842221",
-            "http://www.roblox.com/asset/?id=1151231493",
-            "http://www.roblox.com/asset/?id=1150967949",
-            "http://www.roblox.com/asset/?id=1150944216",
-            "http://www.roblox.com/asset/?id=1148811837",
-            "http://www.roblox.com/asset/?id=1148863382",
-        },
-        {
-            -- Zombie FE Animation
-            "http://www.roblox.com/asset/?id=3489171152", 
-            "http://www.roblox.com/asset/?id=3489171152",
-            "http://www.roblox.com/asset/?id=3489174223",
-            "http://www.roblox.com/asset/?id=3489173414",
-            "http://www.roblox.com/asset/?id=616161997",
-            "http://www.roblox.com/asset/?id=616156119",
-            "http://www.roblox.com/asset/?id=616157476",
-        },
-        {
-            -- Catwalk Animation
-            "http://www.roblox.com/asset/?id=133806214992291", 
-            "http://www.roblox.com/asset/?id=94970088341563",
-            "http://www.roblox.com/asset/?id=109168724482748",
-            "http://www.roblox.com/asset/?id=81024476153754",
-            "http://www.roblox.com/asset/?id=116936326516985",
-            "http://www.roblox.com/asset/?id=119377220967554",
-            "http://www.roblox.com/asset/?id=92294537340807",
-        },
-        {
-            -- Unboxed Animation
-            "http://www.roblox.com/asset/?id=98281136301627", 
-            "http://www.roblox.com/asset/?id=138183121662404",
-            "http://www.roblox.com/asset/?id=90478085024465",
-            "http://www.roblox.com/asset/?id=134824450619865",
-            "http://www.roblox.com/asset/?id=121454505477205",
-            "http://www.roblox.com/asset/?id=121145883950231",
-            "http://www.roblox.com/asset/?id=94788218468396",
-        },
-        {
-            -- Popular Animation
-            "http://www.roblox.com/asset/?id=118832222982049", 
-            "http://www.roblox.com/asset/?id=76049494037641",
-            "http://www.roblox.com/asset/?id=92072849924640",
-            "http://www.roblox.com/asset/?id=72301599441680",
-            "http://www.roblox.com/asset/?id=104325245285198",
-            "http://www.roblox.com/asset/?id=131326830509784",
-            "http://www.roblox.com/asset/?id=121152442762481",
-        },
-        {
-            -- Community Animation
-            "http://www.roblox.com/asset/?id=122257458498464", 
-            "http://www.roblox.com/asset/?id=102357151005774",
-            "http://www.roblox.com/asset/?id=122150855457006",
-            "http://www.roblox.com/asset/?id=82598234841035",
-            "http://www.roblox.com/asset/?id=75290611992385",
-            "http://www.roblox.com/asset/?id=88763136693023",
-            "http://www.roblox.com/asset/?id=98600215928904",
-        },
-        {
-            -- Aura Animation
-            "http://www.roblox.com/asset/?id=110211186840347", 
-            "http://www.roblox.com/asset/?id=114191137265065",
-            "http://www.roblox.com/asset/?id=83842218823011",
-            "http://www.roblox.com/asset/?id=118320322718866",
-            "http://www.roblox.com/asset/?id=109996626521204",
-            "http://www.roblox.com/asset/?id=97824616490448",
-            "http://www.roblox.com/asset/?id=95603166884636",
-        },
-        {
-            -- Old Animation
-            "http://www.roblox.com/asset/?id=10921230744", 
-            "http://www.roblox.com/asset/?id=10921232093",
-            "http://www.roblox.com/asset/?id=10921244891",
-            "http://www.roblox.com/asset/?id=10921240218",
-            "http://www.roblox.com/asset/?id=10921242013",
-            "http://www.roblox.com/asset/?id=10921229866",
-            "http://www.roblox.com/asset/?id=10921241244",
-        },
-        {
-            -- Sports Animation
-            "http://www.roblox.com/asset/?id=18537376492", 
-            "http://www.roblox.com/asset/?id=18537371272",
-            "http://www.roblox.com/asset/?id=18537392113",
-            "http://www.roblox.com/asset/?id=18537384940",
-            "http://www.roblox.com/asset/?id=18537380791",
-            "http://www.roblox.com/asset/?id=18537363391",
-            "http://www.roblox.com/asset/?id=18537367238",
-        },
-        {
-            -- Stylish Animation
-            "http://www.roblox.com/asset/?id=10921272275", 
-            "http://www.roblox.com/asset/?id=10921273958",
-            "http://www.roblox.com/asset/?id=10921283326",
-            "http://www.roblox.com/asset/?id=10921276116",
-            "http://www.roblox.com/asset/?id=10921279832",
-            "http://www.roblox.com/asset/?id=10921271391",
-            "http://www.roblox.com/asset/?id=10921278648",
-        },
-        {
-            -- Wicked Animation
-            "http://www.roblox.com/asset/?id=92849173543269", 
-            "http://www.roblox.com/asset/?id=132238900951109",
-            "http://www.roblox.com/asset/?id=73718308412641",
-            "http://www.roblox.com/asset/?id=135515454877967",
-            "http://www.roblox.com/asset/?id=78508480717326",
-            "http://www.roblox.com/asset/?id=129447497744818",
-            "http://www.roblox.com/asset/?id=78147885297412",
-        },
-        {
-            -- Bubbly Animation
-            "http://www.roblox.com/asset/?id=10921054344", 
-            "http://www.roblox.com/asset/?id=10921055107",
-            "http://www.roblox.com/asset/?id=10980888364",
-            "http://www.roblox.com/asset/?id=10921057244",
-            "http://www.roblox.com/asset/?id=10921062673",
-            "http://www.roblox.com/asset/?id=10921053544",
-            "http://www.roblox.com/asset/?id=10921061530",
-        },
-        {
-            -- Robot Animation
-            "http://www.roblox.com/asset/?id=10921248039", 
-            "http://www.roblox.com/asset/?id=10921248831",
-            "http://www.roblox.com/asset/?id=10921255446",
-            "http://www.roblox.com/asset/?id=10921250460",
-            "http://www.roblox.com/asset/?id=10921252123",
-            "http://www.roblox.com/asset/?id=10921247141",
-            "http://www.roblox.com/asset/?id=10921251156",
-        },
-        {
-            -- NFL Animation
-            "http://www.roblox.com/asset/?id=92080889861410", 
-            "http://www.roblox.com/asset/?id=74451233229259",
-            "http://www.roblox.com/asset/?id=110358958299415",
-            "http://www.roblox.com/asset/?id=117333533048078",
-            "http://www.roblox.com/asset/?id=119846112151352",
-            "http://www.roblox.com/asset/?id=134630013742019",
-            "http://www.roblox.com/asset/?id=129773241321032",
-        },
-        {
-            -- Boundaries Animation
-            "http://www.roblox.com/asset/?id=18747067405", 
-            "http://www.roblox.com/asset/?id=18747063918",
-            "http://www.roblox.com/asset/?id=18747074203",
-            "http://www.roblox.com/asset/?id=18747070484",
-            "http://www.roblox.com/asset/?id=18747069148",
-            "http://www.roblox.com/asset/?id=18747060903",
-            "http://www.roblox.com/asset/?id=18747062535",
-        },
-        {
-            -- Realistic Animation
-            "http://www.roblox.com/asset/?id=17172918855", 
-            "http://www.roblox.com/asset/?id=17173014241",
-            "http://www.roblox.com/asset/?id=11600249883",
-            "http://www.roblox.com/asset/?id=11600211410",
-            "http://www.roblox.com/asset/?id=11600210487",
-            "http://www.roblox.com/asset/?id=11600205519",
-            "http://www.roblox.com/asset/?id=11600206437",
-        },
-    }
+            -- Order:
+            --       Idle
+            --       Idle2
+            --       Walk
+            --       Run
+            --       Jump
+            --       Climb
+            --       Fall
+
+            {
+                -- Bold Animation
+                "http://www.roblox.com/asset/?id=16738333868", 
+                "http://www.roblox.com/asset/?id=16738334710",
+                "http://www.roblox.com/asset/?id=16738340646",
+                "http://www.roblox.com/asset/?id=16738337225",
+                "http://www.roblox.com/asset/?id=16738336650",
+                "http://www.roblox.com/asset/?id=16738332169",
+                "http://www.roblox.com/asset/?id=16738333171",
+            },
+            {
+                -- Rthro Animation
+                "http://www.roblox.com/asset/?id=10921259953", 
+                "http://www.roblox.com/asset/?id=10921258489",
+                "http://www.roblox.com/asset/?id=10921269718",
+                "http://www.roblox.com/asset/?id=10921261968",
+                "http://www.roblox.com/asset/?id=10921263860",
+                "http://www.roblox.com/asset/?id=10921257536",
+                "http://www.roblox.com/asset/?id=10921262864",
+            },
+            {
+                -- Vampire Animation
+                "http://www.roblox.com/asset/?id=1083445855", 
+                "http://www.roblox.com/asset/?id=1083450166",
+                "http://www.roblox.com/asset/?id=1083473930",
+                "http://www.roblox.com/asset/?id=1083462077",
+                "http://www.roblox.com/asset/?id=1083455352",
+                "http://www.roblox.com/asset/?id=1083439238",
+                "http://www.roblox.com/asset/?id=1083443587",
+            },
+            {
+                -- Hero Animation
+                "http://www.roblox.com/asset/?id=616111295", 
+                "http://www.roblox.com/asset/?id=616113536",
+                "http://www.roblox.com/asset/?id=616122287",
+                "http://www.roblox.com/asset/?id=616117076",
+                "http://www.roblox.com/asset/?id=616115533",
+                "http://www.roblox.com/asset/?id=616104706",
+                "http://www.roblox.com/asset/?id=616108001",
+            },
+            {
+                -- Zombie Classic Animation
+                "http://www.roblox.com/asset/?id=616158929", 
+                "http://www.roblox.com/asset/?id=616160636",
+                "http://www.roblox.com/asset/?id=616168032",
+                "http://www.roblox.com/asset/?id=616163682",
+                "http://www.roblox.com/asset/?id=616161997",
+                "http://www.roblox.com/asset/?id=616156119",
+                "http://www.roblox.com/asset/?id=616157476",
+            },
+            {
+                -- Mage Animation
+                "http://www.roblox.com/asset/?id=707742142", 
+                "http://www.roblox.com/asset/?id=707855907",
+                "http://www.roblox.com/asset/?id=707897309",
+                "http://www.roblox.com/asset/?id=707861613",
+                "http://www.roblox.com/asset/?id=707853694",
+                "http://www.roblox.com/asset/?id=707826056",
+                "http://www.roblox.com/asset/?id=707829716",
+            },
+            {
+                -- Ghost Animation
+                "http://www.roblox.com/asset/?id=616006778", 
+                "http://www.roblox.com/asset/?id=616008087",
+                "http://www.roblox.com/asset/?id=616010382",
+                "http://www.roblox.com/asset/?id=616013216",
+                "http://www.roblox.com/asset/?id=616008936",
+                "http://www.roblox.com/asset/?id=616003713",
+                "http://www.roblox.com/asset/?id=616005863",
+            },
+            {
+                -- Elder Animation
+                "http://www.roblox.com/asset/?id=845397899", 
+                "http://www.roblox.com/asset/?id=845400520",
+                "http://www.roblox.com/asset/?id=845403856",
+                "http://www.roblox.com/asset/?id=845386501",
+                "http://www.roblox.com/asset/?id=845398858",
+                "http://www.roblox.com/asset/?id=845392038",
+                "http://www.roblox.com/asset/?id=845396048",
+            },
+            {
+                -- Levitation Animation
+                "http://www.roblox.com/asset/?id=616006778", 
+                "http://www.roblox.com/asset/?id=616008087",
+                "http://www.roblox.com/asset/?id=616013216",
+                "http://www.roblox.com/asset/?id=616010382",
+                "http://www.roblox.com/asset/?id=616008936",
+                "http://www.roblox.com/asset/?id=616003713",
+                "http://www.roblox.com/asset/?id=616005863",
+            },
+            {
+                -- Astronaut Animation
+                "http://www.roblox.com/asset/?id=891621366", 
+                "http://www.roblox.com/asset/?id=891633237",
+                "http://www.roblox.com/asset/?id=891667138",
+                "http://www.roblox.com/asset/?id=891636393",
+                "http://www.roblox.com/asset/?id=891627522",
+                "http://www.roblox.com/asset/?id=891609353",
+                "http://www.roblox.com/asset/?id=891617961",
+            },
+            {
+                -- Ninja Animation
+                "http://www.roblox.com/asset/?id=656117400", 
+                "http://www.roblox.com/asset/?id=656118341",
+                "http://www.roblox.com/asset/?id=656121766",
+                "http://www.roblox.com/asset/?id=656118852",
+                "http://www.roblox.com/asset/?id=656117878",
+                "http://www.roblox.com/asset/?id=656114359",
+                "http://www.roblox.com/asset/?id=656115606",
+            },
+            {
+                -- Werewolf Animation
+                "http://www.roblox.com/asset/?id=1083195517", 
+                "http://www.roblox.com/asset/?id=1083214717",
+                "http://www.roblox.com/asset/?id=1083178339",
+                "http://www.roblox.com/asset/?id=1083216690",
+                "http://www.roblox.com/asset/?id=1083218792",
+                "http://www.roblox.com/asset/?id=1083182000",
+                "http://www.roblox.com/asset/?id=1083189019",
+            },
+            {
+                -- Cartoon Animation
+                "http://www.roblox.com/asset/?id=742637544", 
+                "http://www.roblox.com/asset/?id=742638445",
+                "http://www.roblox.com/asset/?id=742640026",
+                "http://www.roblox.com/asset/?id=742638842",
+                "http://www.roblox.com/asset/?id=742637942",
+                "http://www.roblox.com/asset/?id=742636889",
+                "http://www.roblox.com/asset/?id=742637151",
+            },
+            {
+                -- Pirate Animation
+                "http://www.roblox.com/asset/?id=750781874", 
+                "http://www.roblox.com/asset/?id=750782770",
+                "http://www.roblox.com/asset/?id=750785693",
+                "http://www.roblox.com/asset/?id=750783738",
+                "http://www.roblox.com/asset/?id=750782230",
+                "http://www.roblox.com/asset/?id=750779899",
+                "http://www.roblox.com/asset/?id=750780242",
+            },
+            {
+                -- Sneaky Animation
+                "http://www.roblox.com/asset/?id=1132473842", 
+                "http://www.roblox.com/asset/?id=1132477671",
+                "http://www.roblox.com/asset/?id=1132510133",
+                "http://www.roblox.com/asset/?id=1132494274",
+                "http://www.roblox.com/asset/?id=1132489853",
+                "http://www.roblox.com/asset/?id=1132461372",
+                "http://www.roblox.com/asset/?id=1132469004",
+            },
+            {
+                -- Toy Animation
+                "http://www.roblox.com/asset/?id=782841498", 
+                "http://www.roblox.com/asset/?id=782845736",
+                "http://www.roblox.com/asset/?id=782843345",
+                "http://www.roblox.com/asset/?id=782842708",
+                "http://www.roblox.com/asset/?id=782847020",
+                "http://www.roblox.com/asset/?id=782843869",
+                "http://www.roblox.com/asset/?id=782846423",
+            },
+            {
+                -- Knight Animation
+                "http://www.roblox.com/asset/?id=657595757", 
+                "http://www.roblox.com/asset/?id=657568135",
+                "http://www.roblox.com/asset/?id=657552124",
+                "http://www.roblox.com/asset/?id=657564596",
+                "http://www.roblox.com/asset/?id=658409194",
+                "http://www.roblox.com/asset/?id=658360781",
+                "http://www.roblox.com/asset/?id=657600338",
+            },
+            {
+                -- Confident Animation
+                "http://www.roblox.com/asset/?id=1069977950", 
+                "http://www.roblox.com/asset/?id=1069987858",
+                "http://www.roblox.com/asset/?id=1070017263",
+                "http://www.roblox.com/asset/?id=1070001516",
+                "http://www.roblox.com/asset/?id=1069984524",
+                "http://www.roblox.com/asset/?id=1069946257",
+                "http://www.roblox.com/asset/?id=1069973677",
+            },
+            {
+                -- Popstar Animation
+                "http://www.roblox.com/asset/?id=1212900985", 
+                "http://www.roblox.com/asset/?id=1212900985",
+                "http://www.roblox.com/asset/?id=1212980338",
+                "http://www.roblox.com/asset/?id=1212980348",
+                "http://www.roblox.com/asset/?id=1212954642",
+                "http://www.roblox.com/asset/?id=1213044953",
+                "http://www.roblox.com/asset/?id=1212900995",
+            },
+            {
+                -- Princess Animation
+                "http://www.roblox.com/asset/?id=941003647", 
+                "http://www.roblox.com/asset/?id=941013098",
+                "http://www.roblox.com/asset/?id=941028902",
+                "http://www.roblox.com/asset/?id=941015281",
+                "http://www.roblox.com/asset/?id=941008832",
+                "http://www.roblox.com/asset/?id=940996062",
+                "http://www.roblox.com/asset/?id=941000007",
+            },
+            {
+                -- Cowboy Animation
+                "http://www.roblox.com/asset/?id=1014390418", 
+                "http://www.roblox.com/asset/?id=1014398616",
+                "http://www.roblox.com/asset/?id=1014421541",
+                "http://www.roblox.com/asset/?id=1014401683",
+                "http://www.roblox.com/asset/?id=1014394726",
+                "http://www.roblox.com/asset/?id=1014380606",
+                "http://www.roblox.com/asset/?id=1014384571",
+            },
+            {
+                -- Patrol Animation
+                "http://www.roblox.com/asset/?id=1149612882", 
+                "http://www.roblox.com/asset/?id=1150842221",
+                "http://www.roblox.com/asset/?id=1151231493",
+                "http://www.roblox.com/asset/?id=1150967949",
+                "http://www.roblox.com/asset/?id=1150944216",
+                "http://www.roblox.com/asset/?id=1148811837",
+                "http://www.roblox.com/asset/?id=1148863382",
+            },
+            {
+                -- Zombie FE Animation
+                "http://www.roblox.com/asset/?id=3489171152", 
+                "http://www.roblox.com/asset/?id=3489171152",
+                "http://www.roblox.com/asset/?id=3489174223",
+                "http://www.roblox.com/asset/?id=3489173414",
+                "http://www.roblox.com/asset/?id=616161997",
+                "http://www.roblox.com/asset/?id=616156119",
+                "http://www.roblox.com/asset/?id=616157476",
+            },
+            {
+                -- Catwalk Animation
+                "http://www.roblox.com/asset/?id=133806214992291", 
+                "http://www.roblox.com/asset/?id=94970088341563",
+                "http://www.roblox.com/asset/?id=109168724482748",
+                "http://www.roblox.com/asset/?id=81024476153754",
+                "http://www.roblox.com/asset/?id=116936326516985",
+                "http://www.roblox.com/asset/?id=119377220967554",
+                "http://www.roblox.com/asset/?id=92294537340807",
+            },
+            {
+                -- Unboxed Animation
+                "http://www.roblox.com/asset/?id=98281136301627", 
+                "http://www.roblox.com/asset/?id=138183121662404",
+                "http://www.roblox.com/asset/?id=90478085024465",
+                "http://www.roblox.com/asset/?id=134824450619865",
+                "http://www.roblox.com/asset/?id=121454505477205",
+                "http://www.roblox.com/asset/?id=121145883950231",
+                "http://www.roblox.com/asset/?id=94788218468396",
+            },
+            {
+                -- Popular Animation
+                "http://www.roblox.com/asset/?id=118832222982049", 
+                "http://www.roblox.com/asset/?id=76049494037641",
+                "http://www.roblox.com/asset/?id=92072849924640",
+                "http://www.roblox.com/asset/?id=72301599441680",
+                "http://www.roblox.com/asset/?id=104325245285198",
+                "http://www.roblox.com/asset/?id=131326830509784",
+                "http://www.roblox.com/asset/?id=121152442762481",
+            },
+            {
+                -- Community Animation
+                "http://www.roblox.com/asset/?id=122257458498464", 
+                "http://www.roblox.com/asset/?id=102357151005774",
+                "http://www.roblox.com/asset/?id=122150855457006",
+                "http://www.roblox.com/asset/?id=82598234841035",
+                "http://www.roblox.com/asset/?id=75290611992385",
+                "http://www.roblox.com/asset/?id=88763136693023",
+                "http://www.roblox.com/asset/?id=98600215928904",
+            },
+            {
+                -- Aura Animation
+                "http://www.roblox.com/asset/?id=110211186840347", 
+                "http://www.roblox.com/asset/?id=114191137265065",
+                "http://www.roblox.com/asset/?id=83842218823011",
+                "http://www.roblox.com/asset/?id=118320322718866",
+                "http://www.roblox.com/asset/?id=109996626521204",
+                "http://www.roblox.com/asset/?id=97824616490448",
+                "http://www.roblox.com/asset/?id=95603166884636",
+            },
+            {
+                -- Old Animation
+                "http://www.roblox.com/asset/?id=10921230744", 
+                "http://www.roblox.com/asset/?id=10921232093",
+                "http://www.roblox.com/asset/?id=10921244891",
+                "http://www.roblox.com/asset/?id=10921240218",
+                "http://www.roblox.com/asset/?id=10921242013",
+                "http://www.roblox.com/asset/?id=10921229866",
+                "http://www.roblox.com/asset/?id=10921241244",
+            },
+            {
+                -- Sports Animation
+                "http://www.roblox.com/asset/?id=18537376492", 
+                "http://www.roblox.com/asset/?id=18537371272",
+                "http://www.roblox.com/asset/?id=18537392113",
+                "http://www.roblox.com/asset/?id=18537384940",
+                "http://www.roblox.com/asset/?id=18537380791",
+                "http://www.roblox.com/asset/?id=18537363391",
+                "http://www.roblox.com/asset/?id=18537367238",
+            },
+            {
+                -- Stylish Animation
+                "http://www.roblox.com/asset/?id=10921272275", 
+                "http://www.roblox.com/asset/?id=10921273958",
+                "http://www.roblox.com/asset/?id=10921283326",
+                "http://www.roblox.com/asset/?id=10921276116",
+                "http://www.roblox.com/asset/?id=10921279832",
+                "http://www.roblox.com/asset/?id=10921271391",
+                "http://www.roblox.com/asset/?id=10921278648",
+            },
+            {
+                -- Wicked Animation
+                "http://www.roblox.com/asset/?id=92849173543269", 
+                "http://www.roblox.com/asset/?id=132238900951109",
+                "http://www.roblox.com/asset/?id=73718308412641",
+                "http://www.roblox.com/asset/?id=135515454877967",
+                "http://www.roblox.com/asset/?id=78508480717326",
+                "http://www.roblox.com/asset/?id=129447497744818",
+                "http://www.roblox.com/asset/?id=78147885297412",
+            },
+            {
+                -- Bubbly Animation
+                "http://www.roblox.com/asset/?id=10921054344", 
+                "http://www.roblox.com/asset/?id=10921055107",
+                "http://www.roblox.com/asset/?id=10980888364",
+                "http://www.roblox.com/asset/?id=10921057244",
+                "http://www.roblox.com/asset/?id=10921062673",
+                "http://www.roblox.com/asset/?id=10921053544",
+                "http://www.roblox.com/asset/?id=10921061530",
+            },
+            {
+                -- Robot Animation
+                "http://www.roblox.com/asset/?id=10921248039", 
+                "http://www.roblox.com/asset/?id=10921248831",
+                "http://www.roblox.com/asset/?id=10921255446",
+                "http://www.roblox.com/asset/?id=10921250460",
+                "http://www.roblox.com/asset/?id=10921252123",
+                "http://www.roblox.com/asset/?id=10921247141",
+                "http://www.roblox.com/asset/?id=10921251156",
+            },
+            {
+                -- NFL Animation
+                "http://www.roblox.com/asset/?id=92080889861410", 
+                "http://www.roblox.com/asset/?id=74451233229259",
+                "http://www.roblox.com/asset/?id=110358958299415",
+                "http://www.roblox.com/asset/?id=117333533048078",
+                "http://www.roblox.com/asset/?id=119846112151352",
+                "http://www.roblox.com/asset/?id=134630013742019",
+                "http://www.roblox.com/asset/?id=129773241321032",
+            },
+            {
+                -- Boundaries Animation
+                "http://www.roblox.com/asset/?id=18747067405", 
+                "http://www.roblox.com/asset/?id=18747063918",
+                "http://www.roblox.com/asset/?id=18747074203",
+                "http://www.roblox.com/asset/?id=18747070484",
+                "http://www.roblox.com/asset/?id=18747069148",
+                "http://www.roblox.com/asset/?id=18747060903",
+                "http://www.roblox.com/asset/?id=18747062535",
+            },
+            {
+                -- Realistic Animation
+                "http://www.roblox.com/asset/?id=17172918855", 
+                "http://www.roblox.com/asset/?id=17173014241",
+                "http://www.roblox.com/asset/?id=11600249883",
+                "http://www.roblox.com/asset/?id=11600211410",
+                "http://www.roblox.com/asset/?id=11600210487",
+                "http://www.roblox.com/asset/?id=11600205519",
+                "http://www.roblox.com/asset/?id=11600206437",
+            },
+        }
+
 
     local function CreateAnimButton(column, name, animNumber)
         local Btn = Instance.new("TextButton")
@@ -2301,13 +2464,9 @@
         Btn.Font = Enum.Font.Gotham
         Btn.TextSize = 16
         Btn.Parent = column
-
-        local Corner = Instance.new("UICorner")
-        Corner.CornerRadius = UDim.new(0,6)
-        Corner.Parent = Btn
+        AddCorner(Btn)
 
         Btn.MouseButton1Click:Connect(function()
-            if not Alive then return end
             local Animate = player.Character.Animate
             Animate.Disabled = true
             StopAnim()
@@ -2331,7 +2490,6 @@
         CreateAnimButton(column, name, animNumber)
         UseLeft = not UseLeft
     end
-
 
     AddAnimButton("Bold", 1)
     AddAnimButton("Rthro", 2)
@@ -2374,354 +2532,517 @@
 -- Misc
     
     -- Rejoin
-        local RejoinButton = Instance.new("TextButton")
-        RejoinButton.Size = UDim2.new(0, 200, 0, 30)
-        RejoinButton.Position = UDim2.new(0, 5, 0, 3)
-        RejoinButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        RejoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        RejoinButton.Font = Enum.Font.Gotham
-        RejoinButton.TextSize = 16
-        RejoinButton.Text = "Rejoin"
-        RejoinButton.Parent = MiscPage
 
-        local RejoinCorner = Instance.new("UICorner")
-        RejoinCorner.CornerRadius = UDim.new(0,6)
-        RejoinCorner.Parent = RejoinButton
+        -- Rejoin Button
 
-        RejoinButton.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
-        end)
+            local RejoinButton = Instance.new("TextButton")
+            RejoinButton.Size = UDim2.new(0, 200, 0, 30)
+            RejoinButton.Position = UDim2.new(0, 5, 0, 5)
+            RejoinButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            RejoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            RejoinButton.Font = Enum.Font.Gotham
+            RejoinButton.TextSize = 16
+            RejoinButton.Text = "Rejoin"
+            RejoinButton.Parent = MiscPage
+            AddCorner(RejoinButton)
+
+        -- Rejoin Command
+
+            addcmd("rejoin", {
+                Aliases = {"rj", "reconnect"},
+                Run = function()
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
+                end
+            })
+
+            BindButton(RejoinButton, "rejoin")
 
     -- Server Hop
 
-        local ServerHopButton = Instance.new("TextButton")
-        ServerHopButton.Size = UDim2.new(0, 200, 0, 30)
-        ServerHopButton.Position = UDim2.new(1, -205, 0, 3)
-        ServerHopButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        ServerHopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        ServerHopButton.Font = Enum.Font.Gotham
-        ServerHopButton.TextSize = 16
-        ServerHopButton.Text = "Server Hop"
-        ServerHopButton.Parent = MiscPage
+        -- Server Hop Button
 
-        local ServerHopCorner = Instance.new("UICorner")
-        ServerHopCorner.CornerRadius = UDim.new(0,6)
-        ServerHopCorner.Parent = ServerHopButton
+            local ServerHopButton = Instance.new("TextButton")
+            ServerHopButton.Size = UDim2.new(0, 200, 0, 30)
+            ServerHopButton.Position = UDim2.new(1, -205, 0, 5)
+            ServerHopButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            ServerHopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            ServerHopButton.Font = Enum.Font.Gotham
+            ServerHopButton.TextSize = 16
+            ServerHopButton.Text = "Server Hop"
+            ServerHopButton.Parent = MiscPage
+            AddCorner(ServerHopButton)
 
-        local function getServers(cursor)
-            local url = "https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
-            if cursor then
-                url = url.."&cursor="..cursor
-            end
-            local success, response = pcall(function()
-                return HttpService:JSONDecode(game:HttpGet(url))
-            end)
-            if success and response then
-                return response
-            else
-                return nil
-            end
-        end
+        -- Server Hop Command
 
-        function GetRoot(player)
-            if player.Character then
-                return player.Character:FindFirstChild("HumanoidRootPart")
-            end
-            return nil
-        end
+            addcmd("serverhop", {
+                Aliases = {"hop", "sh"},
+                Run = function()
 
-        local function pickServer()
-            local response = getServers()
-            if not response then return nil end
-            local servers = response.data
-            if #servers == 0 then return nil end
+                    local function getServers(cursor)
+                        local url = "https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+                        if cursor then
+                            url = url.."&cursor="..cursor
+                        end
+                        local success, response = pcall(function()
+                            return HttpService:JSONDecode(game:HttpGet(url))
+                        end)
+                        if success and response then
+                            return response
+                        else
+                            return nil
+                        end
+                    end
 
-            for i = #servers, 1, -1 do
-                if servers[i].id == game.JobId or servers[i].playing >= servers[i].maxPlayers then
-                    table.remove(servers, i)
+                    local function pickServer()
+                        local response = getServers()
+                        if not response then return nil end
+                        local servers = response.data
+                        if #servers == 0 then return nil end
+
+                        for i = #servers, 1, -1 do
+                            if servers[i].id == game.JobId or servers[i].playing >= servers[i].maxPlayers then
+                                table.remove(servers, i)
+                            end
+                        end
+
+                        if #servers == 0 then return nil end
+                        return servers[math.random(1, #servers)].id
+                    end
+
+                    local serverId = pickServer()
+                    if serverId then
+                        TeleportService:TeleportToPlaceInstance(PlaceId, serverId, player)
+                    else
+                        Notify("Revo", "No Available Servers Found To Hop To.", 5)
+                    end
                 end
-            end
+            })
 
-            if #servers == 0 then return nil end
-            return servers[math.random(1, #servers)].id
-        end
-
-        ServerHopButton.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            local serverId = pickServer()
-            if serverId then
-                TeleportService:TeleportToPlaceInstance(PlaceId, serverId, player)
-            else
-                Notify("No available servers found to hop to.")
-            end
-        end)
+            BindButton(ServerHopButton, "serverhop")
 
     -- Shaders
 
-        local ShadersButton = Instance.new("TextButton")
-        ShadersButton.Size = UDim2.new(0, 200, 0, 30)
-        ShadersButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5)
-        ShadersButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        ShadersButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        ShadersButton.Font = Enum.Font.Gotham
-        ShadersButton.TextSize = 16
-        ShadersButton.Text = "Shaders"
-        ShadersButton.Parent = MiscPage
+        -- Shaders Button
 
-        local ShadersCorner = Instance.new("UICorner")
-        ShadersCorner.CornerRadius = UDim.new(0,6)
-        ShadersCorner.Parent = ShadersButton
+            local ShadersButton = Instance.new("TextButton")
+            ShadersButton.Size = UDim2.new(0, 200, 0, 30)
+            ShadersButton.Position = UDim2.new(0, 5, 0, 40)
+            ShadersButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            ShadersButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            ShadersButton.Font = Enum.Font.Gotham
+            ShadersButton.TextSize = 16
+            ShadersButton.Text = "Shaders"
+            ShadersButton.Parent = MiscPage
+            AddCorner(ShadersButton)
 
-        ShadersButton.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            if not shadersOn then
-                local Sky = Instance.new("Sky")
-                local Bloom = Instance.new("BloomEffect")
-                local Blur = Instance.new("BlurEffect")
-                local ColorC = Instance.new("ColorCorrectionEffect")
-                local SunRays = Instance.new("SunRaysEffect")
+        -- Shaders Command
 
-                Light.Brightness = 2.25
-                Light.ExposureCompensation = 0.1
-                Light.ClockTime = 17.55
+            addcmd("shaders", {
+                Aliases = {"gfx", "effects"},
+                Run = function()
 
-                Sky.SkyboxBk = "http://www.roblox.com/asset/?id=144933338"
-                Sky.SkyboxDn = "http://www.roblox.com/asset/?id=144931530"
-                Sky.SkyboxFt = "http://www.roblox.com/asset/?id=144933262"
-                Sky.SkyboxLf = "http://www.roblox.com/asset/?id=144933244"
-                Sky.SkyboxRt = "http://www.roblox.com/asset/?id=144933299"
-                Sky.SkyboxUp = "http://www.roblox.com/asset/?id=144931564"
-                Sky.StarCount = 5000
-                Sky.SunAngularSize = 5
-                Sky.Name = "RevoSky"
-                Sky.Parent = Light
+                    if not shadersOn then
+                        local Sky = Instance.new("Sky")
+                        local Bloom = Instance.new("BloomEffect")
+                        local Blur = Instance.new("BlurEffect")
+                        local ColorC = Instance.new("ColorCorrectionEffect")
+                        local SunRays = Instance.new("SunRaysEffect")
 
-                Bloom.Intensity = 0.3
-                Bloom.Size = 10
-                Bloom.Threshold = 0.8
-                Bloom.Name = "RevoBloom"
-                Bloom.Parent = Light
+                        Lighting.Brightness = 2.25
+                        Lighting.ExposureCompensation = 0.1
+                        Lighting.ClockTime = 17.55
 
-                Blur.Size = 3
-                Blur.Name = "RevoBlur"
-                Blur.Parent = Light
+                        Sky.SkyboxBk = "http://www.roblox.com/asset/?id=144933338"
+                        Sky.SkyboxDn = "http://www.roblox.com/asset/?id=144931530"
+                        Sky.SkyboxFt = "http://www.roblox.com/asset/?id=144933262"
+                        Sky.SkyboxLf = "http://www.roblox.com/asset/?id=144933244"
+                        Sky.SkyboxRt = "http://www.roblox.com/asset/?id=144933299"
+                        Sky.SkyboxUp = "http://www.roblox.com/asset/?id=144931564"
+                        Sky.StarCount = 5000
+                        Sky.SunAngularSize = 5
+                        Sky.Name = "RevoSky"
+                        Sky.Parent = Lighting
 
-                ColorC.Brightness = 0
-                ColorC.Contrast = 0.1
-                ColorC.Saturation = 0.25
-                ColorC.TintColor = Color3.fromRGB(255, 255, 255)
-                ColorC.Name = "RevoColorC"
-                ColorC.Parent = Light
+                        Bloom.Intensity = 0.3
+                        Bloom.Size = 10
+                        Bloom.Threshold = 0.8
+                        Bloom.Name = "RevoBloom"
+                        Bloom.Parent = Lighting
 
-                SunRays.Intensity = 0.1
-                SunRays.Spread = 0.8
-                SunRays.Name = "RevoSunRays"
-                SunRays.Parent = Light
+                        Blur.Size = 3
+                        Blur.Name = "RevoBlur"
+                        Blur.Parent = Lighting
 
-                shadersOn = true
-            else
-                for _, v in pairs(Light:GetChildren()) do
-                    if v.Name == "RevoSky" or v.Name == "RevoBloom" or v.Name == "RevoBlur" or v.Name == "RevoColorC" or v.Name == "RevoSunRays" then
-                        v:Destroy()
+                        ColorC.Brightness = 0
+                        ColorC.Contrast = 0.1
+                        ColorC.Saturation = 0.25
+                        ColorC.TintColor = Color3.fromRGB(255, 255, 255)
+                        ColorC.Name = "RevoColorC"
+                        ColorC.Parent = Lighting
+
+                        SunRays.Intensity = 0.1
+                        SunRays.Spread = 0.8
+                        SunRays.Name = "RevoSunRays"
+                        SunRays.Parent = Lighting
+
+                        shadersOn = true
+                    else
+                        for _, v in pairs(Lighting:GetChildren()) do
+                            if v.Name == "RevoSky" or v.Name == "RevoBloom" or v.Name == "RevoBlur" or v.Name == "RevoColorC" or v.Name == "RevoSunRays" then
+                                v:Destroy()
+                            end
+                        end
+
+                        Lighting.Brightness = 2
+                        Lighting.ExposureCompensation = 0
+                        shadersOn = false
                     end
                 end
+            })
 
-                Light.Brightness = 2
-                Light.ExposureCompensation = 0
-
-                shadersOn = false
-            end
-        end)
+            BindButton(ShadersButton, "shaders")
 
     -- Infinite Yeild
-        local InfiniteYieldButton = Instance.new("TextButton")
-        InfiniteYieldButton.Size = UDim2.new(0, 200, 0, 30)
-        InfiniteYieldButton.Position = UDim2.new(1, -205, 0, 3 + 30 + 5)
-        InfiniteYieldButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        InfiniteYieldButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        InfiniteYieldButton.Font = Enum.Font.Gotham
-        InfiniteYieldButton.TextSize = 16
-        InfiniteYieldButton.Text = "Infinite Yield"
-        InfiniteYieldButton.Parent = MiscPage
 
-        local InfiniteYieldCorner = Instance.new("UICorner")
-        InfiniteYieldCorner.CornerRadius = UDim.new(0,6)
-        InfiniteYieldCorner.Parent = InfiniteYieldButton
+        -- Infinite Yeild Button
 
-        InfiniteYieldButton.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-        end)
+            local InfiniteYieldButton = Instance.new("TextButton")
+            InfiniteYieldButton.Size = UDim2.new(0, 200, 0, 30)
+            InfiniteYieldButton.Position = UDim2.new(1, -205, 0, 40)
+            InfiniteYieldButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            InfiniteYieldButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            InfiniteYieldButton.Font = Enum.Font.Gotham
+            InfiniteYieldButton.TextSize = 16
+            InfiniteYieldButton.Text = "Infinite Yield"
+            InfiniteYieldButton.Parent = MiscPage
+            AddCorner(InfiniteYieldButton)
+
+            addcmd("infiniteyield", {
+                Aliases = {"iy", "infy"},
+                Run = function()
+
+                    loadstring(game:HttpGet(
+                        "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
+                    ))()
+                end
+            })
+
+            BindButton(InfiniteYieldButton, "infiniteyield")
 
     -- Day
 
-        local DayButton = Instance.new("TextButton")
-        DayButton.Size = UDim2.new(0, 200, 0, 30)
-        DayButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5 + 30 + 5)
-        DayButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        DayButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        DayButton.Font = Enum.Font.Gotham
-        DayButton.TextSize = 16
-        DayButton.Text = "Day"
-        DayButton.Parent = MiscPage
+        -- Day Button
 
-        local DayCorner = Instance.new("UICorner")
-        DayCorner.CornerRadius = UDim.new(0,6)
-        DayCorner.Parent = DayButton
-        
-        DayButton.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            if shadersOn then
-                Notify("Revo", "Please turn off shaders before changing time.", 5)
-            else
-                Light.ClockTime = 14
-            end
-        end)
+            local DayButton = Instance.new("TextButton")
+            DayButton.Size = UDim2.new(0, 200, 0, 30)
+            DayButton.Position = UDim2.new(0, 5, 0, 75)
+            DayButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            DayButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            DayButton.Font = Enum.Font.Gotham
+            DayButton.TextSize = 16
+            DayButton.Text = "Day"
+            DayButton.Parent = MiscPage
+            AddCorner(DayButton)
+
+        -- Day Command
+
+            addcmd("day", {
+                Aliases = {"daytime", "time14"},
+                Run = function()
+                    if shadersOn then
+                        Notify("Revo", "Please Turn Off Shaders Before Changing Time.", 5)
+                    else
+                        Lighting.ClockTime = 14
+                    end
+                end
+            })
+
+            BindButton(DayButton, "day")
 
     -- Emotes
 
-        local EmotesButton = Instance.new("TextButton")
-        EmotesButton.Size = UDim2.new(0, 200, 0, 30)
-        EmotesButton.Position = UDim2.new(1, -205, 0, 3 + 30 + 5 + 30 + 5)
-        EmotesButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        EmotesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        EmotesButton.Font = Enum.Font.Gotham
-        EmotesButton.TextSize = 16
-        EmotesButton.Text = "Emotes"
-        EmotesButton.Parent = MiscPage
+        -- Emotes Button
 
-        local EmotesCorner = Instance.new("UICorner")
-        EmotesCorner.CornerRadius = UDim.new(0,6)
-        EmotesCorner.Parent = EmotesButton
+            local EmotesButton = Instance.new("TextButton")
+            EmotesButton.Size = UDim2.new(0, 200, 0, 30)
+            EmotesButton.Position = UDim2.new(1, -205, 0, 75)
+            EmotesButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            EmotesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            EmotesButton.Font = Enum.Font.Gotham
+            EmotesButton.TextSize = 16
+            EmotesButton.Text = "Emotes"
+            EmotesButton.Parent = MiscPage
+            AddCorner(EmotesButton)
 
-        EmotesButton.MouseButton1Click:Connect(function()
-            if not Alive then return end
-                Notify("Revo","Loading emotes. Keybind Is , \nCredits: Gi#7331")
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/Gi7331/scripts/main/Emote.lua"))()
-        end)
+        -- Emotes Command
+
+            addcmd("emotes", {
+                Aliases = {"emote", "emotes"},
+                Run = function()
+
+                    Notify("Revo", "Loading Emotes.\nKeybind Is ,\nCredits: Gi#7331", 4)
+
+                    loadstring(game:HttpGet(
+                        "https://raw.githubusercontent.com/Gi7331/scripts/main/Emote.lua"
+                    ))()
+                end
+            })
+
+            BindButton(EmotesButton, "emotes")
 
     -- Night
         
-        local NightButton = Instance.new("TextButton")
-        NightButton.Size = UDim2.new(0, 200, 0, 30)
-        NightButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5 + 30 + 5 + 30 + 5)
-        NightButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        NightButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        NightButton.Font = Enum.Font.Gotham
-        NightButton.TextSize = 16
-        NightButton.Text = "Night"
-        NightButton.Parent = MiscPage
+        -- Night Button
 
-        local NightCorner = Instance.new("UICorner")
-        NightCorner.CornerRadius = UDim.new(0,6)
-        NightCorner.Parent = NightButton
-        
-        NightButton.MouseButton1Click:Connect(function()
-            if not Alive then return end
-            if shadersOn then
-                Notify("Revo", "Please turn off shaders before changing time.", 5)
-            else
-                Light.ClockTime = 19
-            end
-        end)
+            local NightButton = Instance.new("TextButton")
+            NightButton.Size = UDim2.new(0, 200, 0, 30)
+            NightButton.Position = UDim2.new(0, 5, 0, 110)
+            NightButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            NightButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            NightButton.Font = Enum.Font.Gotham
+            NightButton.TextSize = 16
+            NightButton.Text = "Night"
+            NightButton.Parent = MiscPage
+            AddCorner(NightButton)
+
+        -- Night Command
+
+            addcmd("night", {
+                Aliases = {"nighttime", "time19"},
+                Run = function()
+                    if shadersOn then
+                        Notify("Revo", "Please Turn Off Shaders Before Changing Time.", 5)
+                    else
+                        Lighting.ClockTime = 19
+                    end
+                end
+            })
+
+            BindButton(NightButton, "night")
 
     -- UGC Emotes
 
-        local UGCEmotesButton = Instance.new("TextButton")
-        UGCEmotesButton.Size = UDim2.new(0, 200, 0, 30)
-        UGCEmotesButton.Position = UDim2.new(1, -205, 0, 3 + 30 + 5 + 30 + 5 + 30 + 5)
-        UGCEmotesButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        UGCEmotesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        UGCEmotesButton.Font = Enum.Font.Gotham
-        UGCEmotesButton.TextSize = 16
-        UGCEmotesButton.Text = "UGC Emotes"
-        UGCEmotesButton.Parent = MiscPage
+        -- UGC Emotes Button
 
-        local UGCEmotesCorner = Instance.new("UICorner")
-        UGCEmotesCorner.CornerRadius = UDim.new(0,6)
-        UGCEmotesCorner.Parent = UGCEmotesButton
+            local UGCEmotesButton = Instance.new("TextButton")
+            UGCEmotesButton.Size = UDim2.new(0, 200, 0, 30)
+            UGCEmotesButton.Position = UDim2.new(1, -205, 0, 110)
+            UGCEmotesButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            UGCEmotesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            UGCEmotesButton.Font = Enum.Font.Gotham
+            UGCEmotesButton.TextSize = 16
+            UGCEmotesButton.Text = "UGC Emotes"
+            UGCEmotesButton.Parent = MiscPage
+            AddCorner(UGCEmotesButton)
 
-        UGCEmotesButton.MouseButton1Click:Connect(function()	
-            if not Alive then return end
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/7yd7/Hub/refs/heads/Branch/GUIS/Emotes.lua"))()
-        end)
+        -- UGC Command
+
+            addcmd("ugcemotes", {
+                Aliases = {"ugc", "ugcems"},
+                Run = function()
+
+                    loadstring(game:HttpGet(
+                        "https://raw.githubusercontent.com/7yd7/Hub/refs/heads/Branch/GUIS/Emotes.lua"
+                    ))()
+                end
+            })
+
+            BindButton(UGCEmotesButton, "ugcemotes")
 
     -- Explode
 
-        local ExplodeButton = Instance.new("TextButton")
-        ExplodeButton.Size = UDim2.new(0, 200, 0, 30)
-        ExplodeButton.Position = UDim2.new(0, 5, 0, 3 + 30 + 5 + 30 + 5 + 30 + 5 + 30 + 5)
-        ExplodeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        ExplodeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        ExplodeButton.Font = Enum.Font.Gotham
-        ExplodeButton.TextSize = 16
-        ExplodeButton.Text = "Explode"
-        ExplodeButton.Parent = MiscPage
+        -- Explode Button
 
-        local ExplodeCorner = Instance.new("UICorner")
-        ExplodeCorner.CornerRadius = UDim.new(0,6)
-        ExplodeCorner.Parent = ExplodeButton
+            local ExplodeButton = Instance.new("TextButton")
+            ExplodeButton.Size = UDim2.new(0, 200, 0, 30)
+            ExplodeButton.Position = UDim2.new(0, 5, 0, 145)
+            ExplodeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            ExplodeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            ExplodeButton.Font = Enum.Font.Gotham
+            ExplodeButton.TextSize = 16
+            ExplodeButton.Text = "Explode"
+            ExplodeButton.Parent = MiscPage
+            AddCorner(ExplodeButton)
 
-        local function ToggleRagdoll(bool)
-            pcall(function()
-                player.Character["Falling down"].Disabled = bool
-                player.Character["Swimming"].Disabled = bool
-                player.Character["StartRagdoll"].Disabled = bool
-                player.Character["Pushed"].Disabled = bool
-                player.Character["RagdollMe"].Disabled = bool
+        -- Explode Command
+
+            addcmd("explode", {
+                Aliases = {"expl", "boom"},
+                Run = function()
+                    local char = player.Character
+                    if not char then return end
+
+                    local humanoid = char:FindFirstChildOfClass("Humanoid")
+                    local root = char:FindFirstChild("HumanoidRootPart")
+                    if not humanoid or not root then return end
+
+                    ToggleRagdoll(false)
+
+                    local bav = Instance.new("BodyAngularVelocity")
+                    bav.Name = "Spin"
+                    bav.MaxTorque = Vector3.new(0, math.huge, 0)
+                    bav.AngularVelocity = Vector3.new(0, 150, 0)
+                    bav.Parent = root
+
+                    task.wait(3)
+
+                    humanoid.Health = 0
+                end
+            })
+
+            BindButton(ExplodeButton, "explode")
+
+    -- GUI Key
+
+        -- GUI Key Button
+
+            local GUIKeyButton = Instance.new("TextButton")
+            GUIKeyButton.Size = UDim2.new(0, 200, 0, 30)
+            GUIKeyButton.Position = UDim2.new(0, 215, 0, 145)
+            GUIKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            GUIKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            GUIKeyButton.Font = Enum.Font.Gotham
+            GUIKeyButton.TextSize = 16
+            GUIKeyButton.Text = "GUI Key: "..(GUIKey and GUIKey.Name or "None")
+            GUIKeyButton.Parent = MiscPage
+            AddCorner(GUIKeyButton)
+
+            local GUIKey_Input = Instance.new("TextBox")
+            GUIKey_Input.Size = GUIKeyButton.Size
+            GUIKey_Input.Position = GUIKeyButton.Position
+            GUIKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            GUIKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+            GUIKey_Input.Font = Enum.Font.Gotham
+            GUIKey_Input.TextSize = 16
+            GUIKey_Input.PlaceholderText = "Press Any Key"
+            GUIKey_Input.Visible = false
+            GUIKey_Input.ClearTextOnFocus = true
+            GUIKey_Input.Text = ""
+            GUIKey_Input.Parent = MiscPage
+            AddCorner(GUIKey_Input)
+
+        -- GUI Key Function
+
+            local function enableGlobalGUIListener()
+                if globalGUIConnection then return end
+
+                globalGUIConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if gpe then return end
+                    if capturingGUIKey then return end
+
+                    if GUIKey
+                    and input.UserInputType == Enum.UserInputType.Keyboard
+                    and input.KeyCode == GUIKey then
+                        ScreenGui.Enabled = not ScreenGui.Enabled
+                    end
+                end)
+            end
+
+            enableGlobalGUIListener()
+
+            local function cancelGUICapture()
+                GUIKey = nil
+                GUIKeyButton.Text = "GUI Key: None"
+
+                GUIKey_Input.Visible = false
+                GUIKeyButton.Visible = true
+
+                capturingGUIKey = false
+
+                if guiCaptureConnection then
+                    guiCaptureConnection:Disconnect()
+                    guiCaptureConnection = nil
+                end
+
+                enableGlobalGUIListener()
+            end
+
+            GUIKeyButton.MouseButton1Click:Connect(function()
+                GUIKeyButton.Visible = false
+                GUIKey_Input.Visible = true
+                GUIKey_Input.Text = "Press Any Key"
+
+                capturingGUIKey = true
+
+                if globalGUIConnection then
+                    globalGUIConnection:Disconnect()
+                    globalGUIConnection = nil
+                end
+
+                if guiCaptureConnection then
+                    guiCaptureConnection:Disconnect()
+                end
+
+                guiCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if gpe then return end
+                    if not capturingGUIKey then return end
+
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        if input.KeyCode == Enum.KeyCode.Backspace then
+                            cancelGUICapture()
+                        else
+                            GUIKey = input.KeyCode
+                            GUIKeyButton.Text = "GUI Key: " .. GUIKey.Name
+                            updateHomeText()
+
+                            GUIKey_Input.Visible = false
+                            GUIKeyButton.Visible = true
+                            capturingGUIKey = false
+
+                            guiCaptureConnection:Disconnect()
+                            guiCaptureConnection = nil
+
+                            enableGlobalGUIListener()
+                        end
+
+                    elseif input.UserInputType == Enum.UserInputType.MouseButton1
+                        or input.UserInputType == Enum.UserInputType.MouseButton2
+                        or input.UserInputType == Enum.UserInputType.MouseButton3 then
+                        cancelGUICapture()
+                        updateHomeText()
+                    end
+                end)
             end)
-        end
-        
-        ExplodeButton.MouseButton1Click:Connect(function()
-            ToggleRagdoll(false)
-            task.wait()
-            player.Character.Humanoid:ChangeState(0)
-            local bav = Instance.new("BodyAngularVelocity")
-            bav.Parent = GetRoot(player)
-            bav.Name = "Spin"
-            bav.MaxTorque = Vector3.new(0,math.huge,0)
-            bav.AngularVelocity = Vector3.new(0,150,0)
-            task.wait(3)
-            player.Character.Humanoid:ChangeState(15)
-        end)
 
-    -- Base Plate Creation
+    -- Base Plate
 
-        local validPlaceIds = {
-        6884319169,
-        292628125,
-        }
+        -- Valid Place IDs
 
+            local validPlaceIds = {
+            6884319169,
+            292628125,
+            }
 
-        if table.find(validPlaceIds, game.PlaceId) then
-            if workspace:FindFirstChild("MicUpBaseplateFolder") then return end
+        -- Base Plate Genertaion
 
-            local folder = Instance.new("Folder")
-            folder.Name = "MicUpBaseplateFolder"
-            folder.Parent = workspace
+            if table.find(validPlaceIds, game.PlaceId) then
+                if workspace:FindFirstChild("MicUpBaseplateFolder") then return end
 
-            local TILE_SIZE = 512
-            local GRID = 16
+                local folder = Instance.new("Folder")
+                folder.Name = "MicUpBaseplateFolder"
+                folder.Parent = workspace
 
-            for x = -GRID, GRID do
-                for z = -GRID, GRID do
-                    local part = Instance.new("Part")
-                    part.Name = "MicUpTile"
-                    part.Anchored = true
-                    part.CanCollide = true
-                    part.Locked = true
-                    part.Size = Vector3.new(TILE_SIZE, 1, TILE_SIZE)
-                    part.Position = Vector3.new(x * TILE_SIZE, -0.7, z * TILE_SIZE)
-                    part.Material = Enum.Material.Grass
-                    part.Color = Color3.fromRGB(85, 175, 100)
-                    part.TopSurface = Enum.SurfaceType.Smooth
-                    part.BottomSurface = Enum.SurfaceType.Smooth
-                    part.Parent = folder
+                local TILE_SIZE = 512
+                local GRID = 16
+
+                for x = -GRID, GRID do
+                    for z = -GRID, GRID do
+                        local part = Instance.new("Part")
+                        part.Name = "MicUpTile"
+                        part.Anchored = true
+                        part.CanCollide = true
+                        part.Locked = true
+                        part.Size = Vector3.new(TILE_SIZE, 1, TILE_SIZE)
+                        part.Position = Vector3.new(x * TILE_SIZE, -0.7, z * TILE_SIZE)
+                        part.Material = Enum.Material.Grass
+                        part.Color = Color3.fromRGB(85, 175, 100)
+                        part.TopSurface = Enum.SurfaceType.Smooth
+                        part.BottomSurface = Enum.SurfaceType.Smooth
+                        part.Parent = folder
+                    end
                 end
             end
-        end
-        
+
 -- Credits
 
     local CreditsLabel = Instance.new("TextLabel")
@@ -2739,89 +3060,9 @@
     VersionLabel.Size = UDim2.new(1, -20, 0, 20)
     VersionLabel.Position = UDim2.new(0, 10, 0, 30)
     VersionLabel.BackgroundTransparency = 1
-    VersionLabel.Text = "Version: 1.0"
+    VersionLabel.Text = "Version: 1.1"
     VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     VersionLabel.Font = Enum.Font.Gotham
     VersionLabel.TextSize = 14
     VersionLabel.TextXAlignment = Enum.TextXAlignment.Left
     VersionLabel.Parent = CreditsPage
-
--- User Input Services
-
-    TrackConnection(
-        UserInputService.InputBegan:Connect(function(input, gameProcessed)
-            if not Alive then return end
-            if gameProcessed then return end
-            if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
-
-            local key = input.KeyCode
-
-            -- GUI
-            
-            if key == Enum.KeyCode.V then
-                ScreenGui.Enabled = not ScreenGui.Enabled
-            end
-
-            -- Rewind
-
-            if isRebinding then
-                RewindToggleKey = key
-                RewindKeyButton.Text = "Rewind Key: " .. RewindToggleKey.Name
-                isRebinding = false
-                return
-            elseif key == RewindToggleKey then
-                toggleRewind()
-            end
-
-            -- Fly
-
-            if FlyToggleKey then
-                if ignoreNextFlyToggle then
-                    ignoreNextFlyToggle = false
-                elseif key == FlyToggleKey then
-                    flying = not flying
-                    if flying then
-                        ConnectFlyKeys()
-                        task.spawn(Fly())
-                    else
-                        DisconnectFlyKeys()
-                        ctrl = {f=0,b=0,l=0,r=0}
-                        lastctrl = {f=0,b=0,l=0,r=0}
-                    end
-                end
-            end
-
-            -- Trip
-
-            if isTripRebinding then
-                if key == Enum.KeyCode.Backspace then
-                    TripKey = nil
-                    TripKeyButton.Text = "Trip Key: None"
-                else
-                    TripKey = key
-                    TripKeyButton.Text = "Trip Key: " .. TripKey.Name
-                end
-                isTripRebinding = false
-                return
-            elseif TripKey and key == TripKey then
-                local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
-                local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                if humanoid and root then
-                    humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
-                    root.Velocity = root.CFrame.LookVector * 30
-                end
-            end
-        end)
-    )
-
-    TrackConnection(
-        UserInputService.InputEnded:Connect(function(input)
-            if not Alive then return end
-            if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
-            local key = input.KeyCode
-
-            if key == TeleportToggleKey then
-                teleportKeyHeld = false
-            end
-        end)
-    )
