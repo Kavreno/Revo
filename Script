@@ -364,6 +364,22 @@
             return a:Lerp(b, t)
         end
 
+    -- Get Y
+    
+        local function getVoidY()
+            local lowestY = math.huge
+            for _, part in ipairs(workspace:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    if part.Position.Y < lowestY then
+                        lowestY = part.Position.Y
+                    end
+                end
+            end
+            return lowestY - 10
+        end
+
+        local VOID_Y = getVoidY()
+
 -- Nav Bar
 
     local CharacterPage = CreatePage("Character")
@@ -486,7 +502,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "Added No Clip. Fling Dosent Work Push Might."
+    AnnouncementsText.Text = "Fixed Teleport To Last Location. Fling Dosent Work Push Might."
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
@@ -3091,7 +3107,7 @@
             end
 
         -- Teleport To Last Location On Respawn
-            
+
             local function onCharacterAdded(character)
                 local humanoid = character:WaitForChild("Humanoid")
                 local root = character:WaitForChild("HumanoidRootPart")
@@ -3103,7 +3119,11 @@
 
                 humanoid.Died:Connect(function()
                     if root then
-                        lastCFrame = root.CFrame
+                        if root.Position.Y > VOID_Y then
+                            lastCFrame = root.CFrame
+                        else
+                            lastCFrame = nil
+                        end
                     end
                 end)
             end
