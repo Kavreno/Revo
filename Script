@@ -486,7 +486,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "Added Auto Clicker. Fling Dosent Work Push Might."
+    AnnouncementsText.Text = "Added No Clip. Fling Dosent Work Push Might."
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
@@ -3131,7 +3131,7 @@
     VersionLabel.Size = UDim2.new(1, -20, 0, 20)
     VersionLabel.Position = UDim2.new(0, 10, 0, 30)
     VersionLabel.BackgroundTransparency = 1
-    VersionLabel.Text = "Version: 1.2"
+    VersionLabel.Text = "Version: 1.5"
     VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     VersionLabel.Font = Enum.Font.Gotham
     VersionLabel.TextSize = 14
