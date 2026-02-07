@@ -1,3 +1,31 @@
+-- Need To Add
+
+    -- Anti Afk
+    -- Face Bang
+    -- Fixed Fling
+    -- Fixed Push
+    -- Anti Void
+    -- Invisibility
+    -- Infinite Base Plate
+    -- Walk On Air
+    -- Fix No Clip
+    -- Fix Emote Script
+    -- Saving Keybinds Etc
+    -- Switch This Crap To CMDS
+
+    -- Not Sure If Adding
+
+        -- Mute And Unmute Player
+        -- Hide And Unhide Player
+        -- Inspect Player
+        -- Chat Bypass
+        -- Voice Chat Bypass
+        -- Aim Bot
+        -- ESP
+        -- Custom Animations
+        -- No Sit
+        -- Anti All (Headsit, Backpack, ETC)
+
 -- Variables
 
     -- Services
@@ -110,11 +138,12 @@
     -- No Clip
 
         local NoClipKey = nil
-        local noClipping = false
         local capturingNoClipKey = false
         local noClipCaptureConnection = nil
         local globalNoClipConnection = nil
         local floatName = "FloatPart"
+        local Clip = true
+        local Noclipping = nil
 
 -- Gui Load Detection
 
@@ -502,7 +531,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "Fixed Teleport To Last Location. Fling Dosent Work Push Might."
+    AnnouncementsText.Text = "Disabled No Clip Due To Bugs. Fling Dosent Work Push Might."
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
@@ -1375,121 +1404,148 @@
 
         -- No Clip Key
 
-            local NoClipKeyButton = Instance.new("TextButton")
-            NoClipKeyButton.Size = UDim2.new(0, 200, 0, 30)
-            NoClipKeyButton.Position = UDim2.new(0, 5, 0, 110)
-            NoClipKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            NoClipKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            NoClipKeyButton.Font = Enum.Font.Gotham
-            NoClipKeyButton.TextSize = 16
-            NoClipKeyButton.Text = "No Clip Key: "..(NoClipKey and NoClipKey.Name or "None")
-            NoClipKeyButton.Parent = CharacterPage
-            AddCorner(NoClipKeyButton)
+        --     local NoClipKeyButton = Instance.new("TextButton")
+        --     NoClipKeyButton.Size = UDim2.new(0, 200, 0, 30)
+        --     NoClipKeyButton.Position = UDim2.new(0, 5, 0, 110)
+        --     NoClipKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        --     NoClipKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        --     NoClipKeyButton.Font = Enum.Font.Gotham
+        --     NoClipKeyButton.TextSize = 16
+        --     NoClipKeyButton.Text = "No Clip Key: "..(NoClipKey and NoClipKey.Name or "None")
+        --     NoClipKeyButton.Parent = CharacterPage
+        --     AddCorner(NoClipKeyButton)
 
-            local NoClipKey_Input = Instance.new("TextBox")
-            NoClipKey_Input.Size = NoClipKeyButton.Size
-            NoClipKey_Input.Position = NoClipKeyButton.Position
-            NoClipKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            NoClipKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
-            NoClipKey_Input.Font = Enum.Font.Gotham
-            NoClipKey_Input.TextSize = 16
-            NoClipKey_Input.PlaceholderText = "Press Any Key"
-            NoClipKey_Input.Visible = false
-            NoClipKey_Input.ClearTextOnFocus = true
-            NoClipKey_Input.Text = ""
-            NoClipKey_Input.Parent = CharacterPage
-            AddCorner(NoClipKey_Input)
+        --     local NoClipKey_Input = Instance.new("TextBox")
+        --     NoClipKey_Input.Size = NoClipKeyButton.Size
+        --     NoClipKey_Input.Position = NoClipKeyButton.Position
+        --     NoClipKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        --     NoClipKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+        --     NoClipKey_Input.Font = Enum.Font.Gotham
+        --     NoClipKey_Input.TextSize = 16
+        --     NoClipKey_Input.PlaceholderText = "Press Any Key"
+        --     NoClipKey_Input.Visible = false
+        --     NoClipKey_Input.ClearTextOnFocus = true
+        --     NoClipKey_Input.Text = ""
+        --     NoClipKey_Input.Parent = CharacterPage
+        --     AddCorner(NoClipKey_Input)
 
-        -- No Clip Funtion
-        
-            local function toggleNoClip()
-                noClipping = not noClipping
-            end
+        -- -- No Clip Funtion
 
-            local function NoclipLoop()
-                if noClipping and player.Character then
-                    for _, child in pairs(player.Character:GetDescendants()) do
-                        if child:IsA("BasePart") and child.CanCollide and child.Name ~= floatName then
-                            child.CanCollide = false
-                        end
-                    end
-                end
-            end
+        --     local function noclipLoop()
+        --         if Clip or not speaker.Character then return end
 
-        -- No Clip Key Function
+        --         for _, part in ipairs(speaker.Character:GetDescendants()) do
+        --             if part:IsA("BasePart") and part.Name ~= floatName then
+        --                 part.CanCollide = false
+        --             end
+        --         end
+        --     end
 
-            local function enableGlobalNoClipListener()
-                if globalNoClipConnection then return end
+        --     local function noclip()
+        --         if Noclipping then return end
 
-                globalNoClipConnection = UserInputService.InputBegan:Connect(function(input, gpe)
-                    if gpe then return end
-                    if capturingNoClipKey then return end
+        --         Clip = false
+        --         Noclipping = RunService.Stepped:Connect(noclipLoop)
+        --     end
 
-                    if NoClipKey
-                    and input.UserInputType == Enum.UserInputType.Keyboard
-                    and input.KeyCode == NoClipKey then
-                        toggleNoClip()
-                    end
-                end)
-            end
+        --     local function clip()
+        --         Clip = true
 
-            local function cancelNoClipCapture()
-                NoClipKey = nil
-                NoClipKeyButton.Text = "No Clip Key: None"
+        --         if Noclipping then
+        --             Noclipping:Disconnect()
+        --             Noclipping = nil
+        --         end
 
-                NoClipKey_Input.Visible = false
-                NoClipKeyButton.Visible = true
-                capturingNoClipKey = false
+        --         if speaker.Character then
+        --             for _, part in ipairs(speaker.Character:GetDescendants()) do
+        --                 if part:IsA("BasePart") and part.Name ~= floatName then
+        --                     part.CanCollide = true
+        --                 end
+        --             end
+        --         end
+        --     end
 
-                if noClipCaptureConnection then
-                    noClipCaptureConnection:Disconnect()
-                    noClipCaptureConnection = nil
-                end
+        --     local function toggleNoClip()
+        --         if Clip then
+        --             noclip()
+        --         else
+        --             clip()
+        --         end
+        --     end
 
-                enableGlobalNoClipListener()
-            end
+        -- -- No Clip Key Function
 
-            NoClipKeyButton.MouseButton1Click:Connect(function()
-                NoClipKeyButton.Visible = false
-                NoClipKey_Input.Visible = true
-                NoClipKey_Input.Text = "Press Any Key"
-                capturingNoClipKey = true
+        --     local function enableGlobalNoClipListener()
+        --         if globalNoClipConnection then return end
 
-                if globalNoClipConnection then
-                    globalNoClipConnection:Disconnect()
-                    globalNoClipConnection = nil
-                end
-                if noClipCaptureConnection then
-                    noClipCaptureConnection:Disconnect()
-                end
+        --         globalNoClipConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+        --             if gpe then return end
+        --             if capturingNoClipKey then return end
 
-                noClipCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
-                    if gpe then return end
-                    if not capturingNoClipKey then return end
+        --             if NoClipKey
+        --             and input.UserInputType == Enum.UserInputType.Keyboard
+        --             and input.KeyCode == NoClipKey then
+        --                 toggleNoClip()
+        --             end
+        --         end)
+        --     end
 
-                    if input.UserInputType == Enum.UserInputType.Keyboard then
-                        if input.KeyCode == Enum.KeyCode.Backspace then
-                            cancelNoClipCapture()
-                        else
-                            NoClipKey = input.KeyCode
-                            NoClipKeyButton.Text = "No Clip Key: " .. NoClipKey.Name
+        --     local function cancelNoClipCapture()
+        --         NoClipKey = nil
+        --         NoClipKeyButton.Text = "No Clip Key: None"
 
-                            NoClipKey_Input.Visible = false
-                            NoClipKeyButton.Visible = true
-                            capturingNoClipKey = false
+        --         NoClipKey_Input.Visible = false
+        --         NoClipKeyButton.Visible = true
+        --         capturingNoClipKey = false
 
-                            noClipCaptureConnection:Disconnect()
-                            noClipCaptureConnection = nil
+        --         if noClipCaptureConnection then
+        --             noClipCaptureConnection:Disconnect()
+        --             noClipCaptureConnection = nil
+        --         end
 
-                            enableGlobalNoClipListener()
-                        end
-                    elseif input.UserInputType.Name:find("MouseButton") then
-                        cancelNoClipCapture()
-                    end
-                end)
-            end)
+        --         enableGlobalNoClipListener()
+        --     end
 
-            game:GetService("RunService").RenderStepped:Connect(NoclipLoop)
+        --     NoClipKeyButton.MouseButton1Click:Connect(function()
+        --         NoClipKeyButton.Visible = false
+        --         NoClipKey_Input.Visible = true
+        --         NoClipKey_Input.Text = "Press Any Key"
+        --         capturingNoClipKey = true
+
+        --         if globalNoClipConnection then
+        --             globalNoClipConnection:Disconnect()
+        --             globalNoClipConnection = nil
+        --         end
+        --         if noClipCaptureConnection then
+        --             noClipCaptureConnection:Disconnect()
+        --         end
+
+        --         noClipCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+        --             if gpe then return end
+        --             if not capturingNoClipKey then return end
+
+        --             if input.UserInputType == Enum.UserInputType.Keyboard then
+        --                 if input.KeyCode == Enum.KeyCode.Backspace then
+        --                     cancelNoClipCapture()
+        --                 else
+        --                     NoClipKey = input.KeyCode
+        --                     NoClipKeyButton.Text = "No Clip Key: " .. NoClipKey.Name
+
+        --                     NoClipKey_Input.Visible = false
+        --                     NoClipKeyButton.Visible = true
+        --                     capturingNoClipKey = false
+
+        --                     noClipCaptureConnection:Disconnect()
+        --                     noClipCaptureConnection = nil
+
+        --                     enableGlobalNoClipListener()
+        --                 end
+        --             elseif input.UserInputType.Name:find("MouseButton") then
+        --                 cancelNoClipCapture()
+        --             end
+        --         end)
+        --     end)
+
 
 -- Target
 
