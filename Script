@@ -99,6 +99,14 @@
         
         local lastCFrame = nil
 
+    -- Auto Clicker
+
+        local AutoClickerKey = nil
+        local autoClicking = false
+        local capturingAutoClickerKey = false
+        local autoClickerCaptureConnection = nil
+        local globalAutoClickerConnection = nil
+
 -- Gui Load Detection
 
     -- if playerGui:FindFirstChild("RevoGUI") then
@@ -469,7 +477,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "Added Teleport To Last Location On Reset. Fling Dosent Work Push Might."
+    AnnouncementsText.Text = "Added Auto Clicker. Fling Dosent Work Push Might."
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
@@ -2792,6 +2800,124 @@
                         or input.UserInputType == Enum.UserInputType.MouseButton3 then
                         cancelGUICapture()
                         updateHomeText()
+                    end
+                end)
+            end)
+
+        -- Auto Clicker
+
+            local AutoClickerKeyButton = Instance.new("TextButton")
+            AutoClickerKeyButton.Size = UDim2.new(0, 200, 0, 30)
+            AutoClickerKeyButton.Position = UDim2.new(0, 215, 0, 180)
+            AutoClickerKeyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            AutoClickerKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            AutoClickerKeyButton.Font = Enum.Font.Gotham
+            AutoClickerKeyButton.TextSize = 16
+            AutoClickerKeyButton.Text = "Auto Clicker Key: "..(AutoClickerKey and AutoClickerKey.Name or "None")
+            AutoClickerKeyButton.Parent = MiscPage
+            AddCorner(AutoClickerKeyButton)
+
+            local AutoClickerKey_Input = Instance.new("TextBox")
+            AutoClickerKey_Input.Size = AutoClickerKeyButton.Size
+            AutoClickerKey_Input.Position = AutoClickerKeyButton.Position
+            AutoClickerKey_Input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            AutoClickerKey_Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+            AutoClickerKey_Input.Font = Enum.Font.Gotham
+            AutoClickerKey_Input.TextSize = 16
+            AutoClickerKey_Input.PlaceholderText = "Press Any Key"
+            AutoClickerKey_Input.Visible = false
+            AutoClickerKey_Input.ClearTextOnFocus = true
+            AutoClickerKey_Input.Text = ""
+            AutoClickerKey_Input.Parent = MiscPage
+            AddCorner(AutoClickerKey_Input)
+
+        -- Auto Clicker Function
+
+            task.spawn(function()
+                while true do
+                    if autoClicking then
+                        mouse1click()
+                    end
+                    task.wait()
+                end
+            end)        
+
+        -- Auto Clicker Key Function
+
+            local function enableGlobalAutoClickerListener()
+                if globalAutoClickerConnection then return end
+
+                globalAutoClickerConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if gpe then return end
+                    if capturingAutoClickerKey then return end
+
+                    if AutoClickerKey
+                    and input.UserInputType == Enum.UserInputType.Keyboard
+                    and input.KeyCode == AutoClickerKey then
+
+                        autoClicking = not autoClicking
+                        Notify("Revo", autoClicking and "Auto Clicker On" or "Auto Clicker Off", 5)
+                    end
+                end)
+            end
+
+            enableGlobalAutoClickerListener()
+
+            local function cancelAutoClickerCapture()
+                AutoClickerKey = nil
+
+                AutoClickerKeyButton.Text = "Auto Clicker Key: None"
+                AutoClickerKey_Input.Visible = false
+                AutoClickerKeyButton.Visible = true
+
+                capturingAutoClickerKey = false
+
+                if autoClickerCaptureConnection then
+                    autoClickerCaptureConnection:Disconnect()
+                    autoClickerCaptureConnection = nil
+                end
+
+                enableGlobalAutoClickerListener()
+            end
+
+            AutoClickerKeyButton.MouseButton1Click:Connect(function()
+                AutoClickerKeyButton.Visible = false
+                AutoClickerKey_Input.Visible = true
+                AutoClickerKey_Input.Text = "Press Any Key"
+
+                capturingAutoClickerKey = true
+
+                if globalAutoClickerConnection then
+                    globalAutoClickerConnection:Disconnect()
+                    globalAutoClickerConnection = nil
+                end
+
+                if autoClickerCaptureConnection then
+                    autoClickerCaptureConnection:Disconnect()
+                end
+
+                autoClickerCaptureConnection = UserInputService.InputBegan:Connect(function(input, gpe)
+                    if gpe then return end
+                    if not capturingAutoClickerKey then return end
+
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        if input.KeyCode == Enum.KeyCode.Backspace then
+                            cancelAutoClickerCapture()
+                        else
+                            AutoClickerKey = input.KeyCode
+
+                            AutoClickerKeyButton.Text = "Auto Clicker Key: " .. AutoClickerKey.Name
+                            AutoClickerKey_Input.Visible = false
+                            AutoClickerKeyButton.Visible = true
+                            capturingAutoClickerKey = false
+
+                            autoClickerCaptureConnection:Disconnect()
+                            autoClickerCaptureConnection = nil
+
+                            enableGlobalAutoClickerListener()
+                        end
+                    elseif input.UserInputType.Name:find("MouseButton") then
+                        cancelAutoClickerCapture()
                     end
                 end)
             end)
