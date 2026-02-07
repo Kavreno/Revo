@@ -7,6 +7,7 @@
     local UserInputService = game:GetService("UserInputService")
     local StarterGui       = game:GetService("StarterGui")
     local HttpService      = game:GetService("HttpService")
+    local httprequest      = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
     local TeleportService  = game:GetService("TeleportService")
     local Lighting         = game:GetService("Lighting")
 
@@ -505,7 +506,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "half this shit is broken fuck roblox"
+    AnnouncementsText.Text = "Fixed :) Drag And Doggy Dont Work Currently"
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
@@ -1181,74 +1182,74 @@
 
         -- Jerk Command
 
-            addcmd("jerk", {
-                Aliases = {"jork", "jo"},
-                Run = function()
+            local function runJerk()
+                local character = player.Character or player.CharacterAdded:Wait()
+                local humanoid = character:WaitForChild("Humanoid")
+                local backpack = player:WaitForChild("Backpack")
 
-                    local character = player.Character or player.CharacterAdded:Wait()
-                    local humanoid = character:WaitForChild("Humanoid")
-                    local backpack = player:WaitForChild("Backpack")
+                if backpack:FindFirstChild("Jerk Off") then return end
 
-                    if backpack:FindFirstChild("Jerk Off") then return end
+                local tool = Instance.new("Tool")
+                tool.Name = "Jerk Off"
+                tool.ToolTip = ";)"
+                tool.RequiresHandle = false
+                tool.Parent = backpack
 
-                    local tool = Instance.new("Tool")
-                    tool.Name = "Jerk Off"
-                    tool.ToolTip = ";)"
-                    tool.RequiresHandle = false
-                    tool.Parent = backpack
+                local jorkin = false
+                local track
 
-                    local jorkin = false
-                    local track
+                local function stopTomfoolery()
+                    jorkin = false
+                    if track then
+                        track:Stop()
+                        track = nil
+                    end
+                end
 
-                    local function stopTomfoolery()
-                        jorkin = false
+                tool.Equipped:Connect(function()
+                    jorkin = true
+                end)
+
+                tool.Unequipped:Connect(stopTomfoolery)
+                humanoid.Died:Connect(stopTomfoolery)
+
+                task.spawn(function()
+                    while task.wait() do
+                        if not jorkin then continue end
+
+                        local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
+
+                        if not track then
+                            local anim = Instance.new("Animation")
+                            anim.AnimationId = isR15
+                                and "rbxassetid://698251653"
+                                or  "rbxassetid://72042024"
+
+                            track = humanoid:LoadAnimation(anim)
+                        end
+
+                        track:Play()
+                        track:AdjustSpeed(isR15 and 0.7 or 0.65)
+                        track.TimePosition = 0.6
+
+                        task.wait(0.1)
+                        while track and track.TimePosition < (isR15 and 0.7 or 0.65) do
+                            task.wait(0.1)
+                        end
+
                         if track then
                             track:Stop()
                             track = nil
                         end
                     end
+                end)
+            end
 
-                    tool.Equipped:Connect(function()
-                        jorkin = true
-                    end)
+        -- Jerk Button
 
-                    tool.Unequipped:Connect(stopTomfoolery)
-                    humanoid.Died:Connect(stopTomfoolery)
-
-                    task.spawn(function()
-                        while task.wait() do
-                            if jorkin then
-                                local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
-
-                                if not track then
-                                    local anim = Instance.new("Animation")
-                                    anim.AnimationId = isR15
-                                        and "rbxassetid://698251653"
-                                        or  "rbxassetid://72042024"
-
-                                    track = humanoid:LoadAnimation(anim)
-                                end
-
-                                track:Play()
-                                track:AdjustSpeed(isR15 and 0.7 or 0.65)
-                                track.TimePosition = 0.6
-
-                                task.wait(0.1)
-                                while Alive and track and track.TimePosition < (isR15 and 0.7 or 0.65) do
-                                    task.wait(0.1)
-                                end
-
-                                if track then
-                                    track:Stop()
-                                    track = nil
-                                end
-                            end
-                        end
-                    end)
-                end
-            })
-
-            BindButton(JerkButton, "jerk")
+            JerkButton.MouseButton1Click:Connect(function()
+                runJerk()
+            end)
 
     -- Trip
 
@@ -1861,7 +1862,7 @@
                     BangTarget          = false
                     flingingTarget      = false
 
-                    Notify("Revo", "Targeted player left/rejoined.", 5)
+                    Notify("Revo", "Targeted Player Left/Rejoined.", 5)
                 end
             end)
         end)
@@ -2397,14 +2398,9 @@
 
         -- Rejoin Command
 
-            addcmd("rejoin", {
-                Aliases = {"rj", "reconnect"},
-                Run = function()
-                    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
-                end
-            })
-
-            BindButton(RejoinButton, "rejoin")
+            RejoinButton.MouseButton1Click:Connect(function()
+                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, plr)
+            end)
 
     -- Server Hop
 
@@ -2423,51 +2419,23 @@
 
         -- Server Hop Command
 
-            addcmd("serverhop", {
-                Aliases = {"hop", "sh"},
-                Run = function()
-
-                    local function getServers(cursor)
-                        local url = "https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
-                        if cursor then
-                            url = url.."&cursor="..cursor
-                        end
-                        local success, response = pcall(function()
-                            return HttpService:JSONDecode(game:HttpGet(url))
-                        end)
-                        if success and response then
-                            return response
-                        else
-                            return nil
-                        end
-                    end
-
-                    local function pickServer()
-                        local response = getServers()
-                        if not response then return nil end
-                        local servers = response.data
-                        if #servers == 0 then return nil end
-
-                        for i = #servers, 1, -1 do
-                            if servers[i].id == game.JobId or servers[i].playing >= servers[i].maxPlayers then
-                                table.remove(servers, i)
+            ServerHopButton.MouseButton1Click:Connect(function()
+                if httprequest then
+                    local servers = {}
+                    local req = httprequest({Url = string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Desc&limit=100", game.PlaceId)})
+                    local body = HttpService:JSONDecode(req.Body)
+                    if body and body.data then
+                        for i, v in next, body.data do
+                            if type(v) == "table" and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and v.id ~= game.JobId then
+                                table.insert(servers, 1, v.id)
                             end
                         end
-
-                        if #servers == 0 then return nil end
-                        return servers[math.random(1, #servers)].id
                     end
-
-                    local serverId = pickServer()
-                    if serverId then
-                        TeleportService:TeleportToPlaceInstance(PlaceId, serverId, player)
-                    else
-                        Notify("Revo", "No Available Servers Found To Hop To.", 5)
+                    if #servers > 0 then
+                        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)], plr)
                     end
                 end
-            })
-
-            BindButton(ServerHopButton, "serverhop")
+            end)
 
     -- Shaders
 
@@ -2486,70 +2454,60 @@
 
         -- Shaders Command
 
-            addcmd("shaders", {
-                Aliases = {"gfx", "effects"},
-                Run = function()
+            ShadersButton.MouseButton1Click:Connect(function()
+                shadersOn = not shadersOn
 
-                    if not shadersOn then
-                        local Sky = Instance.new("Sky")
-                        local Bloom = Instance.new("BloomEffect")
-                        local Blur = Instance.new("BlurEffect")
-                        local ColorC = Instance.new("ColorCorrectionEffect")
-                        local SunRays = Instance.new("SunRaysEffect")
+                if shadersOn then
+                    local Sky = Instance.new("Sky")
+                    local Bloom = Instance.new("BloomEffect")
+                    local Blur = Instance.new("BlurEffect")
+                    local ColorC = Instance.new("ColorCorrectionEffect")
+                    local SunRays = Instance.new("SunRaysEffect")
 
-                        Lighting.Brightness = 2.25
-                        Lighting.ExposureCompensation = 0.1
-                        Lighting.ClockTime = 17.55
+                    local Lighting = game:GetService("Lighting")
+                    Lighting.Brightness = 2.25
+                    Lighting.ExposureCompensation = 0.1
+                    Lighting.ClockTime = 17.55
 
-                        Sky.SkyboxBk = "http://www.roblox.com/asset/?id=144933338"
-                        Sky.SkyboxDn = "http://www.roblox.com/asset/?id=144931530"
-                        Sky.SkyboxFt = "http://www.roblox.com/asset/?id=144933262"
-                        Sky.SkyboxLf = "http://www.roblox.com/asset/?id=144933244"
-                        Sky.SkyboxRt = "http://www.roblox.com/asset/?id=144933299"
-                        Sky.SkyboxUp = "http://www.roblox.com/asset/?id=144931564"
-                        Sky.StarCount = 5000
-                        Sky.SunAngularSize = 5
-                        Sky.Name = "RevoSky"
-                        Sky.Parent = Lighting
+                    Sky.SkyboxBk = "http://www.roblox.com/asset/?id=144933338"
+                    Sky.SkyboxDn = "http://www.roblox.com/asset/?id=144931530"
+                    Sky.SkyboxFt = "http://www.roblox.com/asset/?id=144933262"
+                    Sky.SkyboxLf = "http://www.roblox.com/asset/?id=144933244"
+                    Sky.SkyboxRt = "http://www.roblox.com/asset/?id=144933299"
+                    Sky.SkyboxUp = "http://www.roblox.com/asset/?id=144931564"
+                    Sky.StarCount = 5000
+                    Sky.SunAngularSize = 5
+                    Sky.Parent = Lighting
 
-                        Bloom.Intensity = 0.3
-                        Bloom.Size = 10
-                        Bloom.Threshold = 0.8
-                        Bloom.Name = "RevoBloom"
-                        Bloom.Parent = Lighting
+                    Bloom.Intensity = 0.3
+                    Bloom.Size = 10
+                    Bloom.Threshold = 0.8
+                    Bloom.Parent = Lighting
 
-                        Blur.Size = 3
-                        Blur.Name = "RevoBlur"
-                        Blur.Parent = Lighting
+                    Blur.Size = 3
+                    Blur.Parent = Lighting
 
-                        ColorC.Brightness = 0
-                        ColorC.Contrast = 0.1
-                        ColorC.Saturation = 0.25
-                        ColorC.TintColor = Color3.fromRGB(255, 255, 255)
-                        ColorC.Name = "RevoColorC"
-                        ColorC.Parent = Lighting
+                    ColorC.Brightness = 0
+                    ColorC.Contrast = 0.1
+                    ColorC.Saturation = 0.25
+                    ColorC.TintColor = Color3.fromRGB(255, 255, 255)
+                    ColorC.Parent = Lighting
 
-                        SunRays.Intensity = 0.1
-                        SunRays.Spread = 0.8
-                        SunRays.Name = "RevoSunRays"
-                        SunRays.Parent = Lighting
-
-                        shadersOn = true
-                    else
-                        for _, v in pairs(Lighting:GetChildren()) do
-                            if v.Name == "RevoSky" or v.Name == "RevoBloom" or v.Name == "RevoBlur" or v.Name == "RevoColorC" or v.Name == "RevoSunRays" then
-                                v:Destroy()
-                            end
+                    SunRays.Intensity = 0.1
+                    SunRays.Spread = 0.8
+                    SunRays.Parent = Lighting
+                else
+                    local Lighting = game:GetService("Lighting")
+                    for _, v in pairs(Lighting:GetChildren()) do
+                        if v:IsA("Sky") or v:IsA("BloomEffect") or v:IsA("BlurEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("SunRaysEffect") then
+                            v:Destroy()
                         end
-
-                        Lighting.Brightness = 2
-                        Lighting.ExposureCompensation = 0
-                        shadersOn = false
                     end
-                end
-            })
 
-            BindButton(ShadersButton, "shaders")
+                    Lighting.Brightness = 2
+                    Lighting.ExposureCompensation = 0
+                end
+            end)
 
     -- Infinite Yeild
 
@@ -2566,17 +2524,9 @@
             InfiniteYieldButton.Parent = MiscPage
             AddCorner(InfiniteYieldButton)
 
-            addcmd("infiniteyield", {
-                Aliases = {"iy", "infy"},
-                Run = function()
-
-                    loadstring(game:HttpGet(
-                        "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
-                    ))()
-                end
-            })
-
-            BindButton(InfiniteYieldButton, "infiniteyield")
+            InfiniteYieldButton.MouseButton1Click:Connect(function()
+                loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+            end)
 
     -- Day
 
@@ -2595,18 +2545,13 @@
 
         -- Day Command
 
-            addcmd("day", {
-                Aliases = {"daytime", "time14"},
-                Run = function()
-                    if shadersOn then
-                        Notify("Revo", "Please Turn Off Shaders Before Changing Time.", 5)
-                    else
-                        Lighting.ClockTime = 14
-                    end
+            DayButton.MouseButton1Click:Connect(function()
+                if not shadersOn then
+                    game:GetService("Lighting").ClockTime = 14
+                else
+                    Notify("Revo", "Please Turn Off Shaders", 5)
                 end
-            })
-
-            BindButton(DayButton, "day")
+            end)
 
     -- Emotes
 
@@ -2625,19 +2570,10 @@
 
         -- Emotes Command
 
-            addcmd("emotes", {
-                Aliases = {"emote", "emotes"},
-                Run = function()
-
-                    Notify("Revo", "Loading Emotes.\nKeybind Is ,\nCredits: Gi#7331", 4)
-
-                    loadstring(game:HttpGet(
-                        "https://raw.githubusercontent.com/Gi7331/scripts/main/Emote.lua"
-                    ))()
-                end
-            })
-
-            BindButton(EmotesButton, "emotes")
+            EmotesButton.MouseButton1Click:Connect(function()
+                Notify("Revo","Loading Emotes. Keybind Is , \nCredits: Gi#7331")	
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Gi7331/scripts/main/Emote.lua"))()
+            end)
 
     -- Night
         
@@ -2656,18 +2592,13 @@
 
         -- Night Command
 
-            addcmd("night", {
-                Aliases = {"nighttime", "time19"},
-                Run = function()
-                    if shadersOn then
-                        Notify("Revo", "Please Turn Off Shaders Before Changing Time.", 5)
-                    else
-                        Lighting.ClockTime = 19
-                    end
+            NightButton.MouseButton1Click:Connect(function()
+                if not shadersOn then
+                    game:GetService("Lighting").ClockTime = 19
+                else
+                    Notify("Revo", "Please Turn Off Shaders.", 5)
                 end
-            })
-
-            BindButton(NightButton, "night")
+            end)
 
     -- UGC Emotes
 
@@ -2686,17 +2617,9 @@
 
         -- UGC Command
 
-            addcmd("ugcemotes", {
-                Aliases = {"ugc", "ugcems"},
-                Run = function()
-
-                    loadstring(game:HttpGet(
-                        "https://raw.githubusercontent.com/7yd7/Hub/refs/heads/Branch/GUIS/Emotes.lua"
-                    ))()
-                end
-            })
-
-            BindButton(UGCEmotesButton, "ugcemotes")
+            UGCEmotesButton.MouseButton1Click:Connect(function()	
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/7yd7/Hub/refs/heads/Branch/GUIS/Emotes.lua"))()
+            end)
 
     -- Explode
 
@@ -2715,31 +2638,18 @@
 
         -- Explode Command
 
-            addcmd("explode", {
-                Aliases = {"expl", "boom"},
-                Run = function()
-                    local char = player.Character
-                    if not char then return end
-
-                    local humanoid = char:FindFirstChildOfClass("Humanoid")
-                    local root = char:FindFirstChild("HumanoidRootPart")
-                    if not humanoid or not root then return end
-
-                    ToggleRagdoll(false)
-
-                    local bav = Instance.new("BodyAngularVelocity")
-                    bav.Name = "Spin"
-                    bav.MaxTorque = Vector3.new(0, math.huge, 0)
-                    bav.AngularVelocity = Vector3.new(0, 150, 0)
-                    bav.Parent = root
-
-                    task.wait(3)
-
-                    humanoid.Health = 0
-                end
-            })
-
-            BindButton(ExplodeButton, "explode")
+            ExplodeButton.MouseButton1Click:Connect(function()
+                ToggleRagdoll(false)
+                task.wait()
+                player.Character.Humanoid:ChangeState(0)
+                local bav = Instance.new("BodyAngularVelocity")
+                bav.Parent = GetRoot(player)
+                bav.Name = "Spin"
+                bav.MaxTorque = Vector3.new(0,math.huge,0)
+                bav.AngularVelocity = Vector3.new(0,150,0)
+                task.wait(3)
+                player.Character.Humanoid:ChangeState(15)
+            end)
 
     -- GUI Key
 
@@ -2909,7 +2819,7 @@
     VersionLabel.Size = UDim2.new(1, -20, 0, 20)
     VersionLabel.Position = UDim2.new(0, 10, 0, 30)
     VersionLabel.BackgroundTransparency = 1
-    VersionLabel.Text = "Version: 1.1"
+    VersionLabel.Text = "Version: 1.2"
     VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     VersionLabel.Font = Enum.Font.Gotham
     VersionLabel.TextSize = 14
