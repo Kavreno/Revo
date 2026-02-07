@@ -2,98 +2,102 @@
 
     -- Services
 
-    local Players          = game:GetService("Players")
-    local RunService       = game:GetService("RunService")
-    local UserInputService = game:GetService("UserInputService")
-    local StarterGui       = game:GetService("StarterGui")
-    local HttpService      = game:GetService("HttpService")
-    local httprequest      = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
-    local TeleportService  = game:GetService("TeleportService")
-    local Lighting         = game:GetService("Lighting")
+        local Players          = game:GetService("Players")
+        local RunService       = game:GetService("RunService")
+        local UserInputService = game:GetService("UserInputService")
+        local StarterGui       = game:GetService("StarterGui")
+        local HttpService      = game:GetService("HttpService")
+        local httprequest      = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+        local TeleportService  = game:GetService("TeleportService")
+        local Lighting         = game:GetService("Lighting")
 
     -- References
 
-    local player     = Players.LocalPlayer
-    local mouse      = player:GetMouse()
-    local playerGui  = player:WaitForChild("PlayerGui")
-    local PlaceId    = game.PlaceId
-    local humanoid   = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        local player     = Players.LocalPlayer
+        local mouse      = player:GetMouse()
+        local playerGui  = player:WaitForChild("PlayerGui")
+        local PlaceId    = game.PlaceId
+        local humanoid   = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
 
     -- GUI
 
-    local Pages                   = {}
-    local GUIKey                  = Enum.KeyCode.V
-    local dragging                = false
-    local dragStart               = nil
-    local startPos                = nil
-    local capturingGUIKey         = false
-    local guiCaptureConnection    = nil
-    local globalGUIConnection     = nil
+        local Pages                   = {}
+        local GUIKey                  = Enum.KeyCode.V
+        local dragging                = false
+        local dragStart               = nil
+        local startPos                = nil
+        local capturingGUIKey         = false
+        local guiCaptureConnection    = nil
+        local globalGUIConnection     = nil
 
     -- Target
 
-    local TargetedPlayer      = nil
-    local viewingTarget       = false
-    local focusingTarget      = false
-    local headsittingTarget   = false
-    local backpackingTarget   = false
-    local standingTarget      = false
-    local doggingTarget       = false
-    local draggingTarget      = false
-    local BangTarget          = false
-    local flingingTarget      = false
+        local TargetedPlayer      = nil
+        local viewingTarget       = false
+        local focusingTarget      = false
+        local headsittingTarget   = false
+        local backpackingTarget   = false
+        local standingTarget      = false
+        local doggingTarget       = false
+        local draggingTarget      = false
+        local BangTarget          = false
+        local flingingTarget      = false
 
     -- Shaders
 
-    local shadersOn = false
+        local shadersOn = false
 
     -- Fly
 
-    local FlyToggleKey           = nil
-    local flying                 = false
-    local flyThreadRunning       = false
-    local capturingFlyKey        = false
-    local flyCaptureConnection   = nil
-    local globalFlyConnection    = nil
-    local ignoreNextFlyToggle    = true
-    local FlySpeed               = 50
-    local ctrl                   = { f = 0, b = 0, l = 0, r = 0 }
-    local lastctrl               = { f = 0, b = 0, l = 0, r = 0 }
+        local FlyToggleKey           = nil
+        local flying                 = false
+        local flyThreadRunning       = false
+        local capturingFlyKey        = false
+        local flyCaptureConnection   = nil
+        local globalFlyConnection    = nil
+        local ignoreNextFlyToggle    = true
+        local FlySpeed               = 50
+        local ctrl                   = { f = 0, b = 0, l = 0, r = 0 }
+        local lastctrl               = { f = 0, b = 0, l = 0, r = 0 }
 
     -- Rewind
 
-    local RewindToggleKey            = nil
-    local rewinding                  = false
-    local recordingEnabled           = true
-    local REWIND_STEP                = 1
-    local RECORD_FPS                 = 25
-    local RECORD_INTERVAL            = 1 / RECORD_FPS
-    local REWIND_DURATION            = 300
-    local MAX_FRAMES                 = RECORD_FPS * REWIND_DURATION
-    local REWIND_SPEED               = 0.001
-    local rewindHistory              = table.create(MAX_FRAMES)
-    local writeIndex                 = 1
-    local storedFrames               = 0
-    local lastRecordTime             = 0
-    local capturingRewindKey         = false
-    local rewindCaptureConnection    = nil
-    local ignoreNextRewindToggle     = true
-    local globalRewindConnection     = nil
+        local RewindToggleKey            = nil
+        local rewinding                  = false
+        local recordingEnabled           = true
+        local REWIND_STEP                = 1
+        local RECORD_FPS                 = 25
+        local RECORD_INTERVAL            = 1 / RECORD_FPS
+        local REWIND_DURATION            = 300
+        local MAX_FRAMES                 = RECORD_FPS * REWIND_DURATION
+        local REWIND_SPEED               = 0.001
+        local rewindHistory              = table.create(MAX_FRAMES)
+        local writeIndex                 = 1
+        local storedFrames               = 0
+        local lastRecordTime             = 0
+        local capturingRewindKey         = false
+        local rewindCaptureConnection    = nil
+        local ignoreNextRewindToggle     = true
+        local globalRewindConnection     = nil
 
     -- Teleport
 
-    local TeleportToggleKey         = nil
-    local teleportKeyHeld           = false
-    local capturingTeleportKey      = false
-    local teleportCaptureConnection = nil
-    local globalTeleportConnection  = nil
+        local TeleportToggleKey         = nil
+        local teleportKeyHeld           = false
+        local capturingTeleportKey      = false
+        local teleportCaptureConnection = nil
+        local globalTeleportConnection  = nil
 
     -- Trip
 
-    local TripKey                  = nil
-    local capturingTripKey         = false
-    local tripCaptureConnection    = nil
-    local globalTripConnection     = nil
+        local TripKey                  = nil
+        local capturingTripKey         = false
+        local tripCaptureConnection    = nil
+        local globalTripConnection     = nil
+
+    -- Respawning
+        
+        local lastCFrame = nil
 
 -- Gui Load Detection
 
@@ -178,47 +182,6 @@
                 return player.Character:FindFirstChild("HumanoidRootPart")
             end
             return nil
-        end
-
-    -- Add Commands
-
-        Commands = {}
-        Aliases = {}
-
-        function addcmd(name, data)
-            Commands[name] = data
-
-            if data.Aliases then
-                for _, a in ipairs(data.Aliases) do
-                    Aliases[a] = name
-                end
-            end
-        end
-
-    -- Run Commands
-
-        function runCommand(text)
-            local split = string.split(text, " ")
-            local cmdName = split[1]:lower()
-            table.remove(split, 1)
-
-            cmdName = Aliases[cmdName] or cmdName
-            local cmd = Commands[cmdName]
-
-            if not cmd then
-                Notify("Revo", "Unknown Command: "..cmdName, 3)
-                return
-            end
-
-            cmd.Run(split)
-        end
-
-    -- Bind Button
-
-        function BindButton(button, cmdName)
-            button.MouseButton1Click:Connect(function()
-                runCommand(cmdName)
-            end)
         end
 
     -- Get Ping
@@ -506,7 +469,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "Fixed :) Fling Dosent Work Push Might"
+    AnnouncementsText.Text = "Added Teleport To Last Location On Reset. Fling Dosent Work Push Might."
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
@@ -2871,6 +2834,30 @@
                     end
                 end
             end
+
+        -- Teleport To Last Location On Respawn
+            
+            local function onCharacterAdded(character)
+                local humanoid = character:WaitForChild("Humanoid")
+                local root = character:WaitForChild("HumanoidRootPart")
+
+                if lastCFrame then
+                    task.wait(0.1)
+                    root.CFrame = lastCFrame
+                end
+
+                humanoid.Died:Connect(function()
+                    if root then
+                        lastCFrame = root.CFrame
+                    end
+                end)
+            end
+
+            if player.Character then
+                onCharacterAdded(player.Character)
+            end
+
+            player.CharacterAdded:Connect(onCharacterAdded)
 
 -- Credits
 
