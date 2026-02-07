@@ -506,7 +506,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "Fixed :) Drag And Doggy Dont Work Currently"
+    AnnouncementsText.Text = "Fixed :) Fling Dosent Work Push Might"
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
@@ -1750,11 +1750,81 @@
 
     -- Doggy Target
 
+        DoggyTarget_Button.MouseButton1Click:Connect(function()
+            if TargetedPlayer then
+                doggingTarget = not doggingTarget
 
+                if not doggingTarget and GetRoot(player):FindFirstChild("BreakVelocity") then
+                    StopAnim()
+                    GetRoot(player).BreakVelocity:Destroy()
+                    return
+                end
+
+                task.spawn(function()
+                    PlayAnim(13694096724, 3.4, 0)
+
+                    while doggingTarget do
+                        pcall(function()
+                            local playerRoot = GetRoot(player)
+                            local targetLowerTorso = Players[TargetedPlayer].Character.LowerTorso
+
+                            if not playerRoot:FindFirstChild("BreakVelocity") then
+                                local tempV = Velocity_Asset:Clone()
+                                tempV.Parent = playerRoot
+                            end
+
+                            playerRoot.CFrame = targetLowerTorso.CFrame * CFrame.new(0, 0.23, 0)
+                            playerRoot.Velocity = Vector3.new(0, 0, 0)
+                        end)
+                        task.wait()
+                    end
+
+                    StopAnim()
+                    if GetRoot(player):FindFirstChild("BreakVelocity") then
+                        GetRoot(player).BreakVelocity:Destroy()
+                    end
+                end)
+            end
+        end)
 
     -- Drag Target
 
+        DragTarget_Button.MouseButton1Click:Connect(function()
+            if TargetedPlayer then
+                draggingTarget = not draggingTarget
 
+                if not draggingTarget and GetRoot(player):FindFirstChild("BreakVelocity") then
+                    StopAnim()
+                    GetRoot(player).BreakVelocity:Destroy()
+                    return
+                end
+
+                task.spawn(function()
+                    PlayAnim(10714360343, 0.5, 0)
+
+                    while draggingTarget do
+                        pcall(function()
+                            local playerRoot = GetRoot(player)
+                            local targetRightHand = Players[TargetedPlayer].Character.RightHand
+
+                            if not playerRoot:FindFirstChild("BreakVelocity") then
+                                local tempV = Velocity_Asset:Clone()
+                                tempV.Parent = playerRoot
+                            end
+
+                            playerRoot.CFrame = targetRightHand.CFrame * CFrame.new(0, -2.5, 1) * CFrame.Angles(-2, -3, 0)
+                            playerRoot.Velocity = Vector3.new(0, 0, 0)
+                        end)
+                        task.wait()
+                    end
+
+                    StopAnim()
+                    if GetRoot(player):FindFirstChild("BreakVelocity") then
+                        GetRoot(player).BreakVelocity:Destroy()
+                    end
+                end)
+            end
+        end)
 
     -- Bang Target
 
