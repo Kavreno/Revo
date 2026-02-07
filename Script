@@ -1215,31 +1215,31 @@
 
                 task.spawn(function()
                     while task.wait() do
-                        if not jorkin then continue end
+                        if jorkin then
+                            local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
 
-                        local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
+                            if not track then
+                                local anim = Instance.new("Animation")
+                                anim.AnimationId = isR15
+                                    and "rbxassetid://698251653"
+                                    or "rbxassetid://72042024"
 
-                        if not track then
-                            local anim = Instance.new("Animation")
-                            anim.AnimationId = isR15
-                                and "rbxassetid://698251653"
-                                or  "rbxassetid://72042024"
+                                track = humanoid:LoadAnimation(anim)
+                            end
 
-                            track = humanoid:LoadAnimation(anim)
-                        end
+                            track:Play()
+                            track:AdjustSpeed(isR15 and 0.7 or 0.65)
+                            track.TimePosition = 0.6
 
-                        track:Play()
-                        track:AdjustSpeed(isR15 and 0.7 or 0.65)
-                        track.TimePosition = 0.6
-
-                        task.wait(0.1)
-                        while track and track.TimePosition < (isR15 and 0.7 or 0.65) do
                             task.wait(0.1)
-                        end
+                            while track and track.TimePosition < (isR15 and 0.7 or 0.65) do
+                                task.wait(0.1)
+                            end
 
-                        if track then
-                            track:Stop()
-                            track = nil
+                            if track then
+                                track:Stop()
+                                track = nil
+                            end
                         end
                     end
                 end)
