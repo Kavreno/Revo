@@ -137,14 +137,14 @@
 
 -- Gui Load Detection
 
-    -- if playerGui:FindFirstChild("RevoGUI") then
-    --     game:GetService("StarterGui"):SetCore("SendNotification", {
-    --         Title = "Revo",
-    --         Text = "GUI Already Loaded",
-    --         Duration = 5
-    --     })
-    --     return
-    -- end
+     if playerGui:FindFirstChild("RevoGUI") then
+         game:GetService("StarterGui"):SetCore("SendNotification", {
+             Title = "Revo",
+             Text = "GUI Already Loaded",
+             Duration = 5
+         })
+         return
+     end
 
 -- GUI
 
