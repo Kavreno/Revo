@@ -521,7 +521,7 @@
     AnnouncementsText.TextWrapped = true
     AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    AnnouncementsText.Text = "Disabled No Clip Due To Bugs. Fling Dosent Work Push Might."
+    AnnouncementsText.Text = "Send Me A 10 Hour Whimpering Audio If You Guys Want A Update."
     AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     AnnouncementsText.Font = Enum.Font.Gotham
     AnnouncementsText.TextSize = 16
