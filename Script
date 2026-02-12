@@ -1,12 +1,6 @@
 -- Need To Add
 
     -- Saving
-    -- Mute And Unmute Player
-    -- Hide And Unhide Player
-    -- Add Player
-    -- Unadd Player
-    -- Block Player
-    -- Inspect Player
     -- Fling
     -- Push
     -- Face Bang
@@ -14,6 +8,12 @@
     -- Not Sure If Adding
 
         -- Merge Emote Scripts
+        -- Mute And Unmute Player
+        -- Hide And Unhide Player
+        -- Add Player
+        -- Unadd Player
+        -- Block Player
+        -- Inspect Player
         -- Move While Emoting
         -- No Clip
         -- Chat Bypass
@@ -99,8 +99,14 @@
             Dragging = false,
             Banging = false,
             Flinging = false,
+            FaceBanging = false,
         }
-    
+
+            Revo.FaceBangSettings = {
+            Speed = 3,
+            Distance = 0.5
+        }
+            
     -- Shaders
 
         Revo.Shaders = {
@@ -748,7 +754,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Removed No Clip And Fixed Some Things In Target Section."
+    Revo.AnnouncementsText.Text = "Added Face Bang And Fling And Fixed Some Things In Target Section. Will And Push And Face Bang Distance Soon."
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -2663,7 +2669,77 @@
 
     -- Fling Target
 
+        Revo.GUI.TargetButtons.Fling.MouseButton1Click:Connect(function()
+            if not Revo.Target.Player then return end
 
+            Revo.Target.Flinging = not Revo.Target.Flinging
+
+            local myRoot = Revo:GetRoot(Revo.Player)
+            if not myRoot then return end
+
+            -- When turning ON, store original position
+            if Revo.Target.Flinging then
+                Revo.Target._FlingOldCFrame = myRoot.CFrame
+            end
+
+            -- When turning OFF
+            if not Revo.Target.Flinging then
+                if myRoot:FindFirstChild("BreakVelocity") then
+                    myRoot.BreakVelocity:Destroy()
+                end
+                if myRoot:FindFirstChild("FlingVelocity") then
+                    myRoot.FlingVelocity:Destroy()
+                end
+
+                -- Teleport back to old position safely
+                if Revo.Target._FlingOldCFrame then
+                    myRoot.AssemblyLinearVelocity = Vector3.zero
+                    myRoot.Velocity = Vector3.zero
+                    myRoot.CFrame = Revo.Target._FlingOldCFrame
+                end
+
+                return
+            end
+
+            task.spawn(function()
+                while Revo.Target.Flinging do
+                    pcall(function()
+                        local myRoot = Revo:GetRoot(Revo.Player)
+                        if not myRoot then return end
+
+                        local targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
+                        if not targetPlayer then return end
+
+                        local targetRoot = Revo:GetRoot(targetPlayer)
+                        if not targetRoot then return end
+
+                        if not myRoot:FindFirstChild("BreakVelocity") then
+                            local spin = Instance.new("BodyAngularVelocity")
+                            spin.Name = "BreakVelocity"
+                            spin.AngularVelocity = Vector3.new(0, 99999, 0)
+                            spin.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+                            spin.P = 1e6
+                            spin.Parent = myRoot
+                        end
+
+                        if not myRoot:FindFirstChild("FlingVelocity") then
+                            local flingVel = Instance.new("BodyVelocity")
+                            flingVel.Name = "FlingVelocity"
+                            flingVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+                            flingVel.Velocity = Vector3.new(0, 0, 0)
+                            flingVel.Parent = myRoot
+                        end
+
+                        myRoot.CFrame = targetRoot.CFrame
+                        myRoot.FlingVelocity.Velocity =
+                            (targetRoot.CFrame.LookVector * 250)
+
+                    end)
+
+                    task.wait()
+                end
+            end)
+        end)
 
     -- Push Target
 
@@ -2671,7 +2747,163 @@
 
     -- Face Bang Target
 
+        -- Speed And Distance Buttons
 
+            Revo.Buttons.FaceBangSpeed = Instance.new("TextButton")
+            Revo.Buttons.FaceBangSpeed.Size = UDim2.new(0, 200, 0, 30)
+            Revo.Buttons.FaceBangSpeed.Position = UDim2.new(0, 215, 0, 330)
+            Revo.Buttons.FaceBangSpeed.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.FaceBangSpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.FaceBangSpeed.Font = Enum.Font.Gotham
+            Revo.Buttons.FaceBangSpeed.TextSize = 16
+            Revo.Buttons.FaceBangSpeed.Text = "Face Bang Speed: " .. (Revo.FaceBangSettings.Speed or 3)
+            Revo.Buttons.FaceBangSpeed.Parent = Revo.GUI.TargetSection
+            Revo.GUI:AddCorner(Revo.Buttons.FaceBangSpeed)
+
+            Revo.Inputs.FaceBangSpeed = Instance.new("TextBox")
+            Revo.Inputs.FaceBangSpeed.Size = Revo.Buttons.FaceBangSpeed.Size
+            Revo.Inputs.FaceBangSpeed.Position = Revo.Buttons.FaceBangSpeed.Position
+            Revo.Inputs.FaceBangSpeed.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Inputs.FaceBangSpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Inputs.FaceBangSpeed.Font = Enum.Font.Gotham
+            Revo.Inputs.FaceBangSpeed.TextSize = 16
+            Revo.Inputs.FaceBangSpeed.PlaceholderText = "Enter Face Bang Speed"
+            Revo.Inputs.FaceBangSpeed.Visible = false
+            Revo.Inputs.FaceBangSpeed.ClearTextOnFocus = true
+            Revo.Inputs.FaceBangSpeed.Text = ""
+            Revo.Inputs.FaceBangSpeed.Parent = Revo.GUI.TargetSection
+            Revo.GUI:AddCorner(Revo.Inputs.FaceBangSpeed)
+
+            -- Revo.Buttons.FaceBangDistance = Instance.new("TextButton")
+            -- Revo.Buttons.FaceBangDistance.Size = UDim2.new(0, 200, 0, 30)
+            -- Revo.Buttons.FaceBangDistance.Position = UDim2.new(0, 5, 0, 330)
+            -- Revo.Buttons.FaceBangDistance.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            -- Revo.Buttons.FaceBangDistance.TextColor3 = Color3.fromRGB(255, 255, 255)
+            -- Revo.Buttons.FaceBangDistance.Font = Enum.Font.Gotham
+            -- Revo.Buttons.FaceBangDistance.TextSize = 16
+            -- Revo.Buttons.FaceBangDistance.Text = "Face Bang Distance: " .. (Revo.FaceBangSettings.Distance or 0.5)
+            -- Revo.Buttons.FaceBangDistance.Parent = Revo.GUI.TargetSection
+            -- Revo.GUI:AddCorner(Revo.Buttons.FaceBangDistance)
+
+            -- Revo.Inputs.FaceBangDistance = Instance.new("TextBox")
+            -- Revo.Inputs.FaceBangDistance.Size = Revo.Buttons.FaceBangDistance.Size
+            -- Revo.Inputs.FaceBangDistance.Position = Revo.Buttons.FaceBangDistance.Position
+            -- Revo.Inputs.FaceBangDistance.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            -- Revo.Inputs.FaceBangDistance.TextColor3 = Color3.fromRGB(255, 255, 255)
+            -- Revo.Inputs.FaceBangDistance.Font = Enum.Font.Gotham
+            -- Revo.Inputs.FaceBangDistance.TextSize = 16
+            -- Revo.Inputs.FaceBangDistance.PlaceholderText = "Enter Face Bang Distance"
+            -- Revo.Inputs.FaceBangDistance.Visible = false
+            -- Revo.Inputs.FaceBangDistance.ClearTextOnFocus = true
+            -- Revo.Inputs.FaceBangDistance.Text = ""
+            -- Revo.Inputs.FaceBangDistance.Parent = Revo.GUI.TargetSection
+            -- Revo.GUI:AddCorner(Revo.Inputs.FaceBangDistance)
+
+            -- Speed And Distance Functions
+
+                Revo.Buttons.FaceBangSpeed.MouseButton1Click:Connect(function()
+                    Revo.Buttons.FaceBangSpeed.Visible = false
+                    Revo.Inputs.FaceBangSpeed.Visible = true
+                    Revo.Inputs.FaceBangSpeed:CaptureFocus()
+                end)
+
+                Revo.Inputs.FaceBangSpeed.FocusLost:Connect(function()
+                    pcall(function()
+                        local Speed = Revo.Inputs.FaceBangSpeed.Text:gsub("%D", "")
+                        if Speed == "" then Speed = 3 end
+
+                        Revo.FaceBangSettings.Speed = tonumber(Speed)
+                        Revo.Buttons.FaceBangSpeed.Text = "Face Bang Speed: " .. Revo.FaceBangSettings.Speed
+                    end)
+
+                    Revo.Inputs.FaceBangSpeed.Text = ""
+                    Revo.Inputs.FaceBangSpeed.Visible = false
+                    Revo.Buttons.FaceBangSpeed.Visible = true
+                end)
+
+                -- Revo.Buttons.FaceBangDistance.MouseButton1Click:Connect(function()
+                --     Revo.Buttons.FaceBangDistance.Visible = false
+                --     Revo.Inputs.FaceBangDistance.Visible = true
+                --     Revo.Inputs.FaceBangDistance:CaptureFocus()
+                -- end)
+
+                -- Revo.Inputs.FaceBangDistance.FocusLost:Connect(function()
+                --     pcall(function()
+                --         local Distance = Revo.Inputs.FaceBangDistance.Text:gsub("[^%d%.]", "")
+                --         if Distance == "" then Distance = 0.5 end
+
+                --         Revo.FaceBangSettings.Distance = tonumber(Distance)
+                --         Revo.Buttons.FaceBangDistance.Text = "Face Bang Distance: " .. Revo.FaceBangSettings.Distance
+                --     end)
+
+                --     Revo.Inputs.FaceBangDistance.Text = ""
+                --     Revo.Inputs.FaceBangDistance.Visible = false
+                --     Revo.Buttons.FaceBangDistance.Visible = true
+                -- end)
+
+        -- Face Bang Function
+
+            Revo.GUI.TargetButtons.FaceBang.MouseButton1Click:Connect(function()
+                if not Revo.Target.Player then return end
+
+                Revo.Target.FaceBanging = not Revo.Target.FaceBanging
+
+                if not Revo.Target.FaceBanging then
+                    local char = Revo.Player.Character
+                    if not char then return end
+
+                    local root = Revo:GetRoot(Revo.Player)
+                    if not root then return end
+
+                    if root:FindFirstChild("BreakVelocity") then
+                        root.BreakVelocity:Destroy()
+                    end
+
+                    local humanoid = char:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.AutoRotate = true
+                        humanoid:ChangeState(Enum.HumanoidStateType.Running)
+                    end
+
+                    char.Animate.Disabled = false
+
+                    return
+                end
+
+                task.spawn(function()
+                    local t = 0
+                    while Revo.Target.FaceBanging do
+                        pcall(function()
+                            local root = Revo:GetRoot(Revo.Player)
+                            if not root then return end
+
+                            Revo:StopAnim()
+
+                            if not root:FindFirstChild("BreakVelocity") then
+                                local tempV = Revo.VelocityAsset:Clone()
+                                tempV.Parent = root
+                            end
+
+                            local targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
+                            if targetPlayer 
+                            and targetPlayer.Character 
+                            and targetPlayer.Character:FindFirstChild("Head") then
+
+                                local targetHead = targetPlayer.Character.Head
+
+                                local offsetZ = math.sin(t * Revo.FaceBangSettings.Speed) * Revo.FaceBangSettings.Distance
+                                root.CFrame = targetHead.CFrame 
+                                    * CFrame.new(0, 1, -1 - offsetZ)
+                                    * CFrame.Angles(0, math.rad(180), 0)
+
+                                root.Velocity = Vector3.new(0, 0, 0)
+                            end
+
+                            t = t + task.wait()
+                        end)
+                    end
+                end)
+            end)
 
     -- Player Removing
 
@@ -2685,6 +2917,7 @@
             Revo.Target.Dragging     = false
             Revo.Target.Banging      = false
             Revo.Target.Flinging     = false
+            Revo.Target.FaceBanging  = false
 
             local root = Revo:GetRoot(Revo.Player)
             if root and root:FindFirstChild("BreakVelocity") then
