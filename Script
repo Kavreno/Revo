@@ -251,14 +251,14 @@
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = "Revo",
-                Text = "GUI Already Loaded",
-                Duration = 5
-            })
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo.Services.StarterGui:SetCore("SendNotification", {
+        --         Title = "Revo",
+        --         Text = "GUI Already Loaded",
+        --         Duration = 5
+        --     })
+        --     return
+        -- end
 
     -- GUI Creation
 
@@ -749,7 +749,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Disabled No Clip Due To Bugs"
+    Revo.AnnouncementsText.Text = "Removed No Clip And Fixed Some Things In Target Section."
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -856,7 +856,7 @@
 
             Revo.Buttons.JumpPower = Instance.new("TextButton")
             Revo.Buttons.JumpPower.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.JumpPower.Position = UDim2.new(0, 5, 0, 180)
+            Revo.Buttons.JumpPower.Position = UDim2.new(0, 215, 0, 145)
             Revo.Buttons.JumpPower.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.JumpPower.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.JumpPower.Font = Enum.Font.Gotham
@@ -1624,157 +1624,6 @@
                     end
                 end)
             end)
-
-    -- No Clip
-
-        -- No Clip Key
-
-            Revo.Buttons.NoClipKey = Instance.new("TextButton")
-            Revo.Buttons.NoClipKey.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.NoClipKey.Position = UDim2.new(0, 215, 0, 145)
-            Revo.Buttons.NoClipKey.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.NoClipKey.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.NoClipKey.Font = Enum.Font.Gotham
-            Revo.Buttons.NoClipKey.TextSize = 16
-            Revo.Buttons.NoClipKey.Text = "No Clip Key: "..(Revo.NoClip.Key and Revo.NoClip.Key.Name or "None")
-            Revo.Buttons.NoClipKey.Parent = Revo.Pages.Character
-            Revo.GUI:AddCorner(Revo.Buttons.NoClipKey)
-
-            Revo.Inputs.NoClipKey = Instance.new("TextBox")
-            Revo.Inputs.NoClipKey.Size = Revo.Buttons.NoClipKey.Size
-            Revo.Inputs.NoClipKey.Position = Revo.Buttons.NoClipKey.Position
-            Revo.Inputs.NoClipKey.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Inputs.NoClipKey.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Inputs.NoClipKey.Font = Enum.Font.Gotham
-            Revo.Inputs.NoClipKey.TextSize = 16
-            Revo.Inputs.NoClipKey.PlaceholderText = "Press Any Key"
-            Revo.Inputs.NoClipKey.Visible = false
-            Revo.Inputs.NoClipKey.ClearTextOnFocus = true
-            Revo.Inputs.NoClipKey.Text = ""
-            Revo.Inputs.NoClipKey.Parent = Revo.Pages.Character
-            Revo.GUI:AddCorner(Revo.Inputs.NoClipKey)
-
-        -- No Clip Key Function
-
-        --     function Revo.NoClip:CancelKeyCapture()
-        --         self.Key = nil
-        --         Revo.Buttons.NoClipKey.Text = "No Clip Key: None"
-
-        --         Revo.Inputs.NoClipKey.Visible = false
-        --         Revo.Buttons.NoClipKey.Visible = true
-
-        --         self.CapturingKey = false
-
-        --         if self.CaptureConnection then
-        --             self.CaptureConnection:Disconnect()
-        --             self.CaptureConnection = nil
-        --         end
-
-        --         self:EnableGlobalListener()
-        --     end
-
-        --     Revo.Buttons.NoClipKey.MouseButton1Click:Connect(function()
-        --         Revo.Buttons.NoClipKey.Visible = false
-        --         Revo.Inputs.NoClipKey.Visible = true
-        --         Revo.Inputs.NoClipKey.Text = "Press Any Key"
-
-        --         Revo.NoClip.CapturingKey = true
-
-        --         if Revo.NoClip.GlobalConnection then
-        --             Revo.NoClip.GlobalConnection:Disconnect()
-        --             Revo.NoClip.GlobalConnection = nil
-        --         end
-        --         if Revo.NoClip.CaptureConnection then
-        --             Revo.NoClip.CaptureConnection:Disconnect()
-        --         end
-
-        --         Revo.NoClip.CaptureConnection = Revo.Services.UserInputService.InputBegan:Connect(function(input, gpe)
-        --             if gpe then return end
-        --             if not Revo.NoClip.CapturingKey then return end
-
-        --             if input.UserInputType == Enum.UserInputType.Keyboard then
-        --                 if input.KeyCode == Enum.KeyCode.Backspace then
-        --                     Revo.NoClip:CancelKeyCapture()
-        --                 else
-        --                     Revo.NoClip.Key = input.KeyCode
-        --                     Revo.Buttons.NoClipKey.Text = "No Clip Key: "..Revo.NoClip.Key.Name
-
-        --                     Revo.Inputs.NoClipKey.Visible = false
-        --                     Revo.Buttons.NoClipKey.Visible = true
-        --                     Revo.NoClip.CapturingKey = false
-
-        --                     Revo.NoClip.CaptureConnection:Disconnect()
-        --                     Revo.NoClip.CaptureConnection = nil
-
-        --                     Revo.NoClip:EnableGlobalListener()
-        --                 end
-        --             else
-        --                 Revo.NoClip:CancelKeyCapture()
-        --             end
-        --         end)
-        --     end)
-
-        -- -- No Clip Function
-
-        --     function Revo:StartNoClip()
-        --         if self.NoClip.NoclippingConnection then
-        --             self.NoClip.NoclippingConnection:Disconnect()
-        --         end
-
-        --         self.NoClip.Enabled = true
-
-        --         self.NoClip.NoclippingConnection = game:GetService("RunService").Stepped:Connect(function()
-        --             if self.NoClip.Enabled and self.Player.Character then
-        --                 for _, part in pairs(self.Player.Character:GetDescendants()) do
-        --                     if part:IsA("BasePart") and part.CanCollide and part.Name ~= "FloatPart" then
-        --                         part.CanCollide = false
-        --                     end
-        --                 end
-        --             end
-        --         end)
-
-        --     end
-
-        --     function Revo:StopNoClip()
-        --         if self.NoClip.NoclippingConnection then
-        --             self.NoClip.NoclippingConnection:Disconnect()
-        --             self.NoClip.NoclippingConnection = nil
-        --         end
-
-        --         self.NoClip.Enabled = false
-
-        --         if self.Player.Character then
-        --             for _, part in pairs(self.Player.Character:GetDescendants()) do
-        --                 if part:IsA("BasePart") and part.Name ~= "FloatPart" then
-        --                     part.CanCollide = true
-        --                 end
-        --             end
-        --         end
-
-        --     end
-
-        --     function Revo:ToggleNoClip()
-        --         if self.NoClip.Enabled then
-        --             self:StopNoClip()
-        --             Revo:Notify("Revo", "No Clip Disabled", 5)
-        --         else
-        --             self:StartNoClip()
-        --             Revo:Notify("Revo", "No Clip Enabled", 5)
-        --         end
-        --     end
-
-        --     function Revo.NoClip:EnableGlobalListener()
-        --         if self.GlobalConnection then return end
-        --         self.GlobalConnection = Revo.Services.UserInputService.InputBegan:Connect(function(input, gpe)
-        --             if gpe then return end
-        --             if self.CapturingKey then return end
-        --             if self.Key and input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == self.Key then
-        --                 Revo:ToggleNoClip()
-        --             end
-        --         end)
-        --     end
-
-        --     Revo.NoClip:EnableGlobalListener()
 
     -- Jerk
 
@@ -2800,6 +2649,8 @@
             Revo.Target.Dragging     = false
             Revo.Target.Banging      = false
             Revo.Target.Flinging     = false
+
+            Revo.Player.Character.Humanoid.Sit = false
 
             Revo:StopAnim()
 
