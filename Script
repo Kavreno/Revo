@@ -251,14 +251,14 @@
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = "Revo",
-                Text = "GUI Already Loaded",
-                Duration = 5
-            })
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo.Services.StarterGui:SetCore("SendNotification", {
+        --         Title = "Revo",
+        --         Text = "GUI Already Loaded",
+        --         Duration = 5
+        --     })
+        --     return
+        -- end
 
     -- GUI Creation
 
@@ -2390,10 +2390,24 @@
             Revo.Target.Headsitting = not Revo.Target.Headsitting
 
             if not Revo.Target.Headsitting then
+                local char = Revo.Player.Character
+                if not char then return end
+
                 local root = Revo:GetRoot(Revo.Player)
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if not humanoid then return end
+
                 if root and root:FindFirstChild("BreakVelocity") then
                     root.BreakVelocity:Destroy()
                 end
+
+                humanoid.Sit = false
+                humanoid.AutoRotate = true
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+
+                task.wait()
+                humanoid:ChangeState(Enum.HumanoidStateType.Running)
+
                 return
             end
 
@@ -2412,7 +2426,7 @@
                         if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
                             local targetHead = targetPlayer.Character.Head
                             Revo.Player.Character.Humanoid.Sit = true
-                            root.CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
+                            Revo:GetRoot(Revo.Player).CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
                             root.Velocity = Vector3.new(0, 0, 0)
                         end
                     end)
@@ -2428,13 +2442,31 @@
 
             Revo.Target.Backpacking = not Revo.Target.Backpacking
 
+            local char = Revo.Player.Character
+            if not char then return end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local root = Revo:GetRoot(Revo.Player)
+            if not humanoid or not root then return end
+
             if not Revo.Target.Backpacking then
-                local root = Revo:GetRoot(Revo.Player)
-                if root and root:FindFirstChild("BreakVelocity") then
+
+                if root:FindFirstChild("BreakVelocity") then
                     root.BreakVelocity:Destroy()
                 end
+
+                humanoid.Sit = false
+                humanoid.AutoRotate = true
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+
+                task.wait()
+                humanoid:ChangeState(Enum.HumanoidStateType.Running)
+
                 return
             end
+
+            humanoid.Sit = true
+            humanoid.AutoRotate = false
 
             task.spawn(function()
                 while Revo.Target.Backpacking do
@@ -2450,11 +2482,16 @@
                         local targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
                         if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                             local targetRoot = targetPlayer.Character.HumanoidRootPart
-                            Revo.Player.Character.Humanoid.Sit = true
-                            root.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.2) * CFrame.Angles(0, -3, 0)
-                            root.Velocity = Vector3.new(0, 0, 0)
+
+                            root.CFrame =
+                                targetRoot.CFrame
+                                * CFrame.new(0, 0, 1.2)
+                                * CFrame.Angles(0, -3, 0)
+
+                            root.Velocity = Vector3.zero
                         end
                     end)
+
                     task.wait()
                 end
             end)
@@ -2648,8 +2685,6 @@
             Revo.Target.Dragging     = false
             Revo.Target.Banging      = false
             Revo.Target.Flinging     = false
-
-            Revo:StopAnim()
 
             local root = Revo:GetRoot(Revo.Player)
             if root and root:FindFirstChild("BreakVelocity") then
