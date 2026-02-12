@@ -749,7 +749,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Version 2.0 Release, Added Walk On Air, Invisibility, No Clip, Anti Void, Anti AFK, Auto Clicker, Fixed Emotes, No Sit, Jump Power."
+    Revo.AnnouncementsText.Text = "Disabled No Clip Due To Bugs"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
