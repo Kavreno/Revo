@@ -1,7 +1,6 @@
 -- Need To Add
 
-    -- Saving Keybinds Etc
-    -- Move While Emoting
+    -- Saving
     -- Mute And Unmute Player
     -- Hide And Unhide Player
     -- Add Player
@@ -11,11 +10,12 @@
     -- Fling
     -- Push
     -- Face Bang
-    -- Merge Emote Scripts
-    -- Fix No Clip
 
     -- Not Sure If Adding
 
+        -- Merge Emote Scripts
+        -- Move While Emoting
+        -- No Clip
         -- Chat Bypass
         -- Voice Chat Bypass
         -- Aim Bot
@@ -251,14 +251,14 @@
 
     -- GUI Load Detection
 
-        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-        --     Revo.Services.StarterGui:SetCore("SendNotification", {
-        --         Title = "Revo",
-        --         Text = "GUI Already Loaded",
-        --         Duration = 5
-        --     })
-        --     return
-        -- end
+        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+            Revo.Services.StarterGui:SetCore("SendNotification", {
+                Title = "Revo",
+                Text = "GUI Already Loaded",
+                Duration = 5
+            })
+            return
+        end
 
     -- GUI Creation
 
