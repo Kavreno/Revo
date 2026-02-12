@@ -770,7 +770,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 2.0"
+    Revo.VersionLabel.Text = "Version: 2.1"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -2650,7 +2650,16 @@
             Revo.Target.Banging      = false
             Revo.Target.Flinging     = false
 
-            Revo.Player.Character.Humanoid.Sit = false
+
+            if Revo.Target.Headsitting then
+                Revo.Target.Headsitting = false
+                Revo.Player.Character.Humanoid.Sit = false
+            end
+
+            if Revo.Target.Backpacking then
+                Revo.Target.Backpacking = false
+                Revo.Player.Character.Humanoid.Sit = false
+            end
 
             Revo:StopAnim()
 
