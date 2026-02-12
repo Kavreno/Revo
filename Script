@@ -494,7 +494,6 @@
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 if not hum then return end
 
-                -- Stop existing animations
                 for _, track in pairs(hum:GetPlayingAnimationTracks()) do
                     track:Stop()
                 end
@@ -2649,17 +2648,6 @@
             Revo.Target.Dragging     = false
             Revo.Target.Banging      = false
             Revo.Target.Flinging     = false
-
-
-            if Revo.Target.Headsitting then
-                Revo.Target.Headsitting = false
-                Revo.Player.Character.Humanoid.Sit = false
-            end
-
-            if Revo.Target.Backpacking then
-                Revo.Target.Backpacking = false
-                Revo.Player.Character.Humanoid.Sit = false
-            end
 
             Revo:StopAnim()
 
