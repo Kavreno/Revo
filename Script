@@ -250,14 +250,14 @@
 
     -- GUI Load Detection
 
-        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            -- Revo.Services.StarterGui:SetCore("SendNotification", {
-            --     Title = "Revo",
-            --     Text = "GUI Already Loaded",
-            --     Duration = 5
-        --     })
-        --     return
-        -- end
+        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+            Revo.Services.StarterGui:SetCore("SendNotification", {
+                Title = "Revo",
+                Text = "GUI Already Loaded",
+                Duration = 5
+            })
+            return
+        end
 
     -- GUI Creation
 
@@ -2789,21 +2789,35 @@
 
     -- Player Removing
 
+        function Revo:StopTargetActions()
+            Revo.Target.Viewing      = false
+            Revo.Target.Focusing     = false
+            Revo.Target.Headsitting  = false
+            Revo.Target.Backpacking  = false
+            Revo.Target.Standing     = false
+            Revo.Target.Dogging      = false
+            Revo.Target.Dragging     = false
+            Revo.Target.Banging      = false
+            Revo.Target.Flinging     = false
+
+            Revo:StopAnim()
+
+            local root = Revo:GetRoot(Revo.Player)
+            if root and root:FindFirstChild("BreakVelocity") then
+                root.BreakVelocity:Destroy()
+            end
+
+            local camera = workspace.CurrentCamera
+            if camera and Revo.Player.Character and Revo.Player.Character:FindFirstChild("Humanoid") then
+                camera.CameraSubject = Revo.Player.Character.Humanoid
+            end
+        end
+
         Revo.Services.Players.PlayerRemoving:Connect(function(player)
             pcall(function()
                 if Revo.Target.Player and player.Name == Revo.Target.Player then
                     Revo:UpdateTarget(nil)
-
-                    Revo.Target.Viewing      = false
-                    Revo.Target.Focusing     = false
-                    Revo.Target.Headsitting  = false
-                    Revo.Target.Backpacking  = false
-                    Revo.Target.Standing     = false
-                    Revo.Target.Dogging      = false
-                    Revo.Target.Dragging     = false
-                    Revo.Target.Banging      = false
-                    Revo.Target.Flinging     = false
-
+                    Revo:StopTargetActions()
                     Revo:Notify("Revo", "Targeted Player Left/Rejoined.", 5)
                 end
             end)
