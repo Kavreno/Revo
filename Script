@@ -2,14 +2,14 @@
 
     -- Saving
     -- Better Face Bang Distance
-    -- Mute And Unmute Player
-    -- Hide And Unhide Player
-    -- Add And Unadd Player
-    -- Block And Unblock Player
 
     -- Not Sure If Adding
 
         -- Merge Emote Scripts
+        -- Mute And Unmute Player
+        -- Hide And Unhide Player
+        -- Add And Unadd Player
+        -- Block And Unblock Player
         -- Move While Emoting
         -- No Clip
         -- Chat Bypass
@@ -59,12 +59,6 @@
         Revo.PlayerGui = Revo.Player:WaitForChild("PlayerGui")
         Revo.PlaceId = game.PlaceId
         Revo.Humanoid = Revo.Player.Character and Revo.Player.Character:FindFirstChildOfClass("Humanoid")
-
-    -- Save And Loading Settings
-
-        -- Revo.SAVE_FILE = "RevoSettings.json"
-        -- Revo.Settings = Revo.Settings or {}
-        -- Revo.Settings.AutoSave = false
 
     -- GUI
 
@@ -317,62 +311,6 @@
         
 
 -- Functions
-
-    -- Save And Loading
-
-        -- Save Button
-
-            -- Revo.SaveButton = Instance.new("TextButton")
-            -- Revo.SaveButton.Size = UDim2.new(0, 60, 0, 30)
-            -- Revo.SaveButton.Position = UDim2.new(1, -65, 0.5, -15)
-            -- Revo.SaveButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            -- Revo.SaveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            -- Revo.SaveButton.Font = Enum.Font.Gotham
-            -- Revo.SaveButton.TextSize = 14
-            -- Revo.SaveButton.Text = "Save"
-            -- Revo.SaveButton.Parent = Revo.GUI.TitleBar
-            -- Revo.GUI:AddCorner(Revo.SaveButton)
-
-        -- Save Button Function
-        
-            -- function Revo:UpdateSaveButtonText()
-            --     if self.Settings.AutoSave then
-            --         self.SaveButton.Text = "Saving"
-            --     else
-            --         self.SaveButton.Text = "Save"
-            --     end
-            -- end
-            
-            -- Revo:UpdateSaveButtonText()
-
-            -- Revo.SaveButton.MouseButton1Click:Connect(function()
-            --     Revo.Settings.AutoSave = not Revo.Settings.AutoSave
-
-            --     Revo:UpdateSaveButtonText()
-
-            --     Revo:SaveSettings()
-            -- end)
-
-        -- Save Function
-
-            -- function Revo:SaveSettings()
-            --     writefile(
-            --         Revo.SAVE_FILE,
-            --         Revo.Services.HttpService:JSONEncode(Revo.Settings)
-            --     )
-            -- end
-
-            -- if isfile(Revo.SAVE_FILE) then
-            --     local success, data = pcall(function()
-            --         return Revo.Services.HttpService:JSONDecode(readfile(Revo.SAVE_FILE))
-            --     end)
-
-            --     if success and type(data) == "table" then
-            --         for k, v in pairs(data) do
-            --             Revo.Settings[k] = v
-            --         end
-            --     end
-            -- end
 
     -- Create Pages
 
@@ -740,7 +678,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Changed Fling, Added Push, Added Inpsect Player, Changed UI Navigation To Be Faster, Made Headsit And Backpack Work With No Sit, And More Adjustments To Target Removing"
+    Revo.AnnouncementsText.Text = "Fixed Face Bang Distance"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -761,7 +699,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 2.1"
+    Revo.VersionLabel.Text = "Version: 2.3"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -2975,9 +2913,10 @@
 
                                 local targetHead = targetPlayer.Character.Head
 
+                                local startOffset = 0.7                    
                                 local offsetZ = math.sin(t * Revo.FaceBangSettings.Speed) * Revo.FaceBangSettings.Distance
                                 root.CFrame = targetHead.CFrame 
-                                    * CFrame.new(0, 1, -1 - offsetZ)
+                                    * CFrame.new(0, 1, -Revo.FaceBangSettings.Distance - startOffset + offsetZ)
                                     * CFrame.Angles(0, math.rad(180), 0)
 
                                 root.Velocity = Vector3.new(0, 0, 0)
