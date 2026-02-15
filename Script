@@ -1,18 +1,15 @@
 -- Need To Add
 
     -- Saving
-    -- Push
     -- Better Face Bang Distance
+    -- Mute And Unmute Player
+    -- Hide And Unhide Player
+    -- Add And Unadd Player
+    -- Block And Unblock Player
 
     -- Not Sure If Adding
 
         -- Merge Emote Scripts
-        -- Mute And Unmute Player
-        -- Hide And Unhide Player
-        -- Add Player
-        -- Unadd Player
-        -- Block Player
-        -- Inspect Player
         -- Move While Emoting
         -- No Clip
         -- Chat Bypass
@@ -45,6 +42,7 @@
             TeleportService = game:GetService("TeleportService"),
             Lighting = game:GetService("Lighting"),
             VirtualUser = game:GetService("VirtualUser"),
+            GuiService = game:GetService("GuiService"),
         }
 
         Revo.HttpRequest =
@@ -117,6 +115,8 @@
         Revo.NoSit = {
             Enabled = false
         }
+
+        Revo._NoSitBeforeSitActions = false
 
     -- Anti AFK
 
@@ -256,14 +256,14 @@
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = "Revo",
-                Text = "GUI Already Loaded",
-                Duration = 5
-            })
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo.Services.StarterGui:SetCore("SendNotification", {
+        --         Title = "Revo",
+        --         Text = "GUI Already Loaded",
+        --         Duration = 5
+        --     })
+        --     return
+        -- end
 
     -- GUI Creation
 
@@ -629,7 +629,6 @@
     Revo.Pages.Target = Revo.GUI:CreatePage("Target")
     Revo.Pages.Animations = Revo.GUI:CreatePage("Animations")
     Revo.Pages.Misc = Revo.GUI:CreatePage("Misc")
-    Revo.Pages.Empty = Revo.GUI:CreatePage("Empty")
     Revo.Pages.Home = Revo.GUI:CreatePage("Home")
     Revo.Pages.Home.Visible = true
 
@@ -647,17 +646,6 @@
     Revo.UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
     Revo.UIList.VerticalAlignment = Enum.VerticalAlignment.Center
     Revo.UIList.Parent = Revo.ButtonBar
-
-    Revo.HomeButton = Instance.new("TextButton")
-    Revo.HomeButton.Size = UDim2.new(0, 60, 0, 30)
-    Revo.HomeButton.Position = UDim2.new(0, 5, 0.5, -15)
-    Revo.HomeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    Revo.HomeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Revo.HomeButton.Font = Enum.Font.Gotham
-    Revo.HomeButton.TextSize = 14
-    Revo.HomeButton.Text = "Home"
-    Revo.HomeButton.Parent = Revo.GUI.TitleBar
-    Revo.GUI:AddCorner(Revo.HomeButton)
 
     function Revo:CreateButton(name)
         local btn = Instance.new("TextButton")
@@ -682,11 +670,10 @@
 
             for _, b in ipairs(self.ButtonBar:GetChildren()) do
                 if b:IsA("TextButton") then
-                    b.Visible = false
+                    b.Visible = true
                 end
             end
 
-            self.HomeButton.Visible = true
         end)
 
         return btn
@@ -695,11 +682,11 @@
     Revo.Buttons = {}
     Revo.Inputs = {}
 
+    Revo.Buttons.Home = Revo:CreateButton("Home")
     Revo.Buttons.Character = Revo:CreateButton("Character")
     Revo.Buttons.Target = Revo:CreateButton("Target")
     Revo.Buttons.Animations = Revo:CreateButton("Animations")
     Revo.Buttons.Misc = Revo:CreateButton("Misc")
-    Revo.Buttons.Empty = Revo:CreateButton("Empty")
 
 -- Title Bar
 
@@ -753,7 +740,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Face Bang Distance Does Not Work Well. Will And Push Soon."
+    Revo.AnnouncementsText.Text = "Changed Fling, Added Push, Added Inpsect Player, Changed UI Navigation To Be Faster, Made Headsit And Backpack Work With No Sit, And More Adjustments To Target Removing"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -781,7 +768,7 @@
     Revo.VersionLabel.TextXAlignment = Enum.TextXAlignment.Right
     Revo.VersionLabel.Parent = Revo.Pages.Home
 
-    Revo.HomeButton.MouseButton1Click:Connect(function()
+    Revo.Buttons.Home.MouseButton1Click:Connect(function()
         for _, page in pairs(Revo.Pages) do
             page.Visible = false
         end
@@ -801,6 +788,70 @@
 
 -- Character
 
+    Revo.GUI.CharacterLeftColumn = Instance.new("Frame")
+    Revo.GUI.CharacterLeftColumn.Size = UDim2.new(0.5, -5, 1, 0)
+    Revo.GUI.CharacterLeftColumn.Position = UDim2.new(0, 0, 0, 0)
+    Revo.GUI.CharacterLeftColumn.BackgroundTransparency = 1
+    Revo.GUI.CharacterLeftColumn.Parent = Revo.Pages.Character
+
+    Revo.GUI.CharacterRightColumn = Instance.new("Frame")
+    Revo.GUI.CharacterRightColumn.Size = UDim2.new(0.5, -5, 1, 0)
+    Revo.GUI.CharacterRightColumn.Position = UDim2.new(0.5, 0, 0, 0)
+    Revo.GUI.CharacterRightColumn.BackgroundTransparency = 1
+    Revo.GUI.CharacterRightColumn.Parent = Revo.Pages.Character
+
+    Revo.GUI.CharacterLeftLayout = Instance.new("UIListLayout")
+    Revo.GUI.CharacterLeftLayout.FillDirection = Enum.FillDirection.Vertical
+    Revo.GUI.CharacterLeftLayout.Padding = UDim.new(0, 5)
+    Revo.GUI.CharacterLeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    Revo.GUI.CharacterLeftLayout.Parent = Revo.GUI.CharacterLeftColumn
+
+    Revo.GUI.CharacterRightLayout = Instance.new("UIListLayout")
+    Revo.GUI.CharacterRightLayout.FillDirection = Enum.FillDirection.Vertical
+    Revo.GUI.CharacterRightLayout.Padding = UDim.new(0, 5)
+    Revo.GUI.CharacterRightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    Revo.GUI.CharacterRightLayout.Parent = Revo.GUI.CharacterRightColumn
+
+    Revo.GUI.CharacterSection = Instance.new("ScrollingFrame")
+    Revo.GUI.CharacterSection.Name = "Character_Section"
+    Revo.GUI.CharacterSection.Size = UDim2.new(1, 20, 1, -40)
+    Revo.GUI.CharacterSection.Position = UDim2.new(0, 0, 0, 35)
+    Revo.GUI.CharacterSection.BackgroundTransparency = 1
+    Revo.GUI.CharacterSection.ScrollBarThickness = 0
+    Revo.GUI.CharacterSection.ClipsDescendants = true
+    Revo.GUI.CharacterSection.ScrollingDirection = Enum.ScrollingDirection.Y
+    Revo.GUI.CharacterSection.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    Revo.GUI.CharacterSection.Parent = Revo.Pages.Character
+
+    Revo.GUI.CharacterPadding = Instance.new("UIPadding")
+    Revo.GUI.CharacterPadding.PaddingTop = UDim.new(0, 0)
+    Revo.GUI.CharacterPadding.PaddingBottom = UDim.new(0, 5)
+    Revo.GUI.CharacterPadding.PaddingLeft = UDim.new(0, 0)
+    Revo.GUI.CharacterPadding.PaddingRight = UDim.new(0, 0)
+    Revo.GUI.CharacterPadding.Parent = Revo.GUI.CharacterSection
+
+    function Revo:UpdateCharacterCanvas()
+        pcall(function()
+            local scroll = Revo.GUI.CharacterSection
+            local leftLayout = Revo.GUI.CharacterLeftLayout
+            local rightLayout = Revo.GUI.CharacterRightLayout
+            if not scroll or not leftLayout or not rightLayout then return end
+
+            scroll.CanvasSize = UDim2.new(0, 0, 0, math.max(leftLayout.AbsoluteContentSize.Y, rightLayout.AbsoluteContentSize.Y) + 10)
+        end)
+    end
+
+    Revo.GUI.CharacterLeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Revo:UpdateCharacterCanvas()
+    end)
+    Revo.GUI.CharacterRightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Revo:UpdateCharacterCanvas()
+    end)
+
+    task.defer(function()
+        Revo:UpdateCharacterCanvas()
+    end)
+
     -- Walk Speed
 
         -- Walk Speed Button
@@ -813,7 +864,7 @@
             Revo.Buttons.WalkSpeed.Font = Enum.Font.Gotham
             Revo.Buttons.WalkSpeed.TextSize = 16
             Revo.Buttons.WalkSpeed.Text = "Walk Speed: 16"
-            Revo.Buttons.WalkSpeed.Parent = Revo.Pages.Character
+            Revo.Buttons.WalkSpeed.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.WalkSpeed)
 
             Revo.Inputs.WalkSpeed = Instance.new("TextBox")
@@ -826,7 +877,7 @@
             Revo.Inputs.WalkSpeed.PlaceholderText = "Enter Walk Speed"
             Revo.Inputs.WalkSpeed.Visible = false
             Revo.Inputs.WalkSpeed.ClearTextOnFocus = true
-            Revo.Inputs.WalkSpeed.Parent = Revo.Pages.Character
+            Revo.Inputs.WalkSpeed.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Inputs.WalkSpeed)
 
         -- Walk Speed Function
@@ -866,7 +917,7 @@
             Revo.Buttons.JumpPower.Font = Enum.Font.Gotham
             Revo.Buttons.JumpPower.TextSize = 16
             Revo.Buttons.JumpPower.Text = "Jump Power: 50"
-            Revo.Buttons.JumpPower.Parent = Revo.Pages.Character
+            Revo.Buttons.JumpPower.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.JumpPower)
 
             Revo.Inputs.JumpPower = Instance.new("TextBox")
@@ -879,7 +930,7 @@
             Revo.Inputs.JumpPower.PlaceholderText = "Enter Jump Power"
             Revo.Inputs.JumpPower.Visible = false
             Revo.Inputs.JumpPower.ClearTextOnFocus = true
-            Revo.Inputs.JumpPower.Parent = Revo.Pages.Character
+            Revo.Inputs.JumpPower.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Inputs.JumpPower)
 
         -- Jump Power Function
@@ -1019,13 +1070,13 @@
 
                 Revo.Buttons.FlySpeed = Instance.new("TextButton")
                 Revo.Buttons.FlySpeed.Size = UDim2.new(0, 200, 0, 30)
-                Revo.Buttons.FlySpeed.Position = UDim2.new(1, -205, 0, 5)
+                Revo.Buttons.FlySpeed.Position = UDim2.new(0, 215, 0, 5)
                 Revo.Buttons.FlySpeed.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 Revo.Buttons.FlySpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
                 Revo.Buttons.FlySpeed.Font = Enum.Font.Gotham
                 Revo.Buttons.FlySpeed.TextSize = 16
                 Revo.Buttons.FlySpeed.Text = "Fly Speed: " .. (Revo.Fly.Speed or 50)
-                Revo.Buttons.FlySpeed.Parent = Revo.Pages.Character
+                Revo.Buttons.FlySpeed.Parent = Revo.GUI.CharacterSection
                 Revo.GUI:AddCorner(Revo.Buttons.FlySpeed)
 
                 Revo.Inputs.FlySpeed = Instance.new("TextBox")
@@ -1038,7 +1089,7 @@
                 Revo.Inputs.FlySpeed.PlaceholderText = "Enter Fly Speed"
                 Revo.Inputs.FlySpeed.Visible = false
                 Revo.Inputs.FlySpeed.ClearTextOnFocus = true
-                Revo.Inputs.FlySpeed.Parent = Revo.Pages.Character
+                Revo.Inputs.FlySpeed.Parent = Revo.GUI.CharacterSection
                 Revo.GUI:AddCorner(Revo.Inputs.FlySpeed)
 
             -- Fly Speed Function
@@ -1073,7 +1124,7 @@
             Revo.Buttons.FlyKey.Font = Enum.Font.Gotham
             Revo.Buttons.FlyKey.TextSize = 16
             Revo.Buttons.FlyKey.Text = "Fly Key: "..(Revo.Fly.Key and Revo.Fly.Key.Name or "None")
-            Revo.Buttons.FlyKey.Parent = Revo.Pages.Character
+            Revo.Buttons.FlyKey.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.FlyKey)
 
             Revo.Inputs.FlyKey = Instance.new("TextBox")
@@ -1087,7 +1138,7 @@
             Revo.Inputs.FlyKey.Visible = false
             Revo.Inputs.FlyKey.ClearTextOnFocus = true
             Revo.Inputs.FlyKey.Text = ""
-            Revo.Inputs.FlyKey.Parent = Revo.Pages.Character
+            Revo.Inputs.FlyKey.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Inputs.FlyKey)
 
         -- Fly Key Function
@@ -1188,7 +1239,7 @@
             Revo.Buttons.TeleportKey.Font = Enum.Font.Gotham
             Revo.Buttons.TeleportKey.TextSize = 16
             Revo.Buttons.TeleportKey.Text = "Teleport Key: "..(Revo.Teleport.Key and Revo.Teleport.Key.Name or "None")
-            Revo.Buttons.TeleportKey.Parent = Revo.Pages.Character
+            Revo.Buttons.TeleportKey.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.TeleportKey)
 
             Revo.Inputs.TeleportKey = Instance.new("TextBox")
@@ -1202,7 +1253,7 @@
             Revo.Inputs.TeleportKey.Visible = false
             Revo.Inputs.TeleportKey.ClearTextOnFocus = true
             Revo.Inputs.TeleportKey.Text = ""
-            Revo.Inputs.TeleportKey.Parent = Revo.Pages.Character
+            Revo.Inputs.TeleportKey.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Inputs.TeleportKey)
 
         -- Teleport Function
@@ -1336,7 +1387,7 @@
             Revo.Buttons.RewindKey.Font = Enum.Font.Gotham
             Revo.Buttons.RewindKey.TextSize = 16
             Revo.Buttons.RewindKey.Text = "Rewind Key: "..(Revo.Rewind.Key and Revo.Rewind.Key.Name or "None")
-            Revo.Buttons.RewindKey.Parent = Revo.Pages.Character
+            Revo.Buttons.RewindKey.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.RewindKey)
 
             Revo.Inputs.RewindKey = Instance.new("TextBox")
@@ -1350,7 +1401,7 @@
             Revo.Inputs.RewindKey.Visible = false
             Revo.Inputs.RewindKey.ClearTextOnFocus = true
             Revo.Inputs.RewindKey.Text = ""
-            Revo.Inputs.RewindKey.Parent = Revo.Pages.Character
+            Revo.Inputs.RewindKey.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Inputs.RewindKey)
 
         -- Rewind Function
@@ -1517,7 +1568,7 @@
             Revo.Buttons.TripKey.Font = Enum.Font.Gotham
             Revo.Buttons.TripKey.TextSize = 16
             Revo.Buttons.TripKey.Text = "Trip Key: "..(Revo.Trip.Key and Revo.Trip.Key.Name or "None")
-            Revo.Buttons.TripKey.Parent = Revo.Pages.Character
+            Revo.Buttons.TripKey.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.TripKey)
 
             Revo.Inputs.TripKey = Instance.new("TextBox")
@@ -1531,7 +1582,7 @@
             Revo.Inputs.TripKey.Visible = false
             Revo.Inputs.TripKey.ClearTextOnFocus = true
             Revo.Inputs.TripKey.Text = ""
-            Revo.Inputs.TripKey.Parent = Revo.Pages.Character
+            Revo.Inputs.TripKey.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Inputs.TripKey)
 
         -- Trip Function
@@ -1641,7 +1692,7 @@
             Revo.Buttons.Jerk.Font = Enum.Font.Gotham
             Revo.Buttons.Jerk.TextSize = 16
             Revo.Buttons.Jerk.Text = "Jerk"
-            Revo.Buttons.Jerk.Parent = Revo.Pages.Character
+            Revo.Buttons.Jerk.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.Jerk)
 
         -- Jerk Function
@@ -1725,7 +1776,7 @@
             Revo.Buttons.WalkOnAir.Font = Enum.Font.Gotham
             Revo.Buttons.WalkOnAir.TextSize = 16
             Revo.Buttons.WalkOnAir.Text = "Walk On Air"
-            Revo.Buttons.WalkOnAir.Parent = Revo.Pages.Character
+            Revo.Buttons.WalkOnAir.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.WalkOnAir)
             Revo.Buttons.WalkOnAir.Visible = true
 
@@ -1737,7 +1788,7 @@
             Revo.Buttons.WalkOnAirOff.Font = Enum.Font.Gotham
             Revo.Buttons.WalkOnAirOff.TextSize = 16
             Revo.Buttons.WalkOnAirOff.Text = "Off"
-            Revo.Buttons.WalkOnAirOff.Parent = Revo.Pages.Character
+            Revo.Buttons.WalkOnAirOff.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.WalkOnAirOff)
             Revo.Buttons.WalkOnAirOff.Visible = false
 
@@ -1749,7 +1800,7 @@
             Revo.Buttons.WalkOnAirUp.Font = Enum.Font.Gotham
             Revo.Buttons.WalkOnAirUp.TextSize = 16
             Revo.Buttons.WalkOnAirUp.Text = "Up"
-            Revo.Buttons.WalkOnAirUp.Parent = Revo.Pages.Character
+            Revo.Buttons.WalkOnAirUp.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.WalkOnAirUp)
             Revo.Buttons.WalkOnAirUp.Visible = false
 
@@ -1761,7 +1812,7 @@
             Revo.Buttons.WalkOnAirDown.Font = Enum.Font.Gotham
             Revo.Buttons.WalkOnAirDown.TextSize = 16
             Revo.Buttons.WalkOnAirDown.Text = "Down"
-            Revo.Buttons.WalkOnAirDown.Parent = Revo.Pages.Character
+            Revo.Buttons.WalkOnAirDown.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.WalkOnAirDown)
             Revo.Buttons.WalkOnAirDown.Visible = false
 
@@ -1878,7 +1929,7 @@
             Revo.Buttons.InvisibilityKey.Font = Enum.Font.Gotham
             Revo.Buttons.InvisibilityKey.TextSize = 16
             Revo.Buttons.InvisibilityKey.Text = "Invisibility Key: "..(Revo.Invisibility.Key and Revo.Invisibility.Key.Name or "None")
-            Revo.Buttons.InvisibilityKey.Parent = Revo.Pages.Character
+            Revo.Buttons.InvisibilityKey.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Buttons.InvisibilityKey)
 
             Revo.Inputs.InvisibilityKey = Instance.new("TextBox")
@@ -1892,7 +1943,7 @@
             Revo.Inputs.InvisibilityKey.Visible = false
             Revo.Inputs.InvisibilityKey.ClearTextOnFocus = true
             Revo.Inputs.InvisibilityKey.Text = ""
-            Revo.Inputs.InvisibilityKey.Parent = Revo.Pages.Character
+            Revo.Inputs.InvisibilityKey.Parent = Revo.GUI.CharacterSection
             Revo.GUI:AddCorner(Revo.Inputs.InvisibilityKey)
 
         -- Invisibility Key Function
@@ -2138,8 +2189,8 @@
 
     Revo.GUI.TargetSection = Instance.new("ScrollingFrame")
     Revo.GUI.TargetSection.Name = "Target_Section"
-    Revo.GUI.TargetSection.Size = UDim2.new(1, 20, 1, 0)
-    Revo.GUI.TargetSection.Position = UDim2.new(0, 0, 0, 0)
+    Revo.GUI.TargetSection.Size = UDim2.new(1, 20, 1, -40)
+    Revo.GUI.TargetSection.Position = UDim2.new(0, 0, 0, 35)
     Revo.GUI.TargetSection.BackgroundTransparency = 1
     Revo.GUI.TargetSection.ScrollBarThickness = 0
     Revo.GUI.TargetSection.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -2147,6 +2198,13 @@
     Revo.GUI.TargetSection.ScrollingDirection = Enum.ScrollingDirection.Y
     Revo.GUI.TargetSection.ClipsDescendants = true
     Revo.GUI.TargetSection.Parent = Revo.Pages.Target
+
+    Revo.GUI.TargetPadding = Instance.new("UIPadding")
+    Revo.GUI.TargetPadding.PaddingTop = UDim.new(0, 0)
+    Revo.GUI.TargetPadding.PaddingBottom = UDim.new(0, 5)
+    Revo.GUI.TargetPadding.PaddingLeft = UDim.new(0, 0)
+    Revo.GUI.TargetPadding.PaddingRight = UDim.new(0, 0)
+    Revo.GUI.TargetPadding.Parent = Revo.GUI.TargetSection
 
     Revo.GUI.TargetImage = Instance.new("ImageLabel")
     Revo.GUI.TargetImage.Name = "TargetImage"
@@ -2200,18 +2258,19 @@
         return btn
     end
 
-    Revo.GUI.TargetButtons.Fling        = Revo.GUI:CreateTargetButton("Fling",        "Fling",        UDim2.new(0, 5, 0, 120))
-    Revo.GUI.TargetButtons.View         = Revo.GUI:CreateTargetButton("View",         "View",         UDim2.new(0, 215, 0, 120))
-    Revo.GUI.TargetButtons.Focus        = Revo.GUI:CreateTargetButton("Focus",        "Focus",        UDim2.new(0, 5, 0, 155))
-    Revo.GUI.TargetButtons.Bang         = Revo.GUI:CreateTargetButton("Bang",         "Bang",         UDim2.new(0, 215, 0, 155))
-    Revo.GUI.TargetButtons.Stand        = Revo.GUI:CreateTargetButton("Stand",        "Stand",        UDim2.new(0, 5, 0, 190))
-    Revo.GUI.TargetButtons.Headsit      = Revo.GUI:CreateTargetButton("Headsit",      "Headsit",      UDim2.new(0, 215, 0, 190))
-    Revo.GUI.TargetButtons.Doggy        = Revo.GUI:CreateTargetButton("Doggy",        "Doggy",        UDim2.new(0, 5, 0, 225))
-    Revo.GUI.TargetButtons.Backpack     = Revo.GUI:CreateTargetButton("Backpack",     "Backpack",     UDim2.new(0, 215, 0, 225))
-    Revo.GUI.TargetButtons.Drag         = Revo.GUI:CreateTargetButton("Drag",         "Drag",         UDim2.new(0, 5, 0, 260))
-    Revo.GUI.TargetButtons.Teleport     = Revo.GUI:CreateTargetButton("Teleport",     "Teleport",     UDim2.new(0, 215, 0, 260))
-    Revo.GUI.TargetButtons.Push         = Revo.GUI:CreateTargetButton("Push",         "Push",         UDim2.new(0, 5, 0, 295))
-    Revo.GUI.TargetButtons.FaceBang     = Revo.GUI:CreateTargetButton("FaceBang",     "Face Bang",    UDim2.new(0, 215, 0, 295))
+    Revo.GUI.TargetButtons.Fling        = Revo.GUI:CreateTargetButton("Fling",        "Fling",                 UDim2.new(0, 5, 0, 120))
+    Revo.GUI.TargetButtons.View         = Revo.GUI:CreateTargetButton("View",         "View",                  UDim2.new(0, 215, 0, 120))
+    Revo.GUI.TargetButtons.Focus        = Revo.GUI:CreateTargetButton("Focus",        "Focus",                 UDim2.new(0, 5, 0, 155))
+    Revo.GUI.TargetButtons.Bang         = Revo.GUI:CreateTargetButton("Bang",         "Bang",                  UDim2.new(0, 215, 0, 155))
+    Revo.GUI.TargetButtons.Stand        = Revo.GUI:CreateTargetButton("Stand",        "Stand",                 UDim2.new(0, 5, 0, 190))
+    Revo.GUI.TargetButtons.Headsit      = Revo.GUI:CreateTargetButton("Headsit",      "Headsit",               UDim2.new(0, 215, 0, 190))
+    Revo.GUI.TargetButtons.Doggy        = Revo.GUI:CreateTargetButton("Doggy",        "Doggy",                 UDim2.new(0, 5, 0, 225))
+    Revo.GUI.TargetButtons.Backpack     = Revo.GUI:CreateTargetButton("Backpack",     "Backpack",              UDim2.new(0, 215, 0, 225))
+    Revo.GUI.TargetButtons.Drag         = Revo.GUI:CreateTargetButton("Drag",         "Drag",                  UDim2.new(0, 5, 0, 260))
+    Revo.GUI.TargetButtons.Teleport     = Revo.GUI:CreateTargetButton("Teleport",     "Teleport",              UDim2.new(0, 215, 0, 260))
+    Revo.GUI.TargetButtons.Push         = Revo.GUI:CreateTargetButton("Push",         "Push",                  UDim2.new(0, 5, 0, 295))
+    Revo.GUI.TargetButtons.FaceBang     = Revo.GUI:CreateTargetButton("FaceBang",     "Face Bang",             UDim2.new(0, 215, 0, 295))
+    Revo.GUI.TargetButtons.Inspect      = Revo.GUI:CreateTargetButton("Inspect",     "Inspect",                UDim2.new(0, 5, 0, 365))
 
     Revo.GUI.TargetNameInput = Instance.new("TextBox")
     Revo.GUI.TargetNameInput.Name = "TargetName_Input"
@@ -2246,11 +2305,13 @@
                     Enum.ThumbnailType.HeadShot,
                     Enum.ThumbnailSize.Size420x420
                 )
+
             else
                 Revo.GUI.TargetNameInput.Text = "Target"
                 Revo.GUI.UserIDTargetLabel.Text = "UserID: \nDisplay: \nJoined: "
                 Revo.GUI.TargetImage.Image = "rbxassetid://10818605405"
                 self.Target.Player = nil
+
             end
         end
 
@@ -2394,15 +2455,16 @@
 
             Revo.Target.Headsitting = not Revo.Target.Headsitting
 
+            local char = Revo.Player.Character
+            if not char then return end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local root = Revo:GetRoot(Revo.Player)
+            if not humanoid or not root then return end
+
             if not Revo.Target.Headsitting then
-                local char = Revo.Player.Character
-                if not char then return end
 
-                local root = Revo:GetRoot(Revo.Player)
-                local humanoid = char:FindFirstChildOfClass("Humanoid")
-                if not humanoid then return end
-
-                if root and root:FindFirstChild("BreakVelocity") then
+                if root:FindFirstChild("BreakVelocity") then
                     root.BreakVelocity:Destroy()
                 end
 
@@ -2413,15 +2475,24 @@
                 task.wait()
                 humanoid:ChangeState(Enum.HumanoidStateType.Running)
 
+                if Revo._NoSitBeforeActions then
+                    Revo.NoSit.Enabled = true
+                    humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+                end
+
                 return
+            end
+
+            Revo._NoSitBeforeActions = Revo.NoSit.Enabled
+
+            if Revo.NoSit.Enabled then
+                Revo.NoSit.Enabled = false
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
             end
 
             task.spawn(function()
                 while Revo.Target.Headsitting do
                     pcall(function()
-                        local root = Revo:GetRoot(Revo.Player)
-                        if not root then return end
-
                         if not root:FindFirstChild("BreakVelocity") then
                             local tempV = Revo.VelocityAsset:Clone()
                             tempV.Parent = root
@@ -2430,8 +2501,8 @@
                         local targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
                         if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
                             local targetHead = targetPlayer.Character.Head
-                            Revo.Player.Character.Humanoid.Sit = true
-                            Revo:GetRoot(Revo.Player).CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
+                            humanoid.Sit = true
+                            root.CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
                             root.Velocity = Vector3.new(0, 0, 0)
                         end
                     end)
@@ -2467,7 +2538,19 @@
                 task.wait()
                 humanoid:ChangeState(Enum.HumanoidStateType.Running)
 
+                if Revo._NoSitBeforeSitActions then
+                    Revo.NoSit.Enabled = true
+                    humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+                end
+
                 return
+            end
+
+            Revo._NoSitBeforeSitActions = Revo.NoSit.Enabled
+
+            if Revo.NoSit.Enabled then
+                Revo.NoSit.Enabled = false
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
             end
 
             humanoid.Sit = true
@@ -2684,9 +2767,6 @@
                 if myRoot:FindFirstChild("BreakVelocity") then
                     myRoot.BreakVelocity:Destroy()
                 end
-                if myRoot:FindFirstChild("FlingVelocity") then
-                    myRoot.FlingVelocity:Destroy()
-                end
 
                 if Revo.Target._FlingOldCFrame then
                     myRoot.AssemblyLinearVelocity = Vector3.zero
@@ -2709,26 +2789,7 @@
                         local targetRoot = Revo:GetRoot(targetPlayer)
                         if not targetRoot then return end
 
-                        if not myRoot:FindFirstChild("BreakVelocity") then
-                            local spin = Instance.new("BodyAngularVelocity")
-                            spin.Name = "BreakVelocity"
-                            spin.AngularVelocity = Vector3.new(0, 99999, 0)
-                            spin.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-                            spin.P = 1e6
-                            spin.Parent = myRoot
-                        end
-
-                        if not myRoot:FindFirstChild("FlingVelocity") then
-                            local flingVel = Instance.new("BodyVelocity")
-                            flingVel.Name = "FlingVelocity"
-                            flingVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-                            flingVel.Velocity = Vector3.new(0, 0, 0)
-                            flingVel.Parent = myRoot
-                        end
-
                         myRoot.CFrame = targetRoot.CFrame
-                        myRoot.FlingVelocity.Velocity =
-                            (targetRoot.CFrame.LookVector * 250)
 
                     end)
 
@@ -2739,7 +2800,34 @@
 
     -- Push Target
 
+        Revo.GUI.TargetButtons.Push.MouseButton1Click:Connect(function()
+            if not Revo.Target.Player then return end
 
+            local myRoot = Revo:GetRoot(Revo.Player)
+            if not myRoot then return end
+
+            local oldCFrame = myRoot.CFrame
+
+            pcall(function()
+                local targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
+                if not targetPlayer then return end
+
+                local targetRoot = Revo:GetRoot(targetPlayer)
+                if not targetRoot then return end
+
+                myRoot.CFrame = targetRoot.CFrame
+            end)
+
+            task.wait(0.417)
+
+            if myRoot:FindFirstChild("BreakVelocity") then
+                myRoot.BreakVelocity:Destroy()
+            end
+
+            myRoot.AssemblyLinearVelocity = Vector3.zero
+            myRoot.Velocity = Vector3.zero
+            myRoot.CFrame = oldCFrame
+        end)
 
     -- Face Bang Target
 
@@ -2901,6 +2989,25 @@
                 end)
             end)
 
+    -- Inspect Target
+
+        Revo.GUI.TargetButtons.Inspect.MouseButton1Click:Connect(function()
+            if not Revo.Target.Player then return end
+
+            local target = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
+            if not target or not target.Character then return end
+
+            local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
+            if not humanoid then return end
+
+            local description = humanoid:GetAppliedDescription()
+
+            Revo.Services.GuiService:InspectPlayerFromHumanoidDescription(
+                description,
+                target.Name
+            )
+        end)
+
     -- Player Removing
 
         function Revo:StopTargetActions()
@@ -2915,9 +3022,25 @@
             Revo.Target.Flinging     = false
             Revo.Target.FaceBanging  = false
 
+            Revo:StopAnim()
+
             local root = Revo:GetRoot(Revo.Player)
             if root and root:FindFirstChild("BreakVelocity") then
                 root.BreakVelocity:Destroy()
+            end
+            
+            if humanoid then
+                humanoid.Sit = false
+                humanoid.AutoRotate = true
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                task.wait()
+                humanoid:ChangeState(Enum.HumanoidStateType.Running)
+
+                -- Restore NoSit settings if needed
+                if self._NoSitBeforeActions then
+                    self.NoSit.Enabled = true
+                    humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+                end
             end
 
             local camera = workspace.CurrentCamera
@@ -2939,8 +3062,8 @@
 -- Animations
 
     Revo.AnimScrollFrame = Instance.new("ScrollingFrame")
-    Revo.AnimScrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    Revo.AnimScrollFrame.Position = UDim2.new(0, 0, 0, 0)
+    Revo.AnimScrollFrame.Size = UDim2.new(1, 0, 1, -40)
+    Revo.AnimScrollFrame.Position = UDim2.new(0, 0, 0, 35)
     Revo.AnimScrollFrame.BackgroundTransparency = 1
     Revo.AnimScrollFrame.ScrollBarThickness = 0
     Revo.AnimScrollFrame.Parent = Revo.Pages.Animations
@@ -3427,6 +3550,70 @@
 
 -- Misc
 
+    Revo.GUI.MiscLeftColumn = Instance.new("Frame")
+    Revo.GUI.MiscLeftColumn.Size = UDim2.new(0.5, -5, 1, 0)
+    Revo.GUI.MiscLeftColumn.Position = UDim2.new(0, 0, 0, 0)
+    Revo.GUI.MiscLeftColumn.BackgroundTransparency = 1
+    Revo.GUI.MiscLeftColumn.Parent = Revo.Pages.Misc
+
+    Revo.GUI.MiscRightColumn = Instance.new("Frame")
+    Revo.GUI.MiscRightColumn.Size = UDim2.new(0.5, -5, 1, 0)
+    Revo.GUI.MiscRightColumn.Position = UDim2.new(0.5, 0, 0, 0)
+    Revo.GUI.MiscRightColumn.BackgroundTransparency = 1
+    Revo.GUI.MiscRightColumn.Parent = Revo.Pages.Misc
+
+    Revo.GUI.MiscLeftLayout = Instance.new("UIListLayout")
+    Revo.GUI.MiscLeftLayout.FillDirection = Enum.FillDirection.Vertical
+    Revo.GUI.MiscLeftLayout.Padding = UDim.new(0, 5)
+    Revo.GUI.MiscLeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    Revo.GUI.MiscLeftLayout.Parent = Revo.GUI.MiscLeftColumn
+
+    Revo.GUI.MiscRightLayout = Instance.new("UIListLayout")
+    Revo.GUI.MiscRightLayout.FillDirection = Enum.FillDirection.Vertical
+    Revo.GUI.MiscRightLayout.Padding = UDim.new(0, 5)
+    Revo.GUI.MiscRightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    Revo.GUI.MiscRightLayout.Parent = Revo.GUI.MiscRightColumn
+
+    Revo.GUI.MiscSection = Instance.new("ScrollingFrame")
+    Revo.GUI.MiscSection.Name = "Misc_Section"
+    Revo.GUI.MiscSection.Size = UDim2.new(1, 20, 1, -40)
+    Revo.GUI.MiscSection.Position = UDim2.new(0, 0, 0, 35)
+    Revo.GUI.MiscSection.BackgroundTransparency = 1
+    Revo.GUI.MiscSection.ScrollBarThickness = 0
+    Revo.GUI.MiscSection.ClipsDescendants = true
+    Revo.GUI.MiscSection.ScrollingDirection = Enum.ScrollingDirection.Y
+    Revo.GUI.MiscSection.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    Revo.GUI.MiscSection.Parent = Revo.Pages.Misc
+
+    Revo.GUI.MiscPadding = Instance.new("UIPadding")
+    Revo.GUI.MiscPadding.PaddingTop = UDim.new(0, 0)
+    Revo.GUI.MiscPadding.PaddingBottom = UDim.new(0, 5)
+    Revo.GUI.MiscPadding.PaddingLeft = UDim.new(0, 0)
+    Revo.GUI.MiscPadding.PaddingRight = UDim.new(0, 0)
+    Revo.GUI.MiscPadding.Parent = Revo.GUI.MiscSection
+
+    function Revo:UpdateMiscCanvas()
+        pcall(function()
+            local scroll = Revo.GUI.MiscSection
+            local leftLayout = Revo.GUI.MiscLeftLayout
+            local rightLayout = Revo.GUI.MiscRightLayout
+            if not scroll or not leftLayout or not rightLayout then return end
+
+            scroll.CanvasSize = UDim2.new(0, 0, 0, math.max(leftLayout.AbsoluteContentSize.Y, rightLayout.AbsoluteContentSize.Y) + 10)
+        end)
+    end
+
+    Revo.GUI.MiscLeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Revo:UpdateMiscCanvas()
+    end)
+    Revo.GUI.MiscRightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Revo:UpdateMiscCanvas()
+    end)
+
+    task.defer(function()
+        Revo:UpdateMiscCanvas()
+    end)
+
     -- Rejoin
 
         -- Rejoin Button
@@ -3439,7 +3626,7 @@
             Revo.Buttons.Rejoin.Font = Enum.Font.Gotham
             Revo.Buttons.Rejoin.TextSize = 16
             Revo.Buttons.Rejoin.Text = "Rejoin"
-            Revo.Buttons.Rejoin.Parent = Revo.Pages.Misc
+            Revo.Buttons.Rejoin.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.Rejoin)
 
         -- Rejoin Command
@@ -3455,13 +3642,13 @@
 
             Revo.Buttons.ServerHop = Instance.new("TextButton")
             Revo.Buttons.ServerHop.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.ServerHop.Position = UDim2.new(1, -205, 0, 5)
+            Revo.Buttons.ServerHop.Position = UDim2.new(0, 215, 0, 5)
             Revo.Buttons.ServerHop.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.ServerHop.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.ServerHop.Font = Enum.Font.Gotham
             Revo.Buttons.ServerHop.TextSize = 16
             Revo.Buttons.ServerHop.Text = "Server Hop"
-            Revo.Buttons.ServerHop.Parent = Revo.Pages.Misc
+            Revo.Buttons.ServerHop.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.ServerHop)
 
         -- Server Hop Command
@@ -3500,7 +3687,7 @@
             Revo.Buttons.Shaders.Font = Enum.Font.Gotham
             Revo.Buttons.Shaders.TextSize = 16
             Revo.Buttons.Shaders.Text = "Shaders"
-            Revo.Buttons.Shaders.Parent = Revo.Pages.Misc
+            Revo.Buttons.Shaders.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.Shaders)
 
         -- Shaders Function
@@ -3572,7 +3759,7 @@
             Revo.Buttons.Day.Font = Enum.Font.Gotham
             Revo.Buttons.Day.TextSize = 16
             Revo.Buttons.Day.Text = "Day"
-            Revo.Buttons.Day.Parent = Revo.Pages.Misc
+            Revo.Buttons.Day.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.Day)
 
         -- Day Function
@@ -3597,7 +3784,7 @@
             Revo.Buttons.Night.Font = Enum.Font.Gotham
             Revo.Buttons.Night.TextSize = 16
             Revo.Buttons.Night.Text = "Night"
-            Revo.Buttons.Night.Parent = Revo.Pages.Misc
+            Revo.Buttons.Night.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.Night)
 
         -- Night Function
@@ -3616,13 +3803,13 @@
 
             Revo.Buttons.Emotes = Instance.new("TextButton")
             Revo.Buttons.Emotes.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Emotes.Position = UDim2.new(1, -205, 0, 75)
+            Revo.Buttons.Emotes.Position = UDim2.new(0, 215, 0, 75)
             Revo.Buttons.Emotes.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.Emotes.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.Emotes.Font = Enum.Font.Gotham
             Revo.Buttons.Emotes.TextSize = 16
             Revo.Buttons.Emotes.Text = "Emotes"
-            Revo.Buttons.Emotes.Parent = Revo.Pages.Misc
+            Revo.Buttons.Emotes.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.Emotes)
 
         -- Emotes Function
@@ -3638,13 +3825,13 @@
 
             Revo.Buttons.UGCEmotes = Instance.new("TextButton")
             Revo.Buttons.UGCEmotes.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.UGCEmotes.Position = UDim2.new(1, -205, 0, 110)
+            Revo.Buttons.UGCEmotes.Position = UDim2.new(0, 215, 0, 110)
             Revo.Buttons.UGCEmotes.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.UGCEmotes.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.UGCEmotes.Font = Enum.Font.Gotham
             Revo.Buttons.UGCEmotes.TextSize = 16
             Revo.Buttons.UGCEmotes.Text = "UGC Emotes"
-            Revo.Buttons.UGCEmotes.Parent = Revo.Pages.Misc
+            Revo.Buttons.UGCEmotes.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.UGCEmotes)
 
         -- UGC Emotes Function
@@ -3659,13 +3846,13 @@
 
             Revo.Buttons.InfiniteYield = Instance.new("TextButton")
             Revo.Buttons.InfiniteYield.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.InfiniteYield.Position = UDim2.new(1, -205, 0, 40)
+            Revo.Buttons.InfiniteYield.Position = UDim2.new(0, 215, 0, 40)
             Revo.Buttons.InfiniteYield.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.InfiniteYield.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.InfiniteYield.Font = Enum.Font.Gotham
             Revo.Buttons.InfiniteYield.TextSize = 16
             Revo.Buttons.InfiniteYield.Text = "Infinite Yield"
-            Revo.Buttons.InfiniteYield.Parent = Revo.Pages.Misc
+            Revo.Buttons.InfiniteYield.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.InfiniteYield)
 
         -- Infinite Yield Function
@@ -3686,7 +3873,7 @@
             Revo.Buttons.Explode.Font = Enum.Font.Gotham
             Revo.Buttons.Explode.TextSize = 16
             Revo.Buttons.Explode.Text = "Explode"
-            Revo.Buttons.Explode.Parent = Revo.Pages.Misc
+            Revo.Buttons.Explode.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.Explode)
 
         -- Explode Function
@@ -3729,7 +3916,7 @@
             Revo.Buttons.GUIKey.Font = Enum.Font.Gotham
             Revo.Buttons.GUIKey.TextSize = 16
             Revo.Buttons.GUIKey.Text = "GUI Key: "..(Revo.GUI.Key and Revo.GUI.Key.Name or "None")
-            Revo.Buttons.GUIKey.Parent = Revo.Pages.Misc
+            Revo.Buttons.GUIKey.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.GUIKey)
 
             Revo.Inputs = Revo.Inputs or {}
@@ -3744,7 +3931,7 @@
             Revo.Inputs.GUIKey.Visible = false
             Revo.Inputs.GUIKey.ClearTextOnFocus = true
             Revo.Inputs.GUIKey.Text = ""
-            Revo.Inputs.GUIKey.Parent = Revo.Pages.Misc
+            Revo.Inputs.GUIKey.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Inputs.GUIKey)
 
         -- GUI Key Function
@@ -3844,7 +4031,7 @@
             Revo.Buttons.AutoClickerKey.Font = Enum.Font.Gotham
             Revo.Buttons.AutoClickerKey.TextSize = 16
             Revo.Buttons.AutoClickerKey.Text = "Auto Clicker Key: "..(Revo.AutoClicker.Key and Revo.AutoClicker.Key.Name or "None")
-            Revo.Buttons.AutoClickerKey.Parent = Revo.Pages.Misc
+            Revo.Buttons.AutoClickerKey.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.AutoClickerKey)
 
             Revo.Inputs = Revo.Inputs or {}
@@ -3859,7 +4046,7 @@
             Revo.Inputs.AutoClickerKey.Visible = false
             Revo.Inputs.AutoClickerKey.ClearTextOnFocus = true
             Revo.Inputs.AutoClickerKey.Text = ""
-            Revo.Inputs.AutoClickerKey.Parent = Revo.Pages.Misc
+            Revo.Inputs.AutoClickerKey.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Inputs.AutoClickerKey)
 
         -- Auto Clicker Function
@@ -3962,7 +4149,7 @@
             Revo.Buttons.AntiAFK.Font = Enum.Font.Gotham
             Revo.Buttons.AntiAFK.TextSize = 16
             Revo.Buttons.AntiAFK.Text = "Anti AFK"
-            Revo.Buttons.AntiAFK.Parent = Revo.Pages.Misc
+            Revo.Buttons.AntiAFK.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.AntiAFK)
 
         -- Anit AFK Function
@@ -4000,7 +4187,7 @@
             Revo.Buttons.AntiVoid.Font = Enum.Font.Gotham
             Revo.Buttons.AntiVoid.TextSize = 16
             Revo.Buttons.AntiVoid.Text = "Anti Void"
-            Revo.Buttons.AntiVoid.Parent = Revo.Pages.Misc
+            Revo.Buttons.AntiVoid.Parent = Revo.GUI.MiscSection
             Revo.GUI:AddCorner(Revo.Buttons.AntiVoid)
 
         -- Anti Void Function
@@ -4040,7 +4227,7 @@
         Revo.Buttons.Nosit.Font = Enum.Font.Gotham
         Revo.Buttons.Nosit.TextSize = 16
         Revo.Buttons.Nosit.Text = "No Sit"
-        Revo.Buttons.Nosit.Parent = Revo.Pages.Misc
+        Revo.Buttons.Nosit.Parent = Revo.GUI.MiscSection
         Revo.GUI:AddCorner(Revo.Buttons.Nosit)
 
     -- No Sit Function
