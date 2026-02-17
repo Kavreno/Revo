@@ -252,14 +252,14 @@
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = "Revo",
-                Text = "GUI Already Loaded",
-                Duration = 5
-            })
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo.Services.StarterGui:SetCore("SendNotification", {
+        --         Title = "Revo",
+        --         Text = "GUI Already Loaded",
+        --         Duration = 5
+        --     })
+        --     return
+        -- end
 
     -- GUI Creation
 
@@ -680,7 +680,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Fixed Scrolling So It Works In Any Game Now."
+    Revo.AnnouncementsText.Text = "Fixed Jump Power Button Being In The Wrong Spot."
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -701,7 +701,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 2.3"
+    Revo.VersionLabel.Text = "Version: 2.5"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -846,60 +846,6 @@
                 Revo.Inputs.WalkSpeed.Text = ""
                 Revo.Inputs.WalkSpeed.Visible = false
                 Revo.Buttons.WalkSpeed.Visible = true
-            end)
-
-    -- Jump Power
-
-        -- Jump Power Button
-
-            Revo.Buttons.JumpPower = Instance.new("TextButton")
-            Revo.Buttons.JumpPower.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.JumpPower.Position = UDim2.new(0, 215, 0, 145)
-            Revo.Buttons.JumpPower.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.JumpPower.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.JumpPower.Font = Enum.Font.Gotham
-            Revo.Buttons.JumpPower.TextSize = 16
-            Revo.Buttons.JumpPower.Text = "Jump Power: 50"
-            Revo.Buttons.JumpPower.Parent = Revo.GUI.CharacterRightColumn
-            Revo.GUI:AddCorner(Revo.Buttons.JumpPower)
-
-            Revo.Inputs.JumpPower = Instance.new("TextBox")
-            Revo.Inputs.JumpPower.Size = Revo.Buttons.JumpPower.Size
-            Revo.Inputs.JumpPower.Position = Revo.Buttons.JumpPower.Position
-            Revo.Inputs.JumpPower.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Inputs.JumpPower.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Inputs.JumpPower.Font = Enum.Font.Gotham
-            Revo.Inputs.JumpPower.TextSize = 16
-            Revo.Inputs.JumpPower.PlaceholderText = "Enter Jump Power"
-            Revo.Inputs.JumpPower.Visible = false
-            Revo.Inputs.JumpPower.ClearTextOnFocus = true
-            Revo.Inputs.JumpPower.Parent = Revo.GUI.CharacterRightColumn
-            Revo.GUI:AddCorner(Revo.Inputs.JumpPower)
-
-        -- Jump Power Function
-
-            Revo.Buttons.JumpPower.MouseButton1Click:Connect(function()
-                Revo.Buttons.JumpPower.Visible = false
-                Revo.Inputs.JumpPower.Visible = true
-                Revo.Inputs.JumpPower:CaptureFocus()
-            end)
-
-            Revo.Inputs.JumpPower.FocusLost:Connect(function()
-                pcall(function()
-                    local Jump = Revo.Inputs.JumpPower.Text:gsub("%D", "")
-                    if Jump == "" then Jump = 50 end
-
-                    local hum = Revo.Player.Character and Revo.Player.Character:FindFirstChildOfClass("Humanoid")
-                    if hum then
-                        hum.UseJumpPower = true
-                        hum.JumpPower = tonumber(Jump)
-                        Revo.Buttons.JumpPower.Text = "Jump Power: " .. Jump
-                    end
-                end)
-
-                Revo.Inputs.JumpPower.Text = ""
-                Revo.Inputs.JumpPower.Visible = false
-                Revo.Buttons.JumpPower.Visible = true
             end)
 
     -- Fly
@@ -1622,6 +1568,61 @@
                     end
                 end)
             end)
+    
+    -- Jump Power
+
+        -- Jump Power Button
+
+            Revo.Buttons.JumpPower = Instance.new("TextButton")
+            Revo.Buttons.JumpPower.Size = UDim2.new(0, 200, 0, 30)
+            Revo.Buttons.JumpPower.Position = UDim2.new(0, 215, 0, 145)
+            Revo.Buttons.JumpPower.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.JumpPower.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.JumpPower.Font = Enum.Font.Gotham
+            Revo.Buttons.JumpPower.TextSize = 16
+            Revo.Buttons.JumpPower.Text = "Jump Power: 50"
+            Revo.Buttons.JumpPower.Parent = Revo.GUI.CharacterRightColumn
+            Revo.GUI:AddCorner(Revo.Buttons.JumpPower)
+
+            Revo.Inputs.JumpPower = Instance.new("TextBox")
+            Revo.Inputs.JumpPower.Size = Revo.Buttons.JumpPower.Size
+            Revo.Inputs.JumpPower.Position = Revo.Buttons.JumpPower.Position
+            Revo.Inputs.JumpPower.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Inputs.JumpPower.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Inputs.JumpPower.Font = Enum.Font.Gotham
+            Revo.Inputs.JumpPower.TextSize = 16
+            Revo.Inputs.JumpPower.PlaceholderText = "Enter Jump Power"
+            Revo.Inputs.JumpPower.Visible = false
+            Revo.Inputs.JumpPower.ClearTextOnFocus = true
+            Revo.Inputs.JumpPower.Parent = Revo.GUI.CharacterRightColumn
+            Revo.GUI:AddCorner(Revo.Inputs.JumpPower)
+
+        -- Jump Power Function
+
+            Revo.Buttons.JumpPower.MouseButton1Click:Connect(function()
+                Revo.Buttons.JumpPower.Visible = false
+                Revo.Inputs.JumpPower.Visible = true
+                Revo.Inputs.JumpPower:CaptureFocus()
+            end)
+
+            Revo.Inputs.JumpPower.FocusLost:Connect(function()
+                pcall(function()
+                    local Jump = Revo.Inputs.JumpPower.Text:gsub("%D", "")
+                    if Jump == "" then Jump = 50 end
+
+                    local hum = Revo.Player.Character and Revo.Player.Character:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        hum.UseJumpPower = true
+                        hum.JumpPower = tonumber(Jump)
+                        Revo.Buttons.JumpPower.Text = "Jump Power: " .. Jump
+                    end
+                end)
+
+                Revo.Inputs.JumpPower.Text = ""
+                Revo.Inputs.JumpPower.Visible = false
+                Revo.Buttons.JumpPower.Visible = true
+            end)
+
 
     -- Jerk
 
@@ -4371,7 +4372,6 @@
                 Revo.BasePlate:Update()
             end)
         end
-
 
 -- Loading Finish
 
