@@ -12,7 +12,6 @@
         -- Move While Emoting
         -- No Clip
         -- Aim Bot
-        -- ESP
         -- Custom Animations
         -- Animation Cloning
         -- See Others Cameras
@@ -248,18 +247,22 @@
             GlobalConnection = nil
         }
 
+    -- ESP
+
+        Revo.ESP_ENABLED = false
+
 -- GUI
 
     -- GUI Load Detection
 
-        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-        --     Revo.Services.StarterGui:SetCore("SendNotification", {
-        --         Title = "Revo",
-        --         Text = "GUI Already Loaded",
-        --         Duration = 5
-        --     })
-        --     return
-        -- end
+        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+            Revo.Services.StarterGui:SetCore("SendNotification", {
+                Title = "Revo",
+                Text = "GUI Already Loaded",
+                Duration = 5
+            })
+            return
+        end
 
     -- GUI Creation
 
@@ -680,7 +683,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Fixed Inpsect Button."
+    Revo.AnnouncementsText.Text = "Added ESP."
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -2228,8 +2231,8 @@
     Revo.GUI.TargetButtons.View.Parent     = Revo.GUI.TargetRightColumn
     Revo.GUI.TargetButtons.Headsit.Parent  = Revo.GUI.TargetRightColumn
     Revo.GUI.TargetButtons.Backpack.Parent = Revo.GUI.TargetRightColumn
-    Revo.GUI.TargetButtons.Teleport.Parent = Revo.GUI.TargetRightColumn
     Revo.GUI.TargetButtons.Bang.Parent     = Revo.GUI.TargetRightColumn
+    Revo.GUI.TargetButtons.Teleport.Parent = Revo.GUI.TargetRightColumn
     Revo.GUI.TargetButtons.FaceBang.Parent = Revo.GUI.TargetRightColumn
 
     Revo.GUI.TargetNameInput = Instance.new("TextBox")
@@ -4245,6 +4248,217 @@
                 end
             end
         end)
+
+    -- ESP
+
+        -- ESP Button
+
+            Revo.Buttons.ESP = Instance.new("TextButton")
+            Revo.Buttons.ESP.Size = UDim2.new(0, 200, 0, 30)
+            Revo.Buttons.ESP.Position = UDim2.new(0, 5, 0, 250)
+            Revo.Buttons.ESP.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.ESP.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.ESP.Font = Enum.Font.Gotham
+            Revo.Buttons.ESP.TextSize = 16
+            Revo.Buttons.ESP.Text = "ESP"
+            Revo.Buttons.ESP.Parent = Revo.GUI.MiscLeftColumn
+            Revo.GUI:AddCorner(Revo.Buttons.ESP)
+
+            -- ESP Button Function
+
+                Revo.Buttons.ESP.MouseButton1Click:Connect(function()
+
+                    Revo.ESP_ENABLED = not Revo.ESP_ENABLED
+
+                    if Revo.ESP_ENABLED then
+
+                        for _,player in pairs(Revo.Services.Players:GetPlayers()) do
+                            if player ~= Revo.Player and player.Character then
+                                Revo.ESP:Create(player, player.Character)
+                            end
+                        end
+
+
+                    else
+
+                        for player,_ in pairs(Revo.ESP.Container) do
+                            Revo.ESP:Remove(player)
+                        end
+
+                    end
+                end)
+
+        -- ESP Function
+
+            Revo.ESP = {
+                Container = {},
+                MaxDistance = 2000,
+                BoxColor = Color3.fromRGB(255,255,255),
+                BoxThickness = 2
+            }
+
+            function Revo.ESP:Remove(player)
+                local data = self.Container[player]
+                if not data then return end
+
+                if data.Box then data.Box:Remove() end
+                if data.NameText then data.NameText:Remove() end
+                if data.HealthBar then data.HealthBar:Remove() end
+                if data.Highlight then data.Highlight:Destroy() end
+
+                self.Container[player] = nil
+            end
+
+            function Revo.ESP:Create(player, character)
+                if player == Revo.Player then return end
+                self:Remove(player)
+
+                local box = Drawing.new("Square")
+                box.Color = self.BoxColor
+                box.Thickness = self.BoxThickness
+                box.Filled = false
+                box.Visible = false
+
+                local nameText = Drawing.new("Text")
+                nameText.Size = 16
+                nameText.Center = true
+                nameText.Outline = true
+                nameText.Font = 2
+                nameText.Visible = false
+
+                local healthBar = Drawing.new("Square")
+                healthBar.Filled = true
+                healthBar.Visible = false
+
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "RevoESPHighlight"
+                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                highlight.FillTransparency = 0.6
+                highlight.OutlineTransparency = 0
+                highlight.Adornee = character
+                highlight.Parent = character
+
+                self.Container[player] = {
+                    Box = box,
+                    NameText = nameText,
+                    HealthBar = healthBar,
+                    Highlight = highlight,
+                    LastHealth = nil
+                }
+            end
+
+            function Revo.ESP:HookPlayer(player)
+
+                player.CharacterAdded:Connect(function(character)
+                    if not Revo.ESP_ENABLED then return end
+                    task.wait(0.3)
+                    self:Create(player, character)
+                end)
+
+                player.CharacterRemoving:Connect(function()
+                    self:Remove(player)
+                end)
+
+                if player.Character and Revo.ESP_ENABLED then
+                    self:Create(player, player.Character)
+                end
+            end
+
+            for _,player in pairs(Revo.Services.Players:GetPlayers()) do
+                if player ~= Revo.Player then
+                    Revo.ESP:HookPlayer(player)
+                end
+            end
+
+            Revo.Services.Players.PlayerAdded:Connect(function(player)
+                if player ~= Revo.Player then
+                    Revo.ESP:HookPlayer(player)
+                end
+            end)
+
+            Revo.Services.Players.PlayerRemoving:Connect(function(player)
+                Revo.ESP:Remove(player)
+            end)
+
+            Revo.Services.RunService.RenderStepped:Connect(function()
+                if not Revo.ESP_ENABLED then return end
+
+                local camera = workspace.CurrentCamera
+                local camPos = camera.CFrame.Position
+
+                for player,data in pairs(Revo.ESP.Container) do
+
+                    local character = player.Character
+                    if not character then continue end
+
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    local root = character:FindFirstChild("HumanoidRootPart")
+                    local head = character:FindFirstChild("Head")
+
+                    if not humanoid or not root or not head or humanoid.Health <= 0 then
+                        Revo.ESP:Remove(player)
+                        continue
+                    end
+
+                    local distance = (root.Position - camPos).Magnitude
+                    if distance > Revo.ESP.MaxDistance then
+                        data.Box.Visible = false
+                        data.NameText.Visible = false
+                        data.HealthBar.Visible = false
+                        data.Highlight.Enabled = false
+                        continue
+                    end
+
+                    local topPos = head.Position + Vector3.new(0, 0.5, 0)
+                    local bottomPos = root.Position - Vector3.new(0, 3, 0)
+
+                    local topScreen = camera:WorldToViewportPoint(topPos)
+                    local bottomScreen = camera:WorldToViewportPoint(bottomPos)
+
+                    if topScreen.Z <= 0 or bottomScreen.Z <= 0 then
+                        data.Box.Visible = false
+                        data.NameText.Visible = false
+                        data.HealthBar.Visible = false
+                        data.Highlight.Enabled = false
+                        continue
+                    end
+
+                    local height = math.abs(topScreen.Y - bottomScreen.Y)
+                    local width = height / 2
+
+                    local minX = topScreen.X - width/2
+                    local minY = topScreen.Y
+
+                    data.Box.Size = Vector2.new(width, height)
+                    data.Box.Position = Vector2.new(minX, minY)
+                    data.Box.Visible = true
+
+                    local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
+                    local dynamicColor = Color3.new(1 - healthPercent, healthPercent, 0)
+
+                    local barHeight = height * healthPercent
+                    data.HealthBar.Size = Vector2.new(4, barHeight)
+                    data.HealthBar.Position = Vector2.new(minX - 6, minY + (height - barHeight))
+                    data.HealthBar.Color = dynamicColor
+                    data.HealthBar.Visible = true
+
+                    local displayName = player.DisplayName ~= "" and player.DisplayName or player.Name
+                    data.NameText.Text = displayName .. " [" .. math.floor(distance) .. "]"
+                    data.NameText.Position = Vector2.new(minX + width/2, minY - 18)
+                    data.NameText.Color = dynamicColor
+                    data.NameText.Visible = true
+
+                    if data.LastHealth ~= healthPercent then
+                        data.Highlight.FillColor = dynamicColor
+                        data.Highlight.OutlineColor = dynamicColor
+                        data.LastHealth = healthPercent
+                    end
+
+                    data.Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    data.Highlight.Enabled = true
+                    data.Highlight.Adornee = character
+                end
+            end)     
 
     -- Teleport To Last Location On Respawn
 
