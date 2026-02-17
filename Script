@@ -680,7 +680,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Fixed Walk On Air Buttons."
+    Revo.AnnouncementsText.Text = "Fixed Inpsect Button."
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -2217,7 +2217,6 @@
     Revo.GUI.TargetButtons.Teleport     = Revo.GUI:CreateTargetButton("Teleport",     "Teleport",              UDim2.new(0, 215, 0, 260))
     Revo.GUI.TargetButtons.Push         = Revo.GUI:CreateTargetButton("Push",         "Push",                  UDim2.new(0, 5, 0, 295))
     Revo.GUI.TargetButtons.FaceBang     = Revo.GUI:CreateTargetButton("FaceBang",     "Face Bang",             UDim2.new(0, 215, 0, 295))
-    Revo.GUI.TargetButtons.Inspect      = Revo.GUI:CreateTargetButton("Inspect",     "Inspect",                UDim2.new(0, 5, 0, 365))
 
     Revo.GUI.TargetButtons.Fling.Parent    = Revo.GUI.TargetLeftColumn
     Revo.GUI.TargetButtons.Focus.Parent    = Revo.GUI.TargetLeftColumn
@@ -2225,7 +2224,6 @@
     Revo.GUI.TargetButtons.Doggy.Parent    = Revo.GUI.TargetLeftColumn
     Revo.GUI.TargetButtons.Drag.Parent     = Revo.GUI.TargetLeftColumn
     Revo.GUI.TargetButtons.Push.Parent     = Revo.GUI.TargetLeftColumn
-    Revo.GUI.TargetButtons.Inspect.Parent  = Revo.GUI.TargetLeftColumn
 
     Revo.GUI.TargetButtons.View.Parent     = Revo.GUI.TargetRightColumn
     Revo.GUI.TargetButtons.Headsit.Parent  = Revo.GUI.TargetRightColumn
@@ -2953,6 +2951,9 @@
             end)
 
     -- Inspect Target
+
+        Revo.GUI.TargetButtons.Inspect      = Revo.GUI:CreateTargetButton("Inspect",     "Inspect",                UDim2.new(0, 5, 0, 365))
+        Revo.GUI.TargetButtons.Inspect.Parent  = Revo.GUI.TargetLeftColumn
 
         Revo.GUI.TargetButtons.Inspect.MouseButton1Click:Connect(function()
             if not Revo.Target.Player then return end
