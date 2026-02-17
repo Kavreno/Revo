@@ -2801,7 +2801,7 @@
             Revo.Buttons.FaceBangSpeed.Font = Enum.Font.Gotham
             Revo.Buttons.FaceBangSpeed.TextSize = 16
             Revo.Buttons.FaceBangSpeed.Text = "Face Bang Speed: " .. (Revo.FaceBangSettings.Speed or 3)
-            Revo.Buttons.FaceBangSpeed.Parent = Revo.GUI.TargetLeftColumn
+            Revo.Buttons.FaceBangSpeed.Parent = Revo.GUI.TargetRightColumn
             Revo.GUI:AddCorner(Revo.Buttons.FaceBangSpeed)
 
             Revo.Inputs.FaceBangSpeed = Instance.new("TextBox")
@@ -2815,7 +2815,7 @@
             Revo.Inputs.FaceBangSpeed.Visible = false
             Revo.Inputs.FaceBangSpeed.ClearTextOnFocus = true
             Revo.Inputs.FaceBangSpeed.Text = ""
-            Revo.Inputs.FaceBangSpeed.Parent = Revo.GUI.TargetLeftColumn
+            Revo.Inputs.FaceBangSpeed.Parent = Revo.GUI.TargetRightColumn
             Revo.GUI:AddCorner(Revo.Inputs.FaceBangSpeed)
 
             Revo.Buttons.FaceBangDistance = Instance.new("TextButton")
@@ -2826,7 +2826,7 @@
             Revo.Buttons.FaceBangDistance.Font = Enum.Font.Gotham
             Revo.Buttons.FaceBangDistance.TextSize = 16
             Revo.Buttons.FaceBangDistance.Text = "Face Bang Distance: " .. (Revo.FaceBangSettings.Distance or 0.5)
-            Revo.Buttons.FaceBangDistance.Parent = Revo.GUI.TargetRightColumn
+            Revo.Buttons.FaceBangDistance.Parent = Revo.GUI.TargetLeftColumn
             Revo.GUI:AddCorner(Revo.Buttons.FaceBangDistance)
 
             Revo.Inputs.FaceBangDistance = Instance.new("TextBox")
@@ -2840,7 +2840,7 @@
             Revo.Inputs.FaceBangDistance.Visible = false
             Revo.Inputs.FaceBangDistance.ClearTextOnFocus = true
             Revo.Inputs.FaceBangDistance.Text = ""
-            Revo.Inputs.FaceBangDistance.Parent = Revo.GUI.TargetRightColumn
+            Revo.Inputs.FaceBangDistance.Parent = Revo.GUI.TargetLeftColumn
             Revo.GUI:AddCorner(Revo.Inputs.FaceBangDistance)
 
             -- Speed And Distance Functions
