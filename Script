@@ -128,6 +128,7 @@
     -- Fly
 
         Revo.Fly = {
+
             Key = nil,
 
             Enabled = false,
@@ -250,6 +251,12 @@
     -- ESP
 
         Revo.ESP_ENABLED = false
+
+    -- Save
+
+        Revo.Save = {}
+        Revo.Save.FileName = "RevoSettings.json"
+        Revo.Save.Data = {}
 
 -- GUI
 
@@ -564,6 +571,35 @@
 
         Revo.VOID_Y = Revo:GetVoidY()
 
+    -- Save And Loading
+
+        function Revo.Save:Load()
+            if isfile(self.FileName) then
+                local success, result = pcall(function()
+                    return game:GetService("HttpService"):JSONDecode(readfile(self.FileName))
+                end)
+
+                if success and typeof(result) == "table" then
+                    self.Data = result
+                else
+                    self.Data = {}
+                end
+            else
+                self.Data = {}
+            end
+        end
+
+        function Revo.Save:Write()
+            pcall(function()
+                writefile(
+                    self.FileName,
+                    game:GetService("HttpService"):JSONEncode(self.Data)
+                )
+            end)
+        end
+
+        Revo.Save:Load()
+
 -- Nav Bar
 
     Revo.Pages = {}
@@ -683,7 +719,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added ESP."
+    Revo.AnnouncementsText.Text = "Added Saving To Fly Speed Only."
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -930,7 +966,6 @@
                 self.Enabled = false
             end
 
-            -- Connect WASD keys
             function Revo.Fly:ConnectKeys(mouse)
                 self.KeyDownConnection = mouse.KeyDown:Connect(function(key)
                     key = key:lower()
@@ -960,6 +995,8 @@
 
             -- Fly Speed Button
 
+                Revo.Fly.Speed = (Revo.Save.Data and Revo.Save.Data.FlySpeed) or 50
+
                 Revo.Buttons.FlySpeed = Instance.new("TextButton")
                 Revo.Buttons.FlySpeed.Size = UDim2.new(0, 200, 0, 30)
                 Revo.Buttons.FlySpeed.Position = UDim2.new(0, 215, 0, 5)
@@ -967,7 +1004,7 @@
                 Revo.Buttons.FlySpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
                 Revo.Buttons.FlySpeed.Font = Enum.Font.Gotham
                 Revo.Buttons.FlySpeed.TextSize = 16
-                Revo.Buttons.FlySpeed.Text = "Fly Speed: " .. (Revo.Fly.Speed or 50)
+                Revo.Buttons.FlySpeed.Text = "Fly Speed: " .. Revo.Fly.Speed
                 Revo.Buttons.FlySpeed.Parent = Revo.GUI.CharacterRightColumn
                 Revo.GUI:AddCorner(Revo.Buttons.FlySpeed)
 
@@ -992,6 +1029,10 @@
                     Revo.Inputs.FlySpeed:CaptureFocus()
                 end)
 
+                if Revo.Save.Data.FlySpeed then
+                    Revo.Fly.Speed = Revo.Save.Data.FlySpeed
+                end
+
                 Revo.Inputs.FlySpeed.FocusLost:Connect(function()
                     pcall(function()
                         local Speed = Revo.Inputs.FlySpeed.Text:gsub("%D", "")
@@ -999,6 +1040,9 @@
 
                         Revo.Fly.Speed = tonumber(Speed)
                         Revo.Buttons.FlySpeed.Text = "Fly Speed: " .. Revo.Fly.Speed
+
+                        Revo.Save.Data.FlySpeed = Revo.Fly.Speed
+                        Revo.Save:Write()
                     end)
 
                     Revo.Inputs.FlySpeed.Text = ""
@@ -1625,7 +1669,6 @@
                 Revo.Inputs.JumpPower.Visible = false
                 Revo.Buttons.JumpPower.Visible = true
             end)
-
 
     -- Jerk
 
