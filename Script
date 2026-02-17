@@ -680,7 +680,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Fixed Jump Power Button Being In The Wrong Spot."
+    Revo.AnnouncementsText.Text = "Fixed Walk On Air Buttons."
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -701,7 +701,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 2.5"
+    Revo.VersionLabel.Text = "Version: 2.6"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -1712,53 +1712,62 @@
 
         -- Walk On Air Button
 
+            Revo.GUI.WalkOnAirFrame = Instance.new("Frame")
+            Revo.GUI.WalkOnAirFrame.Size = UDim2.new(1, 0, 0, 30)
+            Revo.GUI.WalkOnAirFrame.BackgroundTransparency = 1
+            Revo.GUI.WalkOnAirFrame.Parent = Revo.GUI.CharacterLeftColumn
+
+            Revo.GUI.WalkOnAirLayout = Instance.new("UIListLayout")
+            Revo.GUI.WalkOnAirLayout.FillDirection = Enum.FillDirection.Horizontal
+            Revo.GUI.WalkOnAirLayout.Padding = UDim.new(0, 5)
+            Revo.GUI.WalkOnAirLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            Revo.GUI.WalkOnAirLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+            Revo.GUI.WalkOnAirLayout.Parent = Revo.GUI.WalkOnAirFrame
+            Revo.GUI.WalkOnAirLayout.Padding = UDim.new(0, 2) 
+
             Revo.Buttons.WalkOnAir = Instance.new("TextButton")
             Revo.Buttons.WalkOnAir.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.WalkOnAir.Position = UDim2.new(0, 5, 0, 110)
             Revo.Buttons.WalkOnAir.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.WalkOnAir.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.WalkOnAir.Font = Enum.Font.Gotham
             Revo.Buttons.WalkOnAir.TextSize = 16
             Revo.Buttons.WalkOnAir.Text = "Walk On Air"
-            Revo.Buttons.WalkOnAir.Parent = Revo.GUI.CharacterLeftColumn
+            Revo.Buttons.WalkOnAir.Parent = Revo.GUI.WalkOnAirFrame
             Revo.GUI:AddCorner(Revo.Buttons.WalkOnAir)
             Revo.Buttons.WalkOnAir.Visible = true
 
-            Revo.Buttons.WalkOnAirOff = Instance.new("TextButton")
-            Revo.Buttons.WalkOnAirOff.Size = UDim2.new(0, 65, 0, 30)
-            Revo.Buttons.WalkOnAirOff.Position = UDim2.new(0, 72.5, 0, 110)
-            Revo.Buttons.WalkOnAirOff.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.WalkOnAirOff.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.WalkOnAirOff.Font = Enum.Font.Gotham
-            Revo.Buttons.WalkOnAirOff.TextSize = 16
-            Revo.Buttons.WalkOnAirOff.Text = "Off"
-            Revo.Buttons.WalkOnAirOff.Parent = Revo.GUI.CharacterLeftColumn
-            Revo.GUI:AddCorner(Revo.Buttons.WalkOnAirOff)
-            Revo.Buttons.WalkOnAirOff.Visible = false
-
-            Revo.Buttons.WalkOnAirUp = Instance.new("TextButton")
-            Revo.Buttons.WalkOnAirUp.Size = UDim2.new(0, 65, 0, 30)
-            Revo.Buttons.WalkOnAirUp.Position = UDim2.new(0, 140, 0, 110)
-            Revo.Buttons.WalkOnAirUp.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.WalkOnAirUp.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.WalkOnAirUp.Font = Enum.Font.Gotham
-            Revo.Buttons.WalkOnAirUp.TextSize = 16
-            Revo.Buttons.WalkOnAirUp.Text = "Up"
-            Revo.Buttons.WalkOnAirUp.Parent = Revo.GUI.CharacterLeftColumn
-            Revo.GUI:AddCorner(Revo.Buttons.WalkOnAirUp)
-            Revo.Buttons.WalkOnAirUp.Visible = false
-
             Revo.Buttons.WalkOnAirDown = Instance.new("TextButton")
             Revo.Buttons.WalkOnAirDown.Size = UDim2.new(0, 65, 0, 30)
-            Revo.Buttons.WalkOnAirDown.Position = UDim2.new(0, 5, 0, 110)
             Revo.Buttons.WalkOnAirDown.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.WalkOnAirDown.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.WalkOnAirDown.Font = Enum.Font.Gotham
             Revo.Buttons.WalkOnAirDown.TextSize = 16
             Revo.Buttons.WalkOnAirDown.Text = "Down"
-            Revo.Buttons.WalkOnAirDown.Parent = Revo.GUI.CharacterLeftColumn
+            Revo.Buttons.WalkOnAirDown.Parent = Revo.GUI.WalkOnAirFrame
             Revo.GUI:AddCorner(Revo.Buttons.WalkOnAirDown)
             Revo.Buttons.WalkOnAirDown.Visible = false
+
+            Revo.Buttons.WalkOnAirOff = Instance.new("TextButton")
+            Revo.Buttons.WalkOnAirOff.Size = UDim2.new(0, 65, 0, 30)
+            Revo.Buttons.WalkOnAirOff.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.WalkOnAirOff.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.WalkOnAirOff.Font = Enum.Font.Gotham
+            Revo.Buttons.WalkOnAirOff.TextSize = 16
+            Revo.Buttons.WalkOnAirOff.Text = "Off"
+            Revo.Buttons.WalkOnAirOff.Parent = Revo.GUI.WalkOnAirFrame
+            Revo.GUI:AddCorner(Revo.Buttons.WalkOnAirOff)
+            Revo.Buttons.WalkOnAirOff.Visible = false
+
+            Revo.Buttons.WalkOnAirUp = Instance.new("TextButton")
+            Revo.Buttons.WalkOnAirUp.Size = UDim2.new(0, 65, 0, 30)
+            Revo.Buttons.WalkOnAirUp.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.WalkOnAirUp.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.WalkOnAirUp.Font = Enum.Font.Gotham
+            Revo.Buttons.WalkOnAirUp.TextSize = 16
+            Revo.Buttons.WalkOnAirUp.Text = "Up"
+            Revo.Buttons.WalkOnAirUp.Parent = Revo.GUI.WalkOnAirFrame
+            Revo.GUI:AddCorner(Revo.Buttons.WalkOnAirUp)
+            Revo.Buttons.WalkOnAirUp.Visible = false
 
         -- Walk On Air Button Function
                     
