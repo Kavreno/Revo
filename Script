@@ -470,89 +470,6 @@
             end)
         end
 
-    -- Prediction Teleport
-
-        function Revo:PredictionTP(player, method)
-            local root = self:GetRoot(player)
-            if not root then return end
-
-            local pos = root.Position
-            local vel = root.Velocity
-            root.CFrame = CFrame.new(
-                pos.X + vel.X * (self:GetPing() * 3.5),
-                pos.Y + vel.Y * (self:GetPing() * 2),
-                pos.Z + vel.Z * (self:GetPing() * 3.5)
-            )
-
-            if method == "safe" then
-                task.wait()
-                root.CFrame = CFrame.new(pos)
-                task.wait()
-                root.CFrame = CFrame.new(
-                    pos.X + vel.X * (self:GetPing() * 3.5),
-                    pos.Y + vel.Y * (self:GetPing() * 2),
-                    pos.Z + vel.Z * (self:GetPing() * 3.5)
-                )
-            end
-        end    
-
-    -- Get Push
-
-        function Revo:GetPush()
-            local tempPush = nil
-
-            pcall(function()
-                local backpack = self.Player:FindFirstChild("Backpack")
-                local char = self.Player.Character
-                if backpack and char and backpack:FindFirstChild("Push") then
-                    local pushTool = backpack.Push
-                    pushTool.Parent = char
-                    tempPush = pushTool
-                end
-
-                for _, plr in pairs(Players:GetPlayers()) do
-                    local plrChar = plr.Character
-                    if plrChar and plrChar:FindFirstChild("Push") then
-                        tempPush = plrChar.Push
-                    end
-                end
-            end)
-
-            return tempPush
-        end
-        
-    -- Push
-
-        function Revo:Push(target)
-            local pushTool = self:GetPush()
-            local fixTool = nil
-
-            if pushTool then
-                local args = {target.Character}
-                pushTool.PushTool:FireServer(unpack(args))
-            end
-
-            local char = self.Player.Character
-            if not char then return end
-
-            local backpack = self.Player:FindFirstChild("Backpack")
-
-            local toolsToReset = {"Push", "ModdedPush", "ClickTarget", "potion"}
-            for _, toolName in ipairs(toolsToReset) do
-                local tool = char:FindFirstChild(toolName)
-                if tool and backpack then
-                    tool.Parent = backpack
-                    tool.Parent = char
-                end
-            end
-        end
-
-    -- Lerp
-
-        function Revo:LerpCFrame(a, b, t)
-            return a:Lerp(b, t)
-        end
-    
     -- Get Y
 
         function Revo:GetVoidY()
@@ -719,7 +636,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Saving To Fly Speed Only."
+    Revo.AnnouncementsText.Text = "Changed Fly Code To Allow Jerk To Be Used."
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -900,65 +817,70 @@
                 local char = player.Character
                 if not char then self.ThreadRunning = false return end
 
-                local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
                 local humanoid = char:FindFirstChildOfClass("Humanoid")
-                if not torso then self.ThreadRunning = false return end
-
-                local bg = Instance.new("BodyGyro")
-                bg.P = 1e5
-                bg.maxTorque = Vector3.new(400000, 400000, 400000)
-                bg.CFrame = CFrame.new(torso.Position, torso.Position + workspace.CurrentCamera.CFrame.LookVector)
-                bg.Parent = torso
-
-                local bv = Instance.new("BodyVelocity")
-                bv.velocity = Vector3.new(0, 0.1, 0)
-                bv.maxForce = Vector3.new(400000, 400000, 400000)
-                bv.Parent = torso
-
-                if humanoid then
-                    humanoid.PlatformStand = true
+                local root = char:FindFirstChild("HumanoidRootPart")
+                if not humanoid or not root then
+                    self.ThreadRunning = false
+                    return
                 end
 
-                local speed = 0
+                humanoid.PlatformStand = true
 
-                while self.Enabled and torso.Parent do
+                local BG = Instance.new("BodyGyro")
+                BG.P = 9e4
+                BG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+                BG.CFrame = workspace.CurrentCamera.CFrame
+                BG.Parent = root
+
+                local BV = Instance.new("BodyVelocity")
+                BV.Velocity = Vector3.new(0, 0, 0)
+                BV.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+                BV.Parent = root
+
+                local SPEED = 0
+
+                while self.Enabled and root.Parent do
                     task.wait()
 
-                    if humanoid then
-                        for _, track in pairs(humanoid:GetPlayingAnimationTracks()) do
-                            track:Stop()
-                        end
-                        humanoid.Jump = false
-                    end
-
+                    local camera = workspace.CurrentCamera
                     local ctrl = self.Ctrl
                     local lastctrl = self.LastCtrl
 
                     if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
-                        speed = math.clamp(speed + self.Speed * 0.1, 0, self.Speed)
-                    else
-                        speed = math.clamp(speed - self.Speed * 0.1, 0, self.Speed)
+                        SPEED = self.Speed
+                    elseif SPEED ~= 0 then
+                        SPEED = 0
                     end
 
-                    if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
-                        bv.velocity = ((workspace.CurrentCamera.CFrame.LookVector * (ctrl.f + ctrl.b)) +
-                            ((workspace.CurrentCamera.CFrame * CFrame.new(ctrl.l + ctrl.r, (ctrl.f + ctrl.b) * 0.2, 0).p) - workspace.CurrentCamera.CFrame.p)) * speed
-                        self.LastCtrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
-                    elseif speed ~= 0 then
-                        bv.velocity = ((workspace.CurrentCamera.CFrame.LookVector * (lastctrl.f + lastctrl.b)) +
-                            ((workspace.CurrentCamera.CFrame * CFrame.new(lastctrl.l + lastctrl.r, (lastctrl.f + lastctrl.b) * 0.2, 0).p) - workspace.CurrentCamera.CFrame.p)) * speed
+                    if (ctrl.l + ctrl.r) ~= 0 or (ctrl.f + ctrl.b) ~= 0 then
+                        BV.Velocity =
+                            ((camera.CFrame.LookVector * (ctrl.f + ctrl.b)) +
+                            ((camera.CFrame * CFrame.new(ctrl.l + ctrl.r, (ctrl.f + ctrl.b) * 0.2, 0).p)
+                            - camera.CFrame.p)) * SPEED
+
+                        self.LastCtrl = {
+                            f = ctrl.f,
+                            b = ctrl.b,
+                            l = ctrl.l,
+                            r = ctrl.r
+                        }
+
+                    elseif SPEED ~= 0 then
+                        BV.Velocity =
+                            ((camera.CFrame.LookVector * (lastctrl.f + lastctrl.b)) +
+                            ((camera.CFrame * CFrame.new(lastctrl.l + lastctrl.r, (lastctrl.f + lastctrl.b) * 0.2, 0).p)
+                            - camera.CFrame.p)) * SPEED
                     else
-                        bv.velocity = Vector3.new(0, 0.1, 0)
+                        BV.Velocity = Vector3.new(0, 0, 0)
                     end
 
-                    bg.CFrame = CFrame.new(torso.Position, torso.Position + workspace.CurrentCamera.CFrame.LookVector)
+                    BG.CFrame = camera.CFrame
                 end
 
-                bg:Destroy()
-                bv:Destroy()
-                if humanoid then
-                    humanoid.PlatformStand = false
-                end
+                BG:Destroy()
+                BV:Destroy()
+                humanoid.PlatformStand = false
+
                 self.ThreadRunning = false
             end
 
@@ -4580,11 +4502,11 @@
                     part.Anchored = true
                     part.CanCollide = true
                     part.Locked = true
-                    part.Size = Vector3.new(self.TILE_SIZE, 1, self.TILE_SIZE)
+                    part.Size = Vector3.new(self.TILE_SIZE, 5, self.TILE_SIZE)
 
                     part.Position = Vector3.new(
                         (cx * self.CHUNK_SIZE + x) * self.TILE_SIZE,
-                        -0.7,
+                        -2.7,
                         (cz * self.CHUNK_SIZE + z) * self.TILE_SIZE
                     )
 
