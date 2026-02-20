@@ -1,6 +1,52 @@
+-- Already Added
+
+    -- Walk Speed
+    -- Fly And 
+    -- Fly Speed
+    -- Teleport
+    -- Rewind
+    -- Trip
+    -- Jump Power
+    -- Jerk
+    -- Walk On Air
+    -- Invisibility
+    -- Head Sit Target
+    -- View Target
+    -- Backpack Target
+    -- Face Bang Target
+    -- Bang Target
+    -- Stand Target
+    -- Focus Target
+    -- Teleport Target
+    -- Doggy Target
+    -- Drag Target
+    -- Inspect Target
+    -- All Of Roblox's Animation Packs
+    -- Rejoin
+    -- Server Hop
+    -- Shaders
+    -- Day
+    -- Night
+    -- Emotes Script
+    -- UGC Emotes Script
+    -- Infinite Yield Script
+    -- Explode
+    -- Gui Rebinding
+    -- Auto Clicker
+    -- Anti AFK
+    -- No Sit
+    -- Teleport To Last Location On Respawn
+    -- Extended Baseplate
+
 -- Need To Add
 
     -- Saving
+    -- Persistent Walk And Jump Speed If Saved
+    -- Infinite Jump
+    -- Gravity
+    -- Fling
+    -- Push
+    -- Anti Ragdoll (Works With Trip)
 
     -- Not Sure If Adding
 
@@ -14,6 +60,14 @@
         -- Aim Bot
         -- Custom Animations
         -- Animation Cloning
+        -- Animation Speeds
+        -- Custom Sky Box
+        -- ESP
+        -- FOV
+        -- Free Cam
+        -- Respawn (Brings You To Normal Respawn Point)
+        -- Spin (With Spin Speed)
+        -- Orbit Target
         -- See Others Cameras
         -- Anti All (Headsit, Backpack, ETC)
 
@@ -247,10 +301,6 @@
             CaptureConnection = nil,
             GlobalConnection = nil
         }
-
-    -- ESP
-
-        Revo.ESP_ENABLED = false
 
     -- Save
 
@@ -636,7 +686,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Changed Fly Code To Allow Jerk To Be Used."
+    Revo.AnnouncementsText.Text = "Added Saving To Jump And Walkspeed, Made Target Tool Not Dupe If You Already Have One, And Removed ESP Due To Lag"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -684,76 +734,80 @@
 
 -- Character
 
-    Revo.GUI.CharacterSection = Instance.new("ScrollingFrame")
-    Revo.GUI.CharacterSection.Name = "Character_Section"
-    Revo.GUI.CharacterSection.Size = UDim2.new(1, 6, 1, -40)
-    Revo.GUI.CharacterSection.Position = UDim2.new(0, -3, 0, 35)
-    Revo.GUI.CharacterSection.BackgroundTransparency = 1
-    Revo.GUI.CharacterSection.ScrollBarThickness = 0
-    Revo.GUI.CharacterSection.ScrollBarImageTransparency = 1
-    Revo.GUI.CharacterSection.ClipsDescendants = true
-    Revo.GUI.CharacterSection.ScrollingDirection = Enum.ScrollingDirection.Y
-    Revo.GUI.CharacterSection.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    Revo.GUI.CharacterSection.Parent = Revo.Pages.Character
+    -- Scrolling Frame
 
-    Revo.GUI.CharacterLeftColumn = Instance.new("Frame")
-    Revo.GUI.CharacterLeftColumn.Size = UDim2.new(0.5, 0, 1, 0)
-    Revo.GUI.CharacterLeftColumn.Position = UDim2.new(0, 0, 0, 0)
-    Revo.GUI.CharacterLeftColumn.BackgroundTransparency = 1
-    Revo.GUI.CharacterLeftColumn.Parent = Revo.GUI.CharacterSection
+        Revo.GUI.CharacterSection = Instance.new("ScrollingFrame")
+        Revo.GUI.CharacterSection.Name = "Character_Section"
+        Revo.GUI.CharacterSection.Size = UDim2.new(1, 6, 1, -40)
+        Revo.GUI.CharacterSection.Position = UDim2.new(0, -3, 0, 35)
+        Revo.GUI.CharacterSection.BackgroundTransparency = 1
+        Revo.GUI.CharacterSection.ScrollBarThickness = 0
+        Revo.GUI.CharacterSection.ScrollBarImageTransparency = 1
+        Revo.GUI.CharacterSection.ClipsDescendants = true
+        Revo.GUI.CharacterSection.ScrollingDirection = Enum.ScrollingDirection.Y
+        Revo.GUI.CharacterSection.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        Revo.GUI.CharacterSection.Parent = Revo.Pages.Character
 
-    Revo.GUI.CharacterRightColumn = Instance.new("Frame")
-    Revo.GUI.CharacterRightColumn.Size = UDim2.new(0.5, 0, 1, 0)
-    Revo.GUI.CharacterRightColumn.Position = UDim2.new(0.5, 0, 0, 0)
-    Revo.GUI.CharacterRightColumn.BackgroundTransparency = 1
-    Revo.GUI.CharacterRightColumn.Parent = Revo.GUI.CharacterSection
+        Revo.GUI.CharacterLeftColumn = Instance.new("Frame")
+        Revo.GUI.CharacterLeftColumn.Size = UDim2.new(0.5, 0, 1, 0)
+        Revo.GUI.CharacterLeftColumn.Position = UDim2.new(0, 0, 0, 0)
+        Revo.GUI.CharacterLeftColumn.BackgroundTransparency = 1
+        Revo.GUI.CharacterLeftColumn.Parent = Revo.GUI.CharacterSection
 
-    Revo.GUI.CharacterLeftLayout = Instance.new("UIListLayout")
-    Revo.GUI.CharacterLeftLayout.FillDirection = Enum.FillDirection.Vertical
-    Revo.GUI.CharacterLeftLayout.Padding = UDim.new(0, 5)
-    Revo.GUI.CharacterLeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    Revo.GUI.CharacterLeftLayout.Parent = Revo.GUI.CharacterLeftColumn
-    Revo.GUI.CharacterLeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        Revo.GUI.CharacterRightColumn = Instance.new("Frame")
+        Revo.GUI.CharacterRightColumn.Size = UDim2.new(0.5, 0, 1, 0)
+        Revo.GUI.CharacterRightColumn.Position = UDim2.new(0.5, 0, 0, 0)
+        Revo.GUI.CharacterRightColumn.BackgroundTransparency = 1
+        Revo.GUI.CharacterRightColumn.Parent = Revo.GUI.CharacterSection
 
-    Revo.GUI.CharacterRightLayout = Instance.new("UIListLayout")
-    Revo.GUI.CharacterRightLayout.FillDirection = Enum.FillDirection.Vertical
-    Revo.GUI.CharacterRightLayout.Padding = UDim.new(0, 5)
-    Revo.GUI.CharacterRightLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    Revo.GUI.CharacterRightLayout.Parent = Revo.GUI.CharacterRightColumn
-    Revo.GUI.CharacterRightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        Revo.GUI.CharacterLeftLayout = Instance.new("UIListLayout")
+        Revo.GUI.CharacterLeftLayout.FillDirection = Enum.FillDirection.Vertical
+        Revo.GUI.CharacterLeftLayout.Padding = UDim.new(0, 5)
+        Revo.GUI.CharacterLeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        Revo.GUI.CharacterLeftLayout.Parent = Revo.GUI.CharacterLeftColumn
+        Revo.GUI.CharacterLeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-    Revo.GUI.CharacterPadding = Instance.new("UIPadding")
-    Revo.GUI.CharacterPadding.PaddingTop = UDim.new(0, 3)
-    Revo.GUI.CharacterPadding.PaddingBottom = UDim.new(0, 5)
-    Revo.GUI.CharacterPadding.PaddingLeft = UDim.new(0, 0)
-    Revo.GUI.CharacterPadding.PaddingRight = UDim.new(0, 0)
-    Revo.GUI.CharacterPadding.Parent = Revo.GUI.CharacterSection
+        Revo.GUI.CharacterRightLayout = Instance.new("UIListLayout")
+        Revo.GUI.CharacterRightLayout.FillDirection = Enum.FillDirection.Vertical
+        Revo.GUI.CharacterRightLayout.Padding = UDim.new(0, 5)
+        Revo.GUI.CharacterRightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        Revo.GUI.CharacterRightLayout.Parent = Revo.GUI.CharacterRightColumn
+        Revo.GUI.CharacterRightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-    function Revo:UpdateCharacterCanvas()
-        pcall(function()
-            local scroll = Revo.GUI.CharacterSection
-            local leftLayout = Revo.GUI.CharacterLeftLayout
-            local rightLayout = Revo.GUI.CharacterRightLayout
-            if not scroll or not leftLayout or not rightLayout then return end
+        Revo.GUI.CharacterPadding = Instance.new("UIPadding")
+        Revo.GUI.CharacterPadding.PaddingTop = UDim.new(0, 3)
+        Revo.GUI.CharacterPadding.PaddingBottom = UDim.new(0, 5)
+        Revo.GUI.CharacterPadding.PaddingLeft = UDim.new(0, 0)
+        Revo.GUI.CharacterPadding.PaddingRight = UDim.new(0, 0)
+        Revo.GUI.CharacterPadding.Parent = Revo.GUI.CharacterSection
 
-            scroll.CanvasSize = UDim2.new(0, 0, 0, math.max(leftLayout.AbsoluteContentSize.Y, rightLayout.AbsoluteContentSize.Y) + 10)
+        function Revo:UpdateCharacterCanvas()
+            pcall(function()
+                local scroll = Revo.GUI.CharacterSection
+                local leftLayout = Revo.GUI.CharacterLeftLayout
+                local rightLayout = Revo.GUI.CharacterRightLayout
+                if not scroll or not leftLayout or not rightLayout then return end
+
+                scroll.CanvasSize = UDim2.new(0, 0, 0, math.max(leftLayout.AbsoluteContentSize.Y, rightLayout.AbsoluteContentSize.Y) + 10)
+            end)
+        end
+
+        Revo.GUI.CharacterLeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Revo:UpdateCharacterCanvas()
         end)
-    end
+        Revo.GUI.CharacterRightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Revo:UpdateCharacterCanvas()
+        end)
 
-    Revo.GUI.CharacterLeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Revo:UpdateCharacterCanvas()
-    end)
-    Revo.GUI.CharacterRightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Revo:UpdateCharacterCanvas()
-    end)
-
-    task.defer(function()
-        Revo:UpdateCharacterCanvas()
-    end)
+        task.defer(function()
+            Revo:UpdateCharacterCanvas()
+        end)
 
     -- Walk Speed
 
         -- Walk Speed Button
+     
+            Revo.WalkSpeed = (Revo.Save.Data and Revo.Save.Data.WalkSpeed) or 16
 
             Revo.Buttons.WalkSpeed = Instance.new("TextButton")
             Revo.Buttons.WalkSpeed.Size = UDim2.new(0, 200, 0, 30)
@@ -762,7 +816,7 @@
             Revo.Buttons.WalkSpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.WalkSpeed.Font = Enum.Font.Gotham
             Revo.Buttons.WalkSpeed.TextSize = 16
-            Revo.Buttons.WalkSpeed.Text = "Walk Speed: 16"
+            Revo.Buttons.WalkSpeed.Text = "Walk Speed: " .. Revo.WalkSpeed
             Revo.Buttons.WalkSpeed.Parent = Revo.GUI.CharacterLeftColumn
             Revo.GUI:AddCorner(Revo.Buttons.WalkSpeed)
 
@@ -792,11 +846,19 @@
                     local Speed = Revo.Inputs.WalkSpeed.Text:gsub("%D", "")
                     if Speed == "" then Speed = 16 end
 
+                    Speed = tonumber(Speed)
+
+                    Revo.WalkSpeed = Speed
+
                     local hum = Revo.Player.Character and Revo.Player.Character:FindFirstChildOfClass("Humanoid")
                     if hum then
-                        hum.WalkSpeed = tonumber(Speed)
-                        Revo.Buttons.WalkSpeed.Text = "Walk Speed: " .. Speed
+                        hum.WalkSpeed = Speed
                     end
+
+                    Revo.Buttons.WalkSpeed.Text = "Walk Speed: " .. Speed
+
+                    Revo.Save.Data.WalkSpeed = Speed
+                    Revo.Save:Write()
                 end)
 
                 Revo.Inputs.WalkSpeed.Text = ""
@@ -1285,10 +1347,7 @@
             end)
 
             function Revo.Rewind:LerpCFrame(cfA, cfB, alpha)
-                local pos = cfA.Position:Lerp(cfB.Position, alpha)
-                local rot = cfA - cfA.Position
-                local rotB = cfB - cfB.Position
-                return CFrame.new(pos) * CFrame.fromMatrix(Vector3.new(), rot.LookVector:Lerp(rotB.LookVector, alpha), rot.UpVector:Lerp(rotB.UpVector, alpha))
+                return cfA:Lerp(cfB, alpha)
             end
 
             function Revo.Rewind:Toggle()
@@ -1542,6 +1601,8 @@
 
         -- Jump Power Button
 
+            Revo.JumpPower = (Revo.Save.Data and Revo.Save.Data.JumpPower) or 50
+
             Revo.Buttons.JumpPower = Instance.new("TextButton")
             Revo.Buttons.JumpPower.Size = UDim2.new(0, 200, 0, 30)
             Revo.Buttons.JumpPower.Position = UDim2.new(0, 215, 0, 145)
@@ -1549,7 +1610,7 @@
             Revo.Buttons.JumpPower.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.JumpPower.Font = Enum.Font.Gotham
             Revo.Buttons.JumpPower.TextSize = 16
-            Revo.Buttons.JumpPower.Text = "Jump Power: 50"
+            Revo.Buttons.JumpPower.Text = "Jump Power: " .. Revo.JumpPower
             Revo.Buttons.JumpPower.Parent = Revo.GUI.CharacterRightColumn
             Revo.GUI:AddCorner(Revo.Buttons.JumpPower)
 
@@ -1579,12 +1640,20 @@
                     local Jump = Revo.Inputs.JumpPower.Text:gsub("%D", "")
                     if Jump == "" then Jump = 50 end
 
+                    Jump = tonumber(Jump)
+
+                    Revo.JumpPower = Jump
+
                     local hum = Revo.Player.Character and Revo.Player.Character:FindFirstChildOfClass("Humanoid")
                     if hum then
                         hum.UseJumpPower = true
-                        hum.JumpPower = tonumber(Jump)
-                        Revo.Buttons.JumpPower.Text = "Jump Power: " .. Jump
+                        hum.JumpPower = Jump
                     end
+
+                    Revo.Buttons.JumpPower.Text = "Jump Power: " .. Jump
+
+                    Revo.Save.Data.JumpPower = Jump
+                    Revo.Save:Write()
                 end)
 
                 Revo.Inputs.JumpPower.Text = ""
@@ -2061,160 +2130,164 @@
 
 -- Target
 
-    Revo.GUI.TargetSection = Instance.new("ScrollingFrame")
-    Revo.GUI.TargetSection.Name = "Target_Section"
-    Revo.GUI.TargetSection.Size = UDim2.new(1, 6, 1, -40)
-    Revo.GUI.TargetSection.Position = UDim2.new(0, -3, 0, 35)
-    Revo.GUI.TargetSection.BackgroundTransparency = 1
-    Revo.GUI.TargetSection.ScrollBarThickness = 0
-    Revo.GUI.TargetSection.ScrollBarImageTransparency = 1
-    Revo.GUI.TargetSection.ClipsDescendants = true
-    Revo.GUI.TargetSection.ScrollingDirection = Enum.ScrollingDirection.Y
-    Revo.GUI.TargetSection.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    Revo.GUI.TargetSection.Parent = Revo.Pages.Target
+    -- Scrolling Frame
 
-    Revo.GUI.TargetLeftColumn = Instance.new("Frame")
-    Revo.GUI.TargetLeftColumn.Size = UDim2.new(0.5, 0, 1, -120)
-    Revo.GUI.TargetLeftColumn.Position = UDim2.new(0, 0, 0, 120)
-    Revo.GUI.TargetLeftColumn.BackgroundTransparency = 1
-    Revo.GUI.TargetLeftColumn.Parent = Revo.GUI.TargetSection
+        Revo.GUI.TargetSection = Instance.new("ScrollingFrame")
+        Revo.GUI.TargetSection.Name = "Target_Section"
+        Revo.GUI.TargetSection.Size = UDim2.new(1, 6, 1, -40)
+        Revo.GUI.TargetSection.Position = UDim2.new(0, -3, 0, 35)
+        Revo.GUI.TargetSection.BackgroundTransparency = 1
+        Revo.GUI.TargetSection.ScrollBarThickness = 0
+        Revo.GUI.TargetSection.ScrollBarImageTransparency = 1
+        Revo.GUI.TargetSection.ClipsDescendants = true
+        Revo.GUI.TargetSection.ScrollingDirection = Enum.ScrollingDirection.Y
+        Revo.GUI.TargetSection.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        Revo.GUI.TargetSection.Parent = Revo.Pages.Target
 
-    Revo.GUI.TargetRightColumn = Instance.new("Frame")
-    Revo.GUI.TargetRightColumn.Size = UDim2.new(0.5, 0, 1, -120)
-    Revo.GUI.TargetRightColumn.Position = UDim2.new(0.5, 0, 0, 120)
-    Revo.GUI.TargetRightColumn.BackgroundTransparency = 1
-    Revo.GUI.TargetRightColumn.Parent = Revo.GUI.TargetSection
+        Revo.GUI.TargetLeftColumn = Instance.new("Frame")
+        Revo.GUI.TargetLeftColumn.Size = UDim2.new(0.5, 0, 1, -120)
+        Revo.GUI.TargetLeftColumn.Position = UDim2.new(0, 0, 0, 120)
+        Revo.GUI.TargetLeftColumn.BackgroundTransparency = 1
+        Revo.GUI.TargetLeftColumn.Parent = Revo.GUI.TargetSection
 
-    Revo.GUI.TargetLeftLayout = Instance.new("UIListLayout")
-    Revo.GUI.TargetLeftLayout.FillDirection = Enum.FillDirection.Vertical
-    Revo.GUI.TargetLeftLayout.Padding = UDim.new(0, 5)
-    Revo.GUI.TargetLeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    Revo.GUI.TargetLeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    Revo.GUI.TargetLeftLayout.Parent = Revo.GUI.TargetLeftColumn
+        Revo.GUI.TargetRightColumn = Instance.new("Frame")
+        Revo.GUI.TargetRightColumn.Size = UDim2.new(0.5, 0, 1, -120)
+        Revo.GUI.TargetRightColumn.Position = UDim2.new(0.5, 0, 0, 120)
+        Revo.GUI.TargetRightColumn.BackgroundTransparency = 1
+        Revo.GUI.TargetRightColumn.Parent = Revo.GUI.TargetSection
 
-    Revo.GUI.TargetRightLayout = Instance.new("UIListLayout")
-    Revo.GUI.TargetRightLayout.FillDirection = Enum.FillDirection.Vertical
-    Revo.GUI.TargetRightLayout.Padding = UDim.new(0, 5)
-    Revo.GUI.TargetRightLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    Revo.GUI.TargetRightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    Revo.GUI.TargetRightLayout.Parent = Revo.GUI.TargetRightColumn
+        Revo.GUI.TargetLeftLayout = Instance.new("UIListLayout")
+        Revo.GUI.TargetLeftLayout.FillDirection = Enum.FillDirection.Vertical
+        Revo.GUI.TargetLeftLayout.Padding = UDim.new(0, 5)
+        Revo.GUI.TargetLeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        Revo.GUI.TargetLeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        Revo.GUI.TargetLeftLayout.Parent = Revo.GUI.TargetLeftColumn
 
-    Revo.GUI.TargetPadding = Instance.new("UIPadding")
-    Revo.GUI.TargetPadding.PaddingTop = UDim.new(0, 3)
-    Revo.GUI.TargetPadding.PaddingBottom = UDim.new(0, 5)
-    Revo.GUI.TargetPadding.PaddingLeft = UDim.new(0, 0)
-    Revo.GUI.TargetPadding.PaddingRight = UDim.new(0, 0)
-    Revo.GUI.TargetPadding.Parent = Revo.GUI.TargetSection
+        Revo.GUI.TargetRightLayout = Instance.new("UIListLayout")
+        Revo.GUI.TargetRightLayout.FillDirection = Enum.FillDirection.Vertical
+        Revo.GUI.TargetRightLayout.Padding = UDim.new(0, 5)
+        Revo.GUI.TargetRightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        Revo.GUI.TargetRightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        Revo.GUI.TargetRightLayout.Parent = Revo.GUI.TargetRightColumn
 
-    function Revo:UpdateTargetCanvas()
-        pcall(function()
-            local scroll = Revo.GUI.TargetSection
-            local leftLayout = Revo.GUI.TargetLeftLayout
-            local rightLayout = Revo.GUI.TargetRightLayout
-            if not scroll or not leftLayout or not rightLayout then return end
+        Revo.GUI.TargetPadding = Instance.new("UIPadding")
+        Revo.GUI.TargetPadding.PaddingTop = UDim.new(0, 3)
+        Revo.GUI.TargetPadding.PaddingBottom = UDim.new(0, 5)
+        Revo.GUI.TargetPadding.PaddingLeft = UDim.new(0, 0)
+        Revo.GUI.TargetPadding.PaddingRight = UDim.new(0, 0)
+        Revo.GUI.TargetPadding.Parent = Revo.GUI.TargetSection
 
-            scroll.CanvasSize = UDim2.new(0, 0, 0, math.max(leftLayout.AbsoluteContentSize.Y, rightLayout.AbsoluteContentSize.Y) + 10)
+        function Revo:UpdateTargetCanvas()
+            pcall(function()
+                local scroll = Revo.GUI.TargetSection
+                local leftLayout = Revo.GUI.TargetLeftLayout
+                local rightLayout = Revo.GUI.TargetRightLayout
+                if not scroll or not leftLayout or not rightLayout then return end
+
+                scroll.CanvasSize = UDim2.new(0, 0, 0, math.max(leftLayout.AbsoluteContentSize.Y, rightLayout.AbsoluteContentSize.Y) + 10)
+            end)
+        end
+
+        Revo.GUI.TargetLeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Revo:UpdateTargetCanvas()
         end)
-    end
+        Revo.GUI.TargetRightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Revo:UpdateTargetCanvas()
+        end)
 
-    Revo.GUI.TargetLeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Revo:UpdateTargetCanvas()
-    end)
-    Revo.GUI.TargetRightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Revo:UpdateTargetCanvas()
-    end)
+        task.defer(function()
+            Revo:UpdateTargetCanvas()
+        end)
 
-    task.defer(function()
-        Revo:UpdateTargetCanvas()
-    end)
+    -- Buttons And Image
 
-    Revo.GUI.TargetImage = Instance.new("ImageLabel")
-    Revo.GUI.TargetImage.Name = "TargetImage"
-    Revo.GUI.TargetImage.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-    Revo.GUI.TargetImage.BorderColor3 = Color3.fromRGB(100, 100, 100)
-    Revo.GUI.TargetImage.Position = UDim2.new(0, 5, 0, 10)
-    Revo.GUI.TargetImage.Size = UDim2.new(0, 100, 0, 100)
-    Revo.GUI.TargetImage.Image = "rbxassetid://10818605405"
-    Revo.GUI.TargetImage.Parent = Revo.GUI.TargetSection
-    Revo.GUI:AddCorner(Revo.GUI.TargetImage)
+        Revo.GUI.TargetImage = Instance.new("ImageLabel")
+        Revo.GUI.TargetImage.Name = "TargetImage"
+        Revo.GUI.TargetImage.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+        Revo.GUI.TargetImage.BorderColor3 = Color3.fromRGB(100, 100, 100)
+        Revo.GUI.TargetImage.Position = UDim2.new(0, 5, 0, 10)
+        Revo.GUI.TargetImage.Size = UDim2.new(0, 100, 0, 100)
+        Revo.GUI.TargetImage.Image = "rbxassetid://10818605405"
+        Revo.GUI.TargetImage.Parent = Revo.GUI.TargetSection
+        Revo.GUI:AddCorner(Revo.GUI.TargetImage)
 
-    Revo.GUI.UserIDTargetLabel = Instance.new("TextLabel")
-    Revo.GUI.UserIDTargetLabel.Name = "UserIDTargetLabel"
-    Revo.GUI.UserIDTargetLabel.BackgroundTransparency = 1
-    Revo.GUI.UserIDTargetLabel.Position = UDim2.new(0, 110, 0, 61)
-    Revo.GUI.UserIDTargetLabel.Size = UDim2.new(0, 300, 0, 55)
-    Revo.GUI.UserIDTargetLabel.Font = Enum.Font.Gotham
-    Revo.GUI.UserIDTargetLabel.Text = "UserID:\nDisplay:\nJoined:"
-    Revo.GUI.UserIDTargetLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-    Revo.GUI.UserIDTargetLabel.TextSize = 17
-    Revo.GUI.UserIDTargetLabel.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.GUI.UserIDTargetLabel.TextYAlignment = Enum.TextYAlignment.Top
-    Revo.GUI.UserIDTargetLabel.Parent = Revo.GUI.TargetSection
+        Revo.GUI.UserIDTargetLabel = Instance.new("TextLabel")
+        Revo.GUI.UserIDTargetLabel.Name = "UserIDTargetLabel"
+        Revo.GUI.UserIDTargetLabel.BackgroundTransparency = 1
+        Revo.GUI.UserIDTargetLabel.Position = UDim2.new(0, 110, 0, 61)
+        Revo.GUI.UserIDTargetLabel.Size = UDim2.new(0, 300, 0, 55)
+        Revo.GUI.UserIDTargetLabel.Font = Enum.Font.Gotham
+        Revo.GUI.UserIDTargetLabel.Text = "UserID:\nDisplay:\nJoined:"
+        Revo.GUI.UserIDTargetLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        Revo.GUI.UserIDTargetLabel.TextSize = 17
+        Revo.GUI.UserIDTargetLabel.TextXAlignment = Enum.TextXAlignment.Left
+        Revo.GUI.UserIDTargetLabel.TextYAlignment = Enum.TextYAlignment.Top
+        Revo.GUI.UserIDTargetLabel.Parent = Revo.GUI.TargetSection
 
-    Revo.GUI.TargetButtons = {}
+        Revo.GUI.TargetButtons = {}
 
-    function Revo.GUI:CreateTargetButton(name, text, pos)
-        local btn = Instance.new("TextButton")
-        btn.Name = name
-        btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        btn.BackgroundTransparency = 0
-        btn.BorderSizePixel = 0
-        btn.Position = pos
-        btn.Size = UDim2.new(0, 200, 0, 30)
-        btn.Font = Enum.Font.Gotham
-        btn.Text = text
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.TextSize = 16
-        btn.Parent = self.TargetSection
-        self:AddCorner(btn)
+        function Revo.GUI:CreateTargetButton(name, text, pos)
+            local btn = Instance.new("TextButton")
+            btn.Name = name
+            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            btn.BackgroundTransparency = 0
+            btn.BorderSizePixel = 0
+            btn.Position = pos
+            btn.Size = UDim2.new(0, 200, 0, 30)
+            btn.Font = Enum.Font.Gotham
+            btn.Text = text
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.TextSize = 16
+            btn.Parent = self.TargetSection
+            self:AddCorner(btn)
 
-        self.TargetButtons[name] = btn
+            self.TargetButtons[name] = btn
 
-        return btn
-    end
+            return btn
+        end
 
-    Revo.GUI.TargetButtons.Fling        = Revo.GUI:CreateTargetButton("Fling",        "Fling",                 UDim2.new(0, 5, 0, 120))
-    Revo.GUI.TargetButtons.View         = Revo.GUI:CreateTargetButton("View",         "View",                  UDim2.new(0, 215, 0, 120))
-    Revo.GUI.TargetButtons.Focus        = Revo.GUI:CreateTargetButton("Focus",        "Focus",                 UDim2.new(0, 5, 0, 155))
-    Revo.GUI.TargetButtons.Bang         = Revo.GUI:CreateTargetButton("Bang",         "Bang",                  UDim2.new(0, 215, 0, 155))
-    Revo.GUI.TargetButtons.Stand        = Revo.GUI:CreateTargetButton("Stand",        "Stand",                 UDim2.new(0, 5, 0, 190))
-    Revo.GUI.TargetButtons.Headsit      = Revo.GUI:CreateTargetButton("Headsit",      "Headsit",               UDim2.new(0, 215, 0, 190))
-    Revo.GUI.TargetButtons.Doggy        = Revo.GUI:CreateTargetButton("Doggy",        "Doggy",                 UDim2.new(0, 5, 0, 225))
-    Revo.GUI.TargetButtons.Backpack     = Revo.GUI:CreateTargetButton("Backpack",     "Backpack",              UDim2.new(0, 215, 0, 225))
-    Revo.GUI.TargetButtons.Drag         = Revo.GUI:CreateTargetButton("Drag",         "Drag",                  UDim2.new(0, 5, 0, 260))
-    Revo.GUI.TargetButtons.Teleport     = Revo.GUI:CreateTargetButton("Teleport",     "Teleport",              UDim2.new(0, 215, 0, 260))
-    Revo.GUI.TargetButtons.Push         = Revo.GUI:CreateTargetButton("Push",         "Push",                  UDim2.new(0, 5, 0, 295))
-    Revo.GUI.TargetButtons.FaceBang     = Revo.GUI:CreateTargetButton("FaceBang",     "Face Bang",             UDim2.new(0, 215, 0, 295))
+        Revo.GUI.TargetButtons.Fling        = Revo.GUI:CreateTargetButton("Fling",        "Fling",                 UDim2.new(0, 5, 0, 120))
+        Revo.GUI.TargetButtons.View         = Revo.GUI:CreateTargetButton("View",         "View",                  UDim2.new(0, 215, 0, 120))
+        Revo.GUI.TargetButtons.Focus        = Revo.GUI:CreateTargetButton("Focus",        "Focus",                 UDim2.new(0, 5, 0, 155))
+        Revo.GUI.TargetButtons.Bang         = Revo.GUI:CreateTargetButton("Bang",         "Bang",                  UDim2.new(0, 215, 0, 155))
+        Revo.GUI.TargetButtons.Stand        = Revo.GUI:CreateTargetButton("Stand",        "Stand",                 UDim2.new(0, 5, 0, 190))
+        Revo.GUI.TargetButtons.Headsit      = Revo.GUI:CreateTargetButton("Headsit",      "Headsit",               UDim2.new(0, 215, 0, 190))
+        Revo.GUI.TargetButtons.Doggy        = Revo.GUI:CreateTargetButton("Doggy",        "Doggy",                 UDim2.new(0, 5, 0, 225))
+        Revo.GUI.TargetButtons.Backpack     = Revo.GUI:CreateTargetButton("Backpack",     "Backpack",              UDim2.new(0, 215, 0, 225))
+        Revo.GUI.TargetButtons.Drag         = Revo.GUI:CreateTargetButton("Drag",         "Drag",                  UDim2.new(0, 5, 0, 260))
+        Revo.GUI.TargetButtons.Teleport     = Revo.GUI:CreateTargetButton("Teleport",     "Teleport",              UDim2.new(0, 215, 0, 260))
+        Revo.GUI.TargetButtons.Push         = Revo.GUI:CreateTargetButton("Push",         "Push",                  UDim2.new(0, 5, 0, 295))
+        Revo.GUI.TargetButtons.FaceBang     = Revo.GUI:CreateTargetButton("FaceBang",     "Face Bang",             UDim2.new(0, 215, 0, 295))
 
-    Revo.GUI.TargetButtons.Fling.Parent    = Revo.GUI.TargetLeftColumn
-    Revo.GUI.TargetButtons.Focus.Parent    = Revo.GUI.TargetLeftColumn
-    Revo.GUI.TargetButtons.Stand.Parent    = Revo.GUI.TargetLeftColumn
-    Revo.GUI.TargetButtons.Doggy.Parent    = Revo.GUI.TargetLeftColumn
-    Revo.GUI.TargetButtons.Drag.Parent     = Revo.GUI.TargetLeftColumn
-    Revo.GUI.TargetButtons.Push.Parent     = Revo.GUI.TargetLeftColumn
+        Revo.GUI.TargetButtons.Fling.Parent    = Revo.GUI.TargetLeftColumn
+        Revo.GUI.TargetButtons.Focus.Parent    = Revo.GUI.TargetLeftColumn
+        Revo.GUI.TargetButtons.Stand.Parent    = Revo.GUI.TargetLeftColumn
+        Revo.GUI.TargetButtons.Doggy.Parent    = Revo.GUI.TargetLeftColumn
+        Revo.GUI.TargetButtons.Drag.Parent     = Revo.GUI.TargetLeftColumn
+        Revo.GUI.TargetButtons.Push.Parent     = Revo.GUI.TargetLeftColumn
 
-    Revo.GUI.TargetButtons.View.Parent     = Revo.GUI.TargetRightColumn
-    Revo.GUI.TargetButtons.Headsit.Parent  = Revo.GUI.TargetRightColumn
-    Revo.GUI.TargetButtons.Backpack.Parent = Revo.GUI.TargetRightColumn
-    Revo.GUI.TargetButtons.Bang.Parent     = Revo.GUI.TargetRightColumn
-    Revo.GUI.TargetButtons.Teleport.Parent = Revo.GUI.TargetRightColumn
-    Revo.GUI.TargetButtons.FaceBang.Parent = Revo.GUI.TargetRightColumn
+        Revo.GUI.TargetButtons.View.Parent     = Revo.GUI.TargetRightColumn
+        Revo.GUI.TargetButtons.Headsit.Parent  = Revo.GUI.TargetRightColumn
+        Revo.GUI.TargetButtons.Backpack.Parent = Revo.GUI.TargetRightColumn
+        Revo.GUI.TargetButtons.Bang.Parent     = Revo.GUI.TargetRightColumn
+        Revo.GUI.TargetButtons.Teleport.Parent = Revo.GUI.TargetRightColumn
+        Revo.GUI.TargetButtons.FaceBang.Parent = Revo.GUI.TargetRightColumn
 
-    Revo.GUI.TargetNameInput = Instance.new("TextBox")
-    Revo.GUI.TargetNameInput.Name = "TargetName_Input"
-    Revo.GUI.TargetNameInput.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-    Revo.GUI.TargetNameInput.BackgroundTransparency = 0.5
-    Revo.GUI.TargetNameInput.BorderColor3 = Color3.fromRGB(100, 100, 100)
-    Revo.GUI.TargetNameInput.Position = UDim2.new(0, 110, 0, 10)
-    Revo.GUI.TargetNameInput.Size = UDim2.new(0, 200, 0, 30)
-    Revo.GUI.TargetNameInput.Font = Enum.Font.Gotham
-    Revo.GUI.TargetNameInput.PlaceholderText = "Target"
-    Revo.GUI.TargetNameInput.Text = ""
-    Revo.GUI.TargetNameInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Revo.GUI.TargetNameInput.TextSize = 14
-    Revo.GUI.TargetNameInput.ClearTextOnFocus = true
-    Revo.GUI.TargetNameInput.Parent = Revo.GUI.TargetSection
-    Revo.GUI:AddCorner(Revo.GUI.TargetNameInput)
+        Revo.GUI.TargetNameInput = Instance.new("TextBox")
+        Revo.GUI.TargetNameInput.Name = "TargetName_Input"
+        Revo.GUI.TargetNameInput.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        Revo.GUI.TargetNameInput.BackgroundTransparency = 0.5
+        Revo.GUI.TargetNameInput.BorderColor3 = Color3.fromRGB(100, 100, 100)
+        Revo.GUI.TargetNameInput.Position = UDim2.new(0, 110, 0, 10)
+        Revo.GUI.TargetNameInput.Size = UDim2.new(0, 200, 0, 30)
+        Revo.GUI.TargetNameInput.Font = Enum.Font.Gotham
+        Revo.GUI.TargetNameInput.PlaceholderText = "Target"
+        Revo.GUI.TargetNameInput.Text = ""
+        Revo.GUI.TargetNameInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.GUI.TargetNameInput.TextSize = 14
+        Revo.GUI.TargetNameInput.ClearTextOnFocus = true
+        Revo.GUI.TargetNameInput.Parent = Revo.GUI.TargetSection
+        Revo.GUI:AddCorner(Revo.GUI.TargetNameInput)
 
     -- Update Target
 
@@ -2290,6 +2363,14 @@
         -- Target Tool Function
 
             Revo.GUI.ClickTargetToolButton.MouseButton1Click:Connect(function()
+
+                local existingTool = Revo.Player.Backpack:FindFirstChild("ClickTarget") 
+                    or (Revo.Player.Character and Revo.Player.Character:FindFirstChild("ClickTarget"))
+
+                if existingTool then
+                    return
+                end
+
                 local GetTargetTool = Instance.new("Tool")
                 GetTargetTool.Name = "ClickTarget"
                 GetTargetTool.RequiresHandle = false
@@ -2335,7 +2416,7 @@
                                 game.Workspace.CurrentCamera.CameraSubject = targetPlayer.Character.Humanoid
                             end
                         end)
-                        task.wait(0.2)
+                        task.wait()
                     end
                 end)
             else
@@ -2679,83 +2760,11 @@
 
     -- Fling Target
 
-        Revo.GUI.TargetButtons.Fling.MouseButton1Click:Connect(function()
-            if not Revo.Target.Player then return end
 
-            Revo.Target.Flinging = not Revo.Target.Flinging
-
-            local myRoot = Revo:GetRoot(Revo.Player)
-            if not myRoot then return end
-
-            if Revo.Target.Flinging then
-                Revo.Target._FlingOldCFrame = myRoot.CFrame
-            end
-
-            if not Revo.Target.Flinging then
-                if myRoot:FindFirstChild("BreakVelocity") then
-                    myRoot.BreakVelocity:Destroy()
-                end
-
-                if Revo.Target._FlingOldCFrame then
-                    myRoot.AssemblyLinearVelocity = Vector3.zero
-                    myRoot.Velocity = Vector3.zero
-                    myRoot.CFrame = Revo.Target._FlingOldCFrame
-                end
-
-                return
-            end
-
-            task.spawn(function()
-                while Revo.Target.Flinging do
-                    pcall(function()
-                        local myRoot = Revo:GetRoot(Revo.Player)
-                        if not myRoot then return end
-
-                        local targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
-                        if not targetPlayer then return end
-
-                        local targetRoot = Revo:GetRoot(targetPlayer)
-                        if not targetRoot then return end
-
-                        myRoot.CFrame = targetRoot.CFrame
-
-                    end)
-
-                    task.wait()
-                end
-            end)
-        end)
 
     -- Push Target
 
-        Revo.GUI.TargetButtons.Push.MouseButton1Click:Connect(function()
-            if not Revo.Target.Player then return end
 
-            local myRoot = Revo:GetRoot(Revo.Player)
-            if not myRoot then return end
-
-            local oldCFrame = myRoot.CFrame
-
-            pcall(function()
-                local targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
-                if not targetPlayer then return end
-
-                local targetRoot = Revo:GetRoot(targetPlayer)
-                if not targetRoot then return end
-
-                myRoot.CFrame = targetRoot.CFrame
-            end)
-
-            task.wait(0.417)
-
-            if myRoot:FindFirstChild("BreakVelocity") then
-                myRoot.BreakVelocity:Destroy()
-            end
-
-            myRoot.AssemblyLinearVelocity = Vector3.zero
-            myRoot.Velocity = Vector3.zero
-            myRoot.CFrame = oldCFrame
-        end)
 
     -- Face Bang Target
 
@@ -2943,6 +2952,7 @@
     -- Player Removing
 
         function Revo:StopTargetActions()
+
             Revo.Target.Viewing      = false
             Revo.Target.Focusing     = false
             Revo.Target.Headsitting  = false
@@ -2954,14 +2964,19 @@
             Revo.Target.Flinging     = false
             Revo.Target.FaceBanging  = false
 
-            Revo:StopAnim()
+            local char = Revo.Player.Character
+            if not char then return end
 
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local animate = char:FindFirstChild("Animate")
             local root = Revo:GetRoot(Revo.Player)
+
             if root and root:FindFirstChild("BreakVelocity") then
                 root.BreakVelocity:Destroy()
             end
-            
+
             if humanoid then
+                humanoid.PlatformStand = false
                 humanoid.Sit = false
                 humanoid.AutoRotate = true
                 humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
@@ -2974,9 +2989,13 @@
                 end
             end
 
+            if animate then
+                animate.Disabled = false
+            end
+
             local camera = workspace.CurrentCamera
-            if camera and Revo.Player.Character and Revo.Player.Character:FindFirstChild("Humanoid") then
-                camera.CameraSubject = Revo.Player.Character.Humanoid
+            if camera and humanoid then
+                camera.CameraSubject = humanoid
             end
         end
 
@@ -3501,72 +3520,74 @@
 
 -- Misc
 
-    Revo.GUI.MiscSection = Instance.new("ScrollingFrame")
-    Revo.GUI.MiscSection.Name = "Misc_Section"
-    Revo.GUI.MiscSection.Size = UDim2.new(1, 6, 1, -40)
-    Revo.GUI.MiscSection.Position = UDim2.new(0, -3, 0, 35)
-    Revo.GUI.MiscSection.BackgroundTransparency = 1
-    Revo.GUI.MiscSection.ScrollBarThickness = 0
-    Revo.GUI.MiscSection.ScrollBarImageTransparency = 1
-    Revo.GUI.MiscSection.ClipsDescendants = true
-    Revo.GUI.MiscSection.ScrollingDirection = Enum.ScrollingDirection.Y
-    Revo.GUI.MiscSection.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    Revo.GUI.MiscSection.Parent = Revo.Pages.Misc
+    -- Scrolling Frame
 
-    Revo.GUI.MiscLeftColumn = Instance.new("Frame")
-    Revo.GUI.MiscLeftColumn.Size = UDim2.new(0.5, 0, 1, 0)
-    Revo.GUI.MiscLeftColumn.Position = UDim2.new(0, 0, 0, 0)
-    Revo.GUI.MiscLeftColumn.BackgroundTransparency = 1
-    Revo.GUI.MiscLeftColumn.Parent = Revo.GUI.MiscSection
+        Revo.GUI.MiscSection = Instance.new("ScrollingFrame")
+        Revo.GUI.MiscSection.Name = "Misc_Section"
+        Revo.GUI.MiscSection.Size = UDim2.new(1, 6, 1, -40)
+        Revo.GUI.MiscSection.Position = UDim2.new(0, -3, 0, 35)
+        Revo.GUI.MiscSection.BackgroundTransparency = 1
+        Revo.GUI.MiscSection.ScrollBarThickness = 0
+        Revo.GUI.MiscSection.ScrollBarImageTransparency = 1
+        Revo.GUI.MiscSection.ClipsDescendants = true
+        Revo.GUI.MiscSection.ScrollingDirection = Enum.ScrollingDirection.Y
+        Revo.GUI.MiscSection.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        Revo.GUI.MiscSection.Parent = Revo.Pages.Misc
 
-    Revo.GUI.MiscRightColumn = Instance.new("Frame")
-    Revo.GUI.MiscRightColumn.Size = UDim2.new(0.5, 0, 1, 0)
-    Revo.GUI.MiscRightColumn.Position = UDim2.new(0.5, 0, 0, 0)
-    Revo.GUI.MiscRightColumn.BackgroundTransparency = 1
-    Revo.GUI.MiscRightColumn.Parent = Revo.GUI.MiscSection
+        Revo.GUI.MiscLeftColumn = Instance.new("Frame")
+        Revo.GUI.MiscLeftColumn.Size = UDim2.new(0.5, 0, 1, 0)
+        Revo.GUI.MiscLeftColumn.Position = UDim2.new(0, 0, 0, 0)
+        Revo.GUI.MiscLeftColumn.BackgroundTransparency = 1
+        Revo.GUI.MiscLeftColumn.Parent = Revo.GUI.MiscSection
 
-    Revo.GUI.MiscLeftLayout = Instance.new("UIListLayout")
-    Revo.GUI.MiscLeftLayout.FillDirection = Enum.FillDirection.Vertical
-    Revo.GUI.MiscLeftLayout.Padding = UDim.new(0, 5)
-    Revo.GUI.MiscLeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    Revo.GUI.MiscLeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    Revo.GUI.MiscLeftLayout.Parent = Revo.GUI.MiscLeftColumn
+        Revo.GUI.MiscRightColumn = Instance.new("Frame")
+        Revo.GUI.MiscRightColumn.Size = UDim2.new(0.5, 0, 1, 0)
+        Revo.GUI.MiscRightColumn.Position = UDim2.new(0.5, 0, 0, 0)
+        Revo.GUI.MiscRightColumn.BackgroundTransparency = 1
+        Revo.GUI.MiscRightColumn.Parent = Revo.GUI.MiscSection
 
-    Revo.GUI.MiscRightLayout = Instance.new("UIListLayout")
-    Revo.GUI.MiscRightLayout.FillDirection = Enum.FillDirection.Vertical
-    Revo.GUI.MiscRightLayout.Padding = UDim.new(0, 5)
-    Revo.GUI.MiscRightLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    Revo.GUI.MiscRightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    Revo.GUI.MiscRightLayout.Parent = Revo.GUI.MiscRightColumn
+        Revo.GUI.MiscLeftLayout = Instance.new("UIListLayout")
+        Revo.GUI.MiscLeftLayout.FillDirection = Enum.FillDirection.Vertical
+        Revo.GUI.MiscLeftLayout.Padding = UDim.new(0, 5)
+        Revo.GUI.MiscLeftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        Revo.GUI.MiscLeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        Revo.GUI.MiscLeftLayout.Parent = Revo.GUI.MiscLeftColumn
 
-    Revo.GUI.MiscPadding = Instance.new("UIPadding")
-    Revo.GUI.MiscPadding.PaddingTop = UDim.new(0, 3)
-    Revo.GUI.MiscPadding.PaddingBottom = UDim.new(0, 5)
-    Revo.GUI.MiscPadding.PaddingLeft = UDim.new(0, 0)
-    Revo.GUI.MiscPadding.PaddingRight = UDim.new(0, 0)
-    Revo.GUI.MiscPadding.Parent = Revo.GUI.MiscSection
+        Revo.GUI.MiscRightLayout = Instance.new("UIListLayout")
+        Revo.GUI.MiscRightLayout.FillDirection = Enum.FillDirection.Vertical
+        Revo.GUI.MiscRightLayout.Padding = UDim.new(0, 5)
+        Revo.GUI.MiscRightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        Revo.GUI.MiscRightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        Revo.GUI.MiscRightLayout.Parent = Revo.GUI.MiscRightColumn
 
-    function Revo:UpdateMiscCanvas()
-        pcall(function()
-            local scroll = Revo.GUI.MiscSection
-            local leftLayout = Revo.GUI.MiscLeftLayout
-            local rightLayout = Revo.GUI.MiscRightLayout
-            if not scroll or not leftLayout or not rightLayout then return end
+        Revo.GUI.MiscPadding = Instance.new("UIPadding")
+        Revo.GUI.MiscPadding.PaddingTop = UDim.new(0, 3)
+        Revo.GUI.MiscPadding.PaddingBottom = UDim.new(0, 5)
+        Revo.GUI.MiscPadding.PaddingLeft = UDim.new(0, 0)
+        Revo.GUI.MiscPadding.PaddingRight = UDim.new(0, 0)
+        Revo.GUI.MiscPadding.Parent = Revo.GUI.MiscSection
 
-            scroll.CanvasSize = UDim2.new(0, 0, 0, math.max(leftLayout.AbsoluteContentSize.Y, rightLayout.AbsoluteContentSize.Y) + 10)
+        function Revo:UpdateMiscCanvas()
+            pcall(function()
+                local scroll = Revo.GUI.MiscSection
+                local leftLayout = Revo.GUI.MiscLeftLayout
+                local rightLayout = Revo.GUI.MiscRightLayout
+                if not scroll or not leftLayout or not rightLayout then return end
+
+                scroll.CanvasSize = UDim2.new(0, 0, 0, math.max(leftLayout.AbsoluteContentSize.Y, rightLayout.AbsoluteContentSize.Y) + 10)
+            end)
+        end
+
+        Revo.GUI.MiscLeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Revo:UpdateMiscCanvas()
         end)
-    end
+        Revo.GUI.MiscRightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Revo:UpdateMiscCanvas()
+        end)
 
-    Revo.GUI.MiscLeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Revo:UpdateMiscCanvas()
-    end)
-    Revo.GUI.MiscRightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Revo:UpdateMiscCanvas()
-    end)
-
-    task.defer(function()
-        Revo:UpdateMiscCanvas()
-    end)
+        task.defer(function()
+            Revo:UpdateMiscCanvas()
+        end)
 
     -- Rejoin
 
@@ -4173,257 +4194,48 @@
 
     -- No Sit
 
-        Revo.Buttons.Nosit = Instance.new("TextButton")
-        Revo.Buttons.Nosit.Size = UDim2.new(0, 200, 0, 30)
-        Revo.Buttons.Nosit.Position = UDim2.new(0, 215, 0, 215)
-        Revo.Buttons.Nosit.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        Revo.Buttons.Nosit.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Revo.Buttons.Nosit.Font = Enum.Font.Gotham
-        Revo.Buttons.Nosit.TextSize = 16
-        Revo.Buttons.Nosit.Text = "No Sit"
-        Revo.Buttons.Nosit.Parent = Revo.GUI.MiscRightColumn
-        Revo.GUI:AddCorner(Revo.Buttons.Nosit)
+        -- NO Sit Button
 
-    -- No Sit Function
+            Revo.Buttons.Nosit = Instance.new("TextButton")
+            Revo.Buttons.Nosit.Size = UDim2.new(0, 200, 0, 30)
+            Revo.Buttons.Nosit.Position = UDim2.new(0, 215, 0, 215)
+            Revo.Buttons.Nosit.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.Nosit.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.Nosit.Font = Enum.Font.Gotham
+            Revo.Buttons.Nosit.TextSize = 16
+            Revo.Buttons.Nosit.Text = "No Sit"
+            Revo.Buttons.Nosit.Parent = Revo.GUI.MiscRightColumn
+            Revo.GUI:AddCorner(Revo.Buttons.Nosit)
 
-        Revo.Buttons.Nosit.MouseButton1Click:Connect(function()
-            Revo.NoSit.Enabled = not Revo.NoSit.Enabled
-            
-            Revo:Notify(
-                "Revo",
-                Revo.NoSit.Enabled and "No Sit Enabled" or "No Sit Disabled",
-                5
-            )
-            
-            if Revo.NoSit.Enabled then
-                local humanoid = Revo.Player.Character and Revo.Player.Character:FindFirstChildWhichIsA("Humanoid")
-                if humanoid then
-                    humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-                end
+        -- No Sit Function
+
+            Revo.Buttons.Nosit.MouseButton1Click:Connect(function()
+                Revo.NoSit.Enabled = not Revo.NoSit.Enabled
                 
-                Revo.Player.CharacterAdded:Connect(function(character)
-                    repeat wait() until character:FindFirstChildWhichIsA("Humanoid")
-                    local newHumanoid = character:FindFirstChildWhichIsA("Humanoid")
-                    newHumanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-                end)
-            else
-                local humanoid = Revo.Player.Character and Revo.Player.Character:FindFirstChildWhichIsA("Humanoid")
-                if humanoid then
-                    humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-                end
-            end
-        end)
-
-    -- ESP
-
-        -- ESP Button
-
-            Revo.Buttons.ESP = Instance.new("TextButton")
-            Revo.Buttons.ESP.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.ESP.Position = UDim2.new(0, 5, 0, 250)
-            Revo.Buttons.ESP.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.ESP.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.ESP.Font = Enum.Font.Gotham
-            Revo.Buttons.ESP.TextSize = 16
-            Revo.Buttons.ESP.Text = "ESP"
-            Revo.Buttons.ESP.Parent = Revo.GUI.MiscLeftColumn
-            Revo.GUI:AddCorner(Revo.Buttons.ESP)
-
-            -- ESP Button Function
-
-                Revo.Buttons.ESP.MouseButton1Click:Connect(function()
-
-                    Revo.ESP_ENABLED = not Revo.ESP_ENABLED
-
-                    if Revo.ESP_ENABLED then
-
-                        for _,player in pairs(Revo.Services.Players:GetPlayers()) do
-                            if player ~= Revo.Player and player.Character then
-                                Revo.ESP:Create(player, player.Character)
-                            end
-                        end
-
-
-                    else
-
-                        for player,_ in pairs(Revo.ESP.Container) do
-                            Revo.ESP:Remove(player)
-                        end
-
+                Revo:Notify(
+                    "Revo",
+                    Revo.NoSit.Enabled and "No Sit Enabled" or "No Sit Disabled",
+                    5
+                )
+                
+                if Revo.NoSit.Enabled then
+                    local humanoid = Revo.Player.Character and Revo.Player.Character:FindFirstChildWhichIsA("Humanoid")
+                    if humanoid then
+                        humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
                     end
-                end)
-
-        -- ESP Function
-
-            Revo.ESP = {
-                Container = {},
-                MaxDistance = 2000,
-                BoxColor = Color3.fromRGB(255,255,255),
-                BoxThickness = 2
-            }
-
-            function Revo.ESP:Remove(player)
-                local data = self.Container[player]
-                if not data then return end
-
-                if data.Box then data.Box:Remove() end
-                if data.NameText then data.NameText:Remove() end
-                if data.HealthBar then data.HealthBar:Remove() end
-                if data.Highlight then data.Highlight:Destroy() end
-
-                self.Container[player] = nil
-            end
-
-            function Revo.ESP:Create(player, character)
-                if player == Revo.Player then return end
-                self:Remove(player)
-
-                local box = Drawing.new("Square")
-                box.Color = self.BoxColor
-                box.Thickness = self.BoxThickness
-                box.Filled = false
-                box.Visible = false
-
-                local nameText = Drawing.new("Text")
-                nameText.Size = 16
-                nameText.Center = true
-                nameText.Outline = true
-                nameText.Font = 2
-                nameText.Visible = false
-
-                local healthBar = Drawing.new("Square")
-                healthBar.Filled = true
-                healthBar.Visible = false
-
-                local highlight = Instance.new("Highlight")
-                highlight.Name = "RevoESPHighlight"
-                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                highlight.FillTransparency = 0.6
-                highlight.OutlineTransparency = 0
-                highlight.Adornee = character
-                highlight.Parent = character
-
-                self.Container[player] = {
-                    Box = box,
-                    NameText = nameText,
-                    HealthBar = healthBar,
-                    Highlight = highlight,
-                    LastHealth = nil
-                }
-            end
-
-            function Revo.ESP:HookPlayer(player)
-
-                player.CharacterAdded:Connect(function(character)
-                    if not Revo.ESP_ENABLED then return end
-                    task.wait(0.3)
-                    self:Create(player, character)
-                end)
-
-                player.CharacterRemoving:Connect(function()
-                    self:Remove(player)
-                end)
-
-                if player.Character and Revo.ESP_ENABLED then
-                    self:Create(player, player.Character)
-                end
-            end
-
-            for _,player in pairs(Revo.Services.Players:GetPlayers()) do
-                if player ~= Revo.Player then
-                    Revo.ESP:HookPlayer(player)
-                end
-            end
-
-            Revo.Services.Players.PlayerAdded:Connect(function(player)
-                if player ~= Revo.Player then
-                    Revo.ESP:HookPlayer(player)
+                    
+                    Revo.Player.CharacterAdded:Connect(function(character)
+                        repeat wait() until character:FindFirstChildWhichIsA("Humanoid")
+                        local newHumanoid = character:FindFirstChildWhichIsA("Humanoid")
+                        newHumanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+                    end)
+                else
+                    local humanoid = Revo.Player.Character and Revo.Player.Character:FindFirstChildWhichIsA("Humanoid")
+                    if humanoid then
+                        humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+                    end
                 end
             end)
-
-            Revo.Services.Players.PlayerRemoving:Connect(function(player)
-                Revo.ESP:Remove(player)
-            end)
-
-            Revo.Services.RunService.RenderStepped:Connect(function()
-                if not Revo.ESP_ENABLED then return end
-
-                local camera = workspace.CurrentCamera
-                local camPos = camera.CFrame.Position
-
-                for player,data in pairs(Revo.ESP.Container) do
-
-                    local character = player.Character
-                    if not character then continue end
-
-                    local humanoid = character:FindFirstChildOfClass("Humanoid")
-                    local root = character:FindFirstChild("HumanoidRootPart")
-                    local head = character:FindFirstChild("Head")
-
-                    if not humanoid or not root or not head or humanoid.Health <= 0 then
-                        Revo.ESP:Remove(player)
-                        continue
-                    end
-
-                    local distance = (root.Position - camPos).Magnitude
-                    if distance > Revo.ESP.MaxDistance then
-                        data.Box.Visible = false
-                        data.NameText.Visible = false
-                        data.HealthBar.Visible = false
-                        data.Highlight.Enabled = false
-                        continue
-                    end
-
-                    local topPos = head.Position + Vector3.new(0, 0.5, 0)
-                    local bottomPos = root.Position - Vector3.new(0, 3, 0)
-
-                    local topScreen = camera:WorldToViewportPoint(topPos)
-                    local bottomScreen = camera:WorldToViewportPoint(bottomPos)
-
-                    if topScreen.Z <= 0 or bottomScreen.Z <= 0 then
-                        data.Box.Visible = false
-                        data.NameText.Visible = false
-                        data.HealthBar.Visible = false
-                        data.Highlight.Enabled = false
-                        continue
-                    end
-
-                    local height = math.abs(topScreen.Y - bottomScreen.Y)
-                    local width = height / 2
-
-                    local minX = topScreen.X - width/2
-                    local minY = topScreen.Y
-
-                    data.Box.Size = Vector2.new(width, height)
-                    data.Box.Position = Vector2.new(minX, minY)
-                    data.Box.Visible = true
-
-                    local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
-                    local dynamicColor = Color3.new(1 - healthPercent, healthPercent, 0)
-
-                    local barHeight = height * healthPercent
-                    data.HealthBar.Size = Vector2.new(4, barHeight)
-                    data.HealthBar.Position = Vector2.new(minX - 6, minY + (height - barHeight))
-                    data.HealthBar.Color = dynamicColor
-                    data.HealthBar.Visible = true
-
-                    local displayName = player.DisplayName ~= "" and player.DisplayName or player.Name
-                    data.NameText.Text = displayName .. " [" .. math.floor(distance) .. "]"
-                    data.NameText.Position = Vector2.new(minX + width/2, minY - 18)
-                    data.NameText.Color = dynamicColor
-                    data.NameText.Visible = true
-
-                    if data.LastHealth ~= healthPercent then
-                        data.Highlight.FillColor = dynamicColor
-                        data.Highlight.OutlineColor = dynamicColor
-                        data.LastHealth = healthPercent
-                    end
-
-                    data.Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                    data.Highlight.Enabled = true
-                    data.Highlight.Adornee = character
-                end
-            end)     
 
     -- Teleport To Last Location On Respawn
 
@@ -4431,8 +4243,12 @@
             local humanoid = character:WaitForChild("Humanoid")
             local root = character:WaitForChild("HumanoidRootPart")
 
-            Revo.Buttons.JumpPower.Text = "Jump Power: 50"
-            Revo.Buttons.WalkSpeed.Text = "Walk Speed: 16"
+            Revo.Buttons.JumpPower.Text = "Jump Power: " .. Revo.JumpPower
+
+            humanoid.UseJumpPower = true
+            humanoid.JumpPower = Revo.JumpPower
+            Revo.Buttons.WalkSpeed.Text = "Walk Speed: " .. Revo.WalkSpeed
+            humanoid.WalkSpeed = Revo.WalkSpeed
 
             if Revo.Respawn.LastCFrame then
                 task.wait(0.1)
