@@ -115,6 +115,41 @@
         Revo.PlaceId = game.PlaceId
         Revo.Humanoid = Revo.Player.Character and Revo.Player.Character:FindFirstChildOfClass("Humanoid")
 
+    -- Save
+
+        Revo.Save = {}
+        Revo.Save.FileName = "RevoSettings.json"
+        Revo.Save.Data = {}
+
+    -- Save And Load Function (Don't Ask Why Its Here)
+
+        function Revo.Save:Load()
+            if isfile(self.FileName) then
+                local success, result = pcall(function()
+                    return game:GetService("HttpService"):JSONDecode(readfile(self.FileName))
+                end)
+
+                if success and typeof(result) == "table" then
+                    self.Data = result
+                else
+                    self.Data = {}
+                end
+            else
+                self.Data = {}
+            end
+        end
+
+        function Revo.Save:Write()
+            pcall(function()
+                writefile(
+                    self.FileName,
+                    game:GetService("HttpService"):JSONEncode(self.Data)
+                )
+            end)
+        end
+
+        Revo.Save:Load()
+
     -- GUI
 
         Revo.GUI = {
@@ -148,9 +183,9 @@
             FaceBanging = false,
         }
 
-            Revo.FaceBangSettings = {
-            Speed = 3,
-            Distance = 0.5
+        Revo.FaceBangSettings = {
+            Speed = (Revo.Save.Data and Revo.Save.Data.FaceBangSpeed) or 3,
+            Distance = (Revo.Save.Data and Revo.Save.Data.FaceBangDistance) or 0.5
         }
             
     -- Shaders
@@ -301,12 +336,6 @@
             CaptureConnection = nil,
             GlobalConnection = nil
         }
-
-    -- Save
-
-        Revo.Save = {}
-        Revo.Save.FileName = "RevoSettings.json"
-        Revo.Save.Data = {}
 
 -- GUI
 
@@ -538,35 +567,6 @@
 
         Revo.VOID_Y = Revo:GetVoidY()
 
-    -- Save And Loading
-
-        function Revo.Save:Load()
-            if isfile(self.FileName) then
-                local success, result = pcall(function()
-                    return game:GetService("HttpService"):JSONDecode(readfile(self.FileName))
-                end)
-
-                if success and typeof(result) == "table" then
-                    self.Data = result
-                else
-                    self.Data = {}
-                end
-            else
-                self.Data = {}
-            end
-        end
-
-        function Revo.Save:Write()
-            pcall(function()
-                writefile(
-                    self.FileName,
-                    game:GetService("HttpService"):JSONEncode(self.Data)
-                )
-            end)
-        end
-
-        Revo.Save:Load()
-
 -- Nav Bar
 
     Revo.Pages = {}
@@ -686,7 +686,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Saving To Jump And Walkspeed, Made Target Tool Not Dupe If You Already Have One, And Removed ESP Due To Lag"
+    Revo.AnnouncementsText.Text = "Added Saving To Jump And Walkspeed, Face Bang Distance, Face Bang Speed, Made Target Tool Not Dupe If You Already Have One, And Removed ESP Due To Lag"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -2833,8 +2833,13 @@
                         local Speed = Revo.Inputs.FaceBangSpeed.Text:gsub("%D", "")
                         if Speed == "" then Speed = 3 end
 
-                        Revo.FaceBangSettings.Speed = tonumber(Speed)
-                        Revo.Buttons.FaceBangSpeed.Text = "Face Bang Speed: " .. Revo.FaceBangSettings.Speed
+                        Speed = tonumber(Speed)
+
+                        Revo.FaceBangSettings.Speed = Speed
+                        Revo.Buttons.FaceBangSpeed.Text = "Face Bang Speed: " .. Speed
+
+                        Revo.Save.Data.FaceBangSpeed = Speed
+                        Revo.Save:Write()
                     end)
 
                     Revo.Inputs.FaceBangSpeed.Text = ""
@@ -2853,8 +2858,13 @@
                         local Distance = Revo.Inputs.FaceBangDistance.Text:gsub("[^%d%.]", "")
                         if Distance == "" then Distance = 0.5 end
 
-                        Revo.FaceBangSettings.Distance = tonumber(Distance)
-                        Revo.Buttons.FaceBangDistance.Text = "Face Bang Distance: " .. Revo.FaceBangSettings.Distance
+                        Distance = tonumber(Distance)
+
+                        Revo.FaceBangSettings.Distance = Distance
+                        Revo.Buttons.FaceBangDistance.Text = "Face Bang Distance: " .. Distance
+
+                        Revo.Save.Data.FaceBangDistance = Distance
+                        Revo.Save:Write()
                     end)
 
                     Revo.Inputs.FaceBangDistance.Text = ""
