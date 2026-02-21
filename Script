@@ -42,12 +42,13 @@
     -- Normal Respawn
     -- Push
     -- Fling
+    -- Anti Ragdoll
 
 -- Need To Add
 
     -- Saving
-    -- Persistent Walk And Jump Speed If Saved
-    -- Anti Ragdoll (Works With Trip)
+    -- Persistent Walk, Jump, Etc Speed If Saved
+    -- Anti Game Paused
 
     -- Not Sure If Adding
 
@@ -286,6 +287,14 @@
             CapturingKey = false,
             CaptureConnection = nil,
             GlobalConnection = nil,
+        }
+
+    -- No Ragdoll
+    
+        Revo.NoRagdoll = {
+            Enabled = false,
+            Connection = nil,
+            Bypass = false
         }
 
     -- No Clip
@@ -713,7 +722,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added More Stable Fling And Push, Respawn Button That Teleports You To A Normal Respawn Point, Gravity, And Infinite Jump"
+    Revo.AnnouncementsText.Text = "Added No Ragdoll And Fixed Face Bang Bug With Shift Lock"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -913,6 +922,12 @@
                     return
                 end
 
+                local bypassing = false
+                if Revo.NoRagdoll and Revo.NoRagdoll.Enabled then
+                    Revo.NoRagdoll.Bypass = true
+                    bypassing = true
+                end
+
                 humanoid.PlatformStand = true
 
                 local BG = Instance.new("BodyGyro")
@@ -957,7 +972,7 @@
                     elseif SPEED ~= 0 then
                         BV.Velocity =
                             ((camera.CFrame.LookVector * (lastctrl.f + lastctrl.b)) +
-                            ((camera.CFrame * CFrame.new(lastctrl.l + lastctrl.r, (lastctrl.f + lastctrl.b) * 0.2, 0).p)
+                            ((camera.CFrame * CFrame.new(lastctrl.l + lastctrl.r, (lastctrl.f + ctrl.b) * 0.2, 0).p)
                             - camera.CFrame.p)) * SPEED
                     else
                         BV.Velocity = Vector3.new(0, 0, 0)
@@ -969,6 +984,10 @@
                 BG:Destroy()
                 BV:Destroy()
                 humanoid.PlatformStand = false
+
+                if bypassing then
+                    Revo.NoRagdoll.Bypass = false
+                end
 
                 self.ThreadRunning = false
             end
@@ -1381,14 +1400,20 @@
                 self.Enabled = not self.Enabled
                 self.Recording = not self.Enabled
 
-                if not self.Enabled then return end
+                local char = Revo.Player.Character
+                if not char then return end
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if not humanoid or not hrp then return end
+
+                if self.Enabled then
+                    Revo:ToggleRagdoll(true)
+                    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                else
+                    return
+                end
 
                 task.spawn(function()
-                    local char = Revo.Player.Character
-                    if not char then return end
-                    local hrp = char:FindFirstChild("HumanoidRootPart")
-                    if not hrp then return end
-
                     local lastRewindTime = 0
 
                     while self.Enabled and self.StoredFrames > 0 do
@@ -1401,21 +1426,29 @@
 
                             local cf1 = self.History[prevIndex]
                             local cf2 = self.History[self.WriteIndex]
+
                             if cf1 and cf2 then
                                 hrp.CFrame = self:LerpCFrame(cf2, cf1, 0.5)
                             end
 
-                            self.WriteIndex = self.WriteIndex - 1
-                            if self.WriteIndex < 1 then self.WriteIndex = self.MaxFrames end
+                            self.WriteIndex -= 1
+                            if self.WriteIndex < 1 then
+                                self.WriteIndex = self.MaxFrames
+                            end
+
                             if self.StoredFrames > 0 then
-                                self.StoredFrames = self.StoredFrames - 1
+                                self.StoredFrames -= 1
                             end
                         end
+
                         Revo.Services.RunService.Heartbeat:Wait()
                     end
 
                     self.Enabled = false
                     self.Recording = true
+
+                    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    Revo:ToggleRagdoll(false)
                 end)
             end
 
@@ -1537,11 +1570,24 @@
 
                 local humanoid = character:FindFirstChildWhichIsA("Humanoid")
                 local root = character:FindFirstChild("HumanoidRootPart")
-                if humanoid and root then
-                    humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
-                    root.Velocity = root.CFrame.LookVector * 30
+                if not humanoid or not root then return end
+
+                local wasEnabled = Revo.NoRagdoll and Revo.NoRagdoll.Enabled
+
+                if wasEnabled then
+                    Revo:DisableNoRagdoll()
                 end
-            end     
+
+                humanoid:ChangeState(Enum.HumanoidStateType.FallingDown)
+                root.Velocity = root.CFrame.LookVector * 30
+
+                if wasEnabled then
+                    task.delay(0.5, function()
+                        if Revo.NoRagdoll.Enabled ~= false then return end
+                        Revo:EnableNoRagdoll()
+                    end)
+                end
+            end  
             
         -- Trip Key Function
 
@@ -2911,8 +2957,7 @@
     -- Fling Target
 
         function Revo:StartFling(targetPlayer)
-            if not targetPlayer then return end
-            if not targetPlayer.Character then return end
+            if not targetPlayer or not targetPlayer.Character then return end
             
             local myChar = self.Player.Character
             local myRoot = self:GetRoot(self.Player)
@@ -2922,9 +2967,13 @@
             if not myRoot or not targetRoot or not humanoid then return end
 
             self.FlingData.OldCFrame = myRoot.CFrame
-
             self:StopTargetActions()
             self.Target.Flinging = true
+
+            if Revo.NoRagdoll and Revo.NoRagdoll.Enabled then
+                Revo.NoRagdoll.Bypass = true
+                self.FlingData.BypassingNoRagdoll = true
+            end
 
             humanoid.PlatformStand = true
             humanoid.AutoRotate = false
@@ -2939,11 +2988,10 @@
 
                 if not self.Target.Flinging then return end
 
-                local targetPlayer = self.Services.Players:FindFirstChild(self.Target.Player)
-                if not targetPlayer then return end
-                if not targetPlayer.Character then return end
+                local target = self.Services.Players:FindFirstChild(self.Target.Player)
+                if not target or not target.Character then return end
 
-                local targetRoot = self:GetRoot(targetPlayer)
+                local targetRoot = self:GetRoot(target)
                 if not targetRoot then return end
 
                 myRoot.CFrame = targetRoot.CFrame
@@ -2969,8 +3017,7 @@
             local humanoid = char:FindFirstChildOfClass("Humanoid")
 
             task.spawn(function()
-                local delayTime = 0.15
-                task.wait(delayTime)
+                task.wait(0.15)
 
                 if root then
                     local breakVel = root:FindFirstChild("BreakVelocity")
@@ -2996,6 +3043,11 @@
                     humanoid:ChangeState(Enum.HumanoidStateType.Running)
                 end
 
+                if self.FlingData.BypassingNoRagdoll then
+                    Revo.NoRagdoll.Bypass = false
+                    self.FlingData.BypassingNoRagdoll = nil
+                end
+
                 self.FlingData.OldCFrame = nil
             end)
         end
@@ -3017,8 +3069,7 @@
     -- Push Target
 
         function Revo:PushTarget(targetPlayer)
-            if not targetPlayer then return end
-            if not targetPlayer.Character then return end
+            if not targetPlayer or not targetPlayer.Character then return end
 
             local myChar = self.Player.Character
             local myRoot = self:GetRoot(self.Player)
@@ -3028,6 +3079,13 @@
             if not myRoot or not targetRoot or not humanoid then return end
 
             local oldCFrame = myRoot.CFrame
+
+            -- 🔥 Bypass NoRagdoll if enabled
+            local bypassing = false
+            if Revo.NoRagdoll and Revo.NoRagdoll.Enabled then
+                Revo.NoRagdoll.Bypass = true
+                bypassing = true
+            end
 
             humanoid.PlatformStand = true
             humanoid.AutoRotate = false
@@ -3077,6 +3135,11 @@
                     humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
                     task.wait()
                     humanoid:ChangeState(Enum.HumanoidStateType.Running)
+                end
+
+                -- 🔥 Restore NoRagdoll protection
+                if bypassing then
+                    Revo.NoRagdoll.Bypass = false
                 end
             end)
         end
@@ -3205,34 +3268,45 @@
 
                 Revo.Target.FaceBanging = not Revo.Target.FaceBanging
 
-                if not Revo.Target.FaceBanging then
-                    local char = Revo.Player.Character
-                    if not char then return end
+                local char = Revo.Player.Character
+                if not char then return end
 
-                    local root = Revo:GetRoot(Revo.Player)
-                    if not root then return end
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                local root = Revo:GetRoot(Revo.Player)
+                if not humanoid or not root then return end
+
+                if not Revo.Target.FaceBanging then
 
                     if root:FindFirstChild("BreakVelocity") then
                         root.BreakVelocity:Destroy()
                     end
 
-                    local humanoid = char:FindFirstChildOfClass("Humanoid")
-                    if humanoid then
-                        humanoid.AutoRotate = true
-                        humanoid:ChangeState(Enum.HumanoidStateType.Running)
-                    end
+                    humanoid.AutoRotate = true
+                    humanoid:ChangeState(Enum.HumanoidStateType.Running)
 
                     char.Animate.Disabled = false
 
+                    if Revo._NoSitBeforeActions then
+                        Revo.NoSit.Enabled = true
+                        humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+                    end
+
                     return
                 end
+
+                Revo._NoSitBeforeActions = Revo.NoSit.Enabled
+
+                if Revo.NoSit.Enabled then
+                    Revo.NoSit.Enabled = false
+                    humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+                end
+
+                humanoid.AutoRotate = false
 
                 task.spawn(function()
                     local t = 0
                     while Revo.Target.FaceBanging do
                         pcall(function()
-                            local root = Revo:GetRoot(Revo.Player)
-                            if not root then return end
 
                             Revo:StopAnim()
 
@@ -3248,9 +3322,12 @@
 
                                 local targetHead = targetPlayer.Character.Head
 
-                                local startOffset = 0.7                    
-                                local offsetZ = math.sin(t * Revo.FaceBangSettings.Speed) * Revo.FaceBangSettings.Distance
-                                root.CFrame = targetHead.CFrame 
+                                local startOffset = 0.7
+                                local offsetZ = math.sin(t * Revo.FaceBangSettings.Speed) 
+                                    * Revo.FaceBangSettings.Distance
+
+                                root.CFrame =
+                                    targetHead.CFrame
                                     * CFrame.new(0, 1, -Revo.FaceBangSettings.Distance - startOffset + offsetZ)
                                     * CFrame.Angles(0, math.rad(180), 0)
 
@@ -3335,6 +3412,10 @@
             local camera = workspace.CurrentCamera
             if camera and humanoid then
                 camera.CameraSubject = humanoid
+            end
+
+            if Revo.NoRagdoll and Revo.NoRagdoll.Bypass then
+                Revo.NoRagdoll.Bypass = false
             end
         end
 
@@ -4193,6 +4274,7 @@
         -- Explode Function
 
             Revo.Buttons.Explode.MouseButton1Click:Connect(function()
+
                 local char = Revo.Player.Character
                 if not char then return end
 
@@ -4200,8 +4282,12 @@
                 local root = Revo:GetRoot(Revo.Player)
                 if not hum or not root then return end
 
-                Revo:ToggleRagdoll(false)
-                task.wait()
+                local bypassing = false
+                if Revo.NoRagdoll and Revo.NoRagdoll.Enabled then
+                    Revo.NoRagdoll.Bypass = true
+                    bypassing = true
+                end
+
                 hum:ChangeState(Enum.HumanoidStateType.Physics)
 
                 local oldSpin = root:FindFirstChild("Spin")
@@ -4213,9 +4299,25 @@
                 spin.AngularVelocity = Vector3.new(0, 150, 0)
                 spin.Parent = root
 
-                task.wait(3)
-                spin:Destroy()
-                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                task.delay(3, function()
+
+                    if spin then
+                        spin:Destroy()
+                    end
+
+                    if hum then
+                        hum.Health = 0
+                    end
+
+                    if hum then
+                        hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    end
+
+                    if bypassing then
+                        Revo.NoRagdoll.Bypass = false
+                    end
+                end)
+
             end)
 
     -- GUI Key
@@ -4576,6 +4678,71 @@
                 end
             end)
 
+    -- No Ragdoll
+
+        -- No Ragdoll Button
+
+            Revo.Buttons.NoRagdoll = Instance.new("TextButton")
+            Revo.Buttons.NoRagdoll.Size = UDim2.new(0, 200, 0, 30)
+            Revo.Buttons.NoRagdoll.Position = UDim2.new(0, 215, 0, 215)
+            Revo.Buttons.NoRagdoll.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.NoRagdoll.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.NoRagdoll.Font = Enum.Font.Gotham
+            Revo.Buttons.NoRagdoll.TextSize = 16
+            Revo.Buttons.NoRagdoll.Text = "No Ragdoll"
+            Revo.Buttons.NoRagdoll.Parent = Revo.GUI.MiscRightColumn
+            Revo.GUI:AddCorner(Revo.Buttons.NoRagdoll)
+
+            -- No Ragdoll Button Function
+
+                Revo.Buttons.NoRagdoll.MouseButton1Click:Connect(function()
+                    if Revo.NoRagdoll.Enabled then
+                        Revo:DisableNoRagdoll()
+                        Revo:Notify("Revo", "No Ragdoll Disabled")
+                    else
+                        Revo:EnableNoRagdoll()
+                        Revo:Notify("Revo", "No Ragdoll Enabled")
+                    end
+                end)
+
+        -- No Ragdoll Function
+
+            function Revo:EnableNoRagdoll()
+                local char = self.Player.Character
+                if not char then return end
+
+                local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+                if not humanoid then return end
+
+                if Revo.NoRagdoll.Connection then
+                    Revo.NoRagdoll.Connection:Disconnect()
+                end
+
+                Revo.NoRagdoll.Connection = humanoid.StateChanged:Connect(function(old, new)
+
+                    if Revo.NoRagdoll.Bypass then return end
+
+                    if new == Enum.HumanoidStateType.Ragdoll
+                    or new == Enum.HumanoidStateType.Physics
+                    or new == Enum.HumanoidStateType.PlatformStanding
+                    or new == Enum.HumanoidStateType.FallingDown then
+
+                        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    end
+                end)
+
+                Revo.NoRagdoll.Enabled = true
+            end
+
+            function Revo:DisableNoRagdoll()
+                if Revo.NoRagdoll.Connection then
+                    Revo.NoRagdoll.Connection:Disconnect()
+                    Revo.NoRagdoll.Connection = nil
+                end
+
+                Revo.NoRagdoll.Enabled = false
+            end
+
     -- Normal Respawn
 
         -- Normal Respawn Button
@@ -4623,6 +4790,11 @@
             end
 
             Revo.Respawn.SkipNextCFrame = false
+
+            if Revo.NoRagdoll and Revo.NoRagdoll.Enabled then
+                task.wait(0.1)
+                Revo:EnableNoRagdoll()
+            end
 
             humanoid.Died:Connect(function()
                 if root then
