@@ -37,15 +37,16 @@
     -- No Sit
     -- Teleport To Last Location On Respawn
     -- Extended Baseplate
+    -- Gravity
+    -- Infinite Jump
+    -- Normal Respawn
+    -- Push
+    -- Fling
 
 -- Need To Add
 
     -- Saving
     -- Persistent Walk And Jump Speed If Saved
-    -- Infinite Jump
-    -- Gravity
-    -- Fling
-    -- Push
     -- Anti Ragdoll (Works With Trip)
 
     -- Not Sure If Adding
@@ -65,7 +66,6 @@
         -- ESP
         -- FOV
         -- Free Cam
-        -- Respawn (Brings You To Normal Respawn Point)
         -- Spin (With Spin Speed)
         -- Orbit Target
         -- See Others Cameras
@@ -187,6 +187,11 @@
             Speed = (Revo.Save.Data and Revo.Save.Data.FaceBangSpeed) or 3,
             Distance = (Revo.Save.Data and Revo.Save.Data.FaceBangDistance) or 0.5
         }
+
+        Revo.FlingData = {
+            OldCFrame = nil,
+            Connection = nil
+        }
             
     -- Shaders
 
@@ -296,7 +301,9 @@
     -- Respawning
 
         Revo.Respawn = {
-            LastCFrame = nil
+            LastCFrame = nil,
+            UseLastCFrame = true,
+            SkipNextCFrame = false
         }
 
     -- Auto Clicker
@@ -337,18 +344,24 @@
             GlobalConnection = nil
         }
 
+        Revo.InfiniteJump = {
+            Enabled = false,
+            Connection = nil,
+            Debounce = false
+        }
+
 -- GUI
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = "Revo",
-                Text = "GUI Already Loaded",
-                Duration = 5
-            })
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo.Services.StarterGui:SetCore("SendNotification", {
+        --         Title = "Revo",
+        --         Text = "GUI Already Loaded",
+        --         Duration = 5
+        --     })
+        --     return
+        -- end
 
     -- GUI Creation
 
@@ -399,7 +412,21 @@
             Revo.GUI.Title.Font = Enum.Font.GothamBold
             Revo.GUI.Title.TextSize = 20
             Revo.GUI.Title.Parent = Revo.GUI.TitleBar
-        
+
+        -- Save Button
+
+            -- Revo.GUI.SaveButton = Instance.new("TextButton")
+            -- Revo.GUI.SaveButton.Name = "SaveButton"
+            -- Revo.GUI.SaveButton.Size = UDim2.new(0, 37, 0, 30)
+            -- Revo.GUI.SaveButton.Position = UDim2.new(1, -40, 0, 6)
+            -- Revo.GUI.SaveButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            -- Revo.GUI.SaveButton.BorderSizePixel = 0
+            -- Revo.GUI.SaveButton.Text = "💾"
+            -- Revo.GUI.SaveButton.TextSize = 16
+            -- Revo.GUI.SaveButton.Font = Enum.Font.GothamBold
+            -- Revo.GUI.SaveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            -- Revo.GUI.SaveButton.Parent = Revo.GUI.TitleBar
+            -- Revo.GUI:AddCorner(Revo.GUI.SaveButton)
 
 -- Functions
 
@@ -686,7 +713,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Saving To Jump And Walkspeed, Face Bang Distance, Face Bang Speed, Made Target Tool Not Dupe If You Already Have One, And Removed ESP Due To Lag"
+    Revo.AnnouncementsText.Text = "Added More Stable Fling And Push, Respawn Button That Teleports You To A Normal Respawn Point, Gravity, And Infinite Jump"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -707,7 +734,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 2.6"
+    Revo.VersionLabel.Text = "Version: 2.7"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -2128,6 +2155,129 @@
                 end
             end
 
+    -- Infinite Jump
+
+        -- Infinite Jump Button
+
+                Revo.Buttons.InfiniteJump = Instance.new("TextButton")
+                Revo.Buttons.InfiniteJump.Size = UDim2.new(0, 200, 0, 30)
+                Revo.Buttons.InfiniteJump.Position = UDim2.new(0, 5, 0, 180)
+                Revo.Buttons.InfiniteJump.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                Revo.Buttons.InfiniteJump.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Revo.Buttons.InfiniteJump.Font = Enum.Font.Gotham
+                Revo.Buttons.InfiniteJump.TextSize = 16
+                Revo.Buttons.InfiniteJump.Text = "Infinite Jump"
+                Revo.Buttons.InfiniteJump.Parent = Revo.GUI.CharacterLeftColumn
+                Revo.GUI:AddCorner(Revo.Buttons.InfiniteJump)
+
+            -- Infinite Jump Button Function
+
+                Revo.Buttons.InfiniteJump.MouseButton1Click:Connect(function()
+
+                    if Revo.InfiniteJump.Enabled then
+                        Revo:DisableInfiniteJump()
+                    else
+                        Revo:EnableInfiniteJump()
+                    end
+
+                end)
+
+        -- Infinite Jump Function
+
+            function Revo:EnableInfiniteJump()
+                if Revo.InfiniteJump.Connection then
+                    Revo.InfiniteJump.Connection:Disconnect()
+                end
+
+                Revo.InfiniteJump.Enabled = true
+                Revo.InfiniteJump.Debounce = false
+
+                Revo.InfiniteJump.Connection = Revo.Services.UserInputService.JumpRequest:Connect(function()
+                    if not Revo.InfiniteJump.Enabled then return end
+                    if Revo.InfiniteJump.Debounce then return end
+
+                    local char = Revo.Player.Character
+                    if not char then return end
+
+                    local humanoid = char:FindFirstChildOfClass("Humanoid")
+                    if not humanoid then return end
+
+                    Revo.InfiniteJump.Debounce = true
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                    task.wait()
+                    Revo.InfiniteJump.Debounce = false
+                end)
+            end
+
+            function Revo:DisableInfiniteJump()
+                Revo.InfiniteJump.Enabled = false
+
+                if Revo.InfiniteJump.Connection then
+                    Revo.InfiniteJump.Connection:Disconnect()
+                    Revo.InfiniteJump.Connection = nil
+                end
+
+                Revo.InfiniteJump.Debounce = false
+            end
+
+    -- Gravity
+
+        -- Gravity Button
+        
+            Revo.Gravity = 196.2
+
+            Revo.Buttons.Gravity = Instance.new("TextButton")
+            Revo.Buttons.Gravity.Size = UDim2.new(0, 200, 0, 30)
+            Revo.Buttons.Gravity.Position = UDim2.new(0, 215, 0, 180)
+            Revo.Buttons.Gravity.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.Gravity.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.Gravity.Font = Enum.Font.Gotham
+            Revo.Buttons.Gravity.TextSize = 16
+            Revo.Buttons.Gravity.Text = "Gravity: " .. Revo.Gravity
+            Revo.Buttons.Gravity.Parent = Revo.GUI.CharacterRightColumn
+            Revo.GUI:AddCorner(Revo.Buttons.Gravity)
+
+            Revo.Inputs.Gravity = Instance.new("TextBox")
+            Revo.Inputs.Gravity.Size = Revo.Buttons.Gravity.Size
+            Revo.Inputs.Gravity.Position = Revo.Buttons.Gravity.Position
+            Revo.Inputs.Gravity.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Inputs.Gravity.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Inputs.Gravity.Font = Enum.Font.Gotham
+            Revo.Inputs.Gravity.TextSize = 16
+            Revo.Inputs.Gravity.PlaceholderText = "Enter Gravity"
+            Revo.Inputs.Gravity.Visible = false
+            Revo.Inputs.Gravity.ClearTextOnFocus = true
+            Revo.Inputs.Gravity.Parent = Revo.GUI.CharacterRightColumn
+            Revo.GUI:AddCorner(Revo.Inputs.Gravity)
+
+            -- Gravity Button Function
+
+                Revo.Buttons.Gravity.MouseButton1Click:Connect(function()
+                    Revo.Buttons.Gravity.Visible = false
+                    Revo.Inputs.Gravity.Visible = true
+                    Revo.Inputs.Gravity:CaptureFocus()
+                end)
+
+        -- Gravity Function
+
+            Revo.Inputs.Gravity.FocusLost:Connect(function()
+                pcall(function()
+                    local Gravity = Revo.Inputs.Gravity.Text:gsub("%D", "")
+                    if Gravity == "" then Gravity = 196.2 end
+
+                    Gravity = tonumber(Gravity)
+
+                    Revo.Gravity = Gravity
+                    workspace.Gravity = Gravity
+
+                    Revo.Buttons.Gravity.Text = "Gravity: " .. Gravity
+                end)
+
+                Revo.Inputs.Gravity.Text = ""
+                Revo.Inputs.Gravity.Visible = false
+                Revo.Buttons.Gravity.Visible = true
+            end)
+                    
 -- Target
 
     -- Scrolling Frame
@@ -2760,11 +2910,187 @@
 
     -- Fling Target
 
+        function Revo:StartFling(targetPlayer)
+            if not targetPlayer then return end
+            if not targetPlayer.Character then return end
+            
+            local myChar = self.Player.Character
+            local myRoot = self:GetRoot(self.Player)
+            local targetRoot = self:GetRoot(targetPlayer)
+            local humanoid = myChar and myChar:FindFirstChildOfClass("Humanoid")
 
+            if not myRoot or not targetRoot or not humanoid then return end
+
+            self.FlingData.OldCFrame = myRoot.CFrame
+
+            self:StopTargetActions()
+            self.Target.Flinging = true
+
+            humanoid.PlatformStand = true
+            humanoid.AutoRotate = false
+
+            local bv = Instance.new("BodyVelocity")
+            bv.Name = "BreakVelocity"
+            bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+            bv.Velocity = Vector3.zero
+            bv.Parent = myRoot
+
+            self.FlingData.Connection = game:GetService("RunService").Heartbeat:Connect(function()
+
+                if not self.Target.Flinging then return end
+
+                local targetPlayer = self.Services.Players:FindFirstChild(self.Target.Player)
+                if not targetPlayer then return end
+                if not targetPlayer.Character then return end
+
+                local targetRoot = self:GetRoot(targetPlayer)
+                if not targetRoot then return end
+
+                myRoot.CFrame = targetRoot.CFrame
+
+                myRoot.AssemblyAngularVelocity = Vector3.new(9999, 9999, 9999)
+                myRoot.AssemblyLinearVelocity = Vector3.new(9999, 9999, 9999)
+
+            end)
+        end
+
+        function Revo:StopFling()
+            self.Target.Flinging = false
+
+            if self.FlingData.Connection then
+                self.FlingData.Connection:Disconnect()
+                self.FlingData.Connection = nil
+            end
+
+            local char = self.Player.Character
+            if not char then return end
+
+            local root = self:GetRoot(self.Player)
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+
+            task.spawn(function()
+                local delayTime = 0.15
+                task.wait(delayTime)
+
+                if root then
+                    local breakVel = root:FindFirstChild("BreakVelocity")
+                    if breakVel then
+                        breakVel:Destroy()
+                    end
+
+                    root.AssemblyAngularVelocity = Vector3.zero
+                    root.AssemblyLinearVelocity = Vector3.zero
+                    root.Velocity = Vector3.zero
+                    root.RotVelocity = Vector3.zero
+
+                    if self.FlingData.OldCFrame then
+                        root.CFrame = self.FlingData.OldCFrame
+                    end
+                end
+
+                if humanoid then
+                    humanoid.PlatformStand = false
+                    humanoid.AutoRotate = true
+                    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    task.wait()
+                    humanoid:ChangeState(Enum.HumanoidStateType.Running)
+                end
+
+                self.FlingData.OldCFrame = nil
+            end)
+        end
+
+        Revo.GUI.TargetButtons.Fling.MouseButton1Click:Connect(function()
+
+            if not Revo.Target.Player then
+                return
+            end
+
+            if not Revo.Target.Flinging then
+                Revo:StartFling(game.Players:FindFirstChild(Revo.Target.Player))
+            else
+                Revo:StopFling()
+            end
+
+        end)
 
     -- Push Target
 
+        function Revo:PushTarget(targetPlayer)
+            if not targetPlayer then return end
+            if not targetPlayer.Character then return end
 
+            local myChar = self.Player.Character
+            local myRoot = self:GetRoot(self.Player)
+            local targetRoot = self:GetRoot(targetPlayer)
+            local humanoid = myChar and myChar:FindFirstChildOfClass("Humanoid")
+
+            if not myRoot or not targetRoot or not humanoid then return end
+
+            local oldCFrame = myRoot.CFrame
+
+            humanoid.PlatformStand = true
+            humanoid.AutoRotate = false
+
+            local bv = Instance.new("BodyVelocity")
+            bv.Name = "BreakVelocity"
+            bv.MaxForce = Vector3.new(1e9,1e9,1e9)
+            bv.Velocity = Vector3.zero
+            bv.Parent = myRoot
+
+            local startTime = tick()
+            local connection
+
+            connection = game:GetService("RunService").Heartbeat:Connect(function()
+                if tick() - startTime > 0.2 then
+                    connection:Disconnect()
+                    return
+                end
+
+                myRoot.CFrame = targetRoot.CFrame
+                myRoot.AssemblyAngularVelocity = Vector3.new(6000,6000,6000)
+                myRoot.AssemblyLinearVelocity = Vector3.new(6000,6000,6000)
+            end)
+
+            task.delay(0.25, function()
+
+                if connection then
+                    connection:Disconnect()
+                end
+
+                if myRoot then
+                    local breakVel = myRoot:FindFirstChild("BreakVelocity")
+                    if breakVel then
+                        breakVel:Destroy()
+                    end
+
+                    myRoot.AssemblyAngularVelocity = Vector3.zero
+                    myRoot.AssemblyLinearVelocity = Vector3.zero
+                    myRoot.Velocity = Vector3.zero
+
+                    myRoot.CFrame = oldCFrame
+                end
+
+                if humanoid then
+                    humanoid.PlatformStand = false
+                    humanoid.AutoRotate = true
+                    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    task.wait()
+                    humanoid:ChangeState(Enum.HumanoidStateType.Running)
+                end
+            end)
+        end
+
+        Revo.GUI.TargetButtons.Push.MouseButton1Click:Connect(function()
+
+            if not Revo.Target.Player then return end
+
+            local targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
+            if not targetPlayer then return end
+
+            Revo:PushTarget(targetPlayer)
+
+        end)
 
     -- Face Bang Target
 
@@ -2971,8 +3297,11 @@
             Revo.Target.Dogging      = false
             Revo.Target.Dragging     = false
             Revo.Target.Banging      = false
-            Revo.Target.Flinging     = false
             Revo.Target.FaceBanging  = false
+
+            if Revo.Target.Flinging then
+                self:StopFling()
+            end
 
             local char = Revo.Player.Character
             if not char then return end
@@ -4247,6 +4576,35 @@
                 end
             end)
 
+    -- Normal Respawn
+
+        -- Normal Respawn Button
+
+            Revo.Buttons.NormalRespawn = Instance.new("TextButton")
+            Revo.Buttons.NormalRespawn.Size = UDim2.new(0, 200, 0, 30)
+            Revo.Buttons.NormalRespawn.Position = UDim2.new(0, 5, 0, 215)
+            Revo.Buttons.NormalRespawn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.NormalRespawn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.NormalRespawn.Font = Enum.Font.Gotham
+            Revo.Buttons.NormalRespawn.TextSize = 16
+            Revo.Buttons.NormalRespawn.Text = "Respawn"
+            Revo.Buttons.NormalRespawn.Parent = Revo.GUI.MiscLeftColumn
+            Revo.GUI:AddCorner(Revo.Buttons.NormalRespawn)
+
+        -- Normal Respawn Function
+
+            Revo.Buttons.NormalRespawn.MouseButton1Click:Connect(function()
+                local character = Revo.Player.Character
+                if character then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        Revo.Respawn.SkipNextCFrame = true
+
+                        humanoid.Health = 0
+                    end
+                end
+            end)
+
     -- Teleport To Last Location On Respawn
 
         function Revo:OnCharacterAdded(character)
@@ -4254,16 +4612,17 @@
             local root = character:WaitForChild("HumanoidRootPart")
 
             Revo.Buttons.JumpPower.Text = "Jump Power: " .. Revo.JumpPower
-
             humanoid.UseJumpPower = true
             humanoid.JumpPower = Revo.JumpPower
             Revo.Buttons.WalkSpeed.Text = "Walk Speed: " .. Revo.WalkSpeed
             humanoid.WalkSpeed = Revo.WalkSpeed
 
-            if Revo.Respawn.LastCFrame then
+            if Revo.Respawn.LastCFrame and Revo.Respawn.UseLastCFrame and not Revo.Respawn.SkipNextCFrame then
                 task.wait(0.1)
                 root.CFrame = Revo.Respawn.LastCFrame
             end
+
+            Revo.Respawn.SkipNextCFrame = false
 
             humanoid.Died:Connect(function()
                 if root then
@@ -4279,7 +4638,6 @@
         if Revo.Player.Character then
             Revo:OnCharacterAdded(Revo.Player.Character)
         end
-
         Revo.Player.CharacterAdded:Connect(function(character)
             Revo:OnCharacterAdded(character)
         end)
