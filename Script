@@ -354,14 +354,14 @@
 
     -- GUI Load Detection
 
-        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-        --     Revo.Services.StarterGui:SetCore("SendNotification", {
-        --         Title = "Revo",
-        --         Text = "GUI Already Loaded",
-        --         Duration = 5
-        --     })
-        --     return
-        -- end
+        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+            Revo.Services.StarterGui:SetCore("SendNotification", {
+                Title = "Revo",
+                Text = "GUI Already Loaded",
+                Duration = 5
+            })
+            return
+        end
 
     -- GUI Creation
 
@@ -3042,7 +3042,7 @@
             local connection
 
             connection = game:GetService("RunService").Heartbeat:Connect(function()
-                if tick() - startTime > 0.2 then
+                if tick() - startTime > 0.5 then
                     connection:Disconnect()
                     return
                 end
@@ -3052,7 +3052,7 @@
                 myRoot.AssemblyLinearVelocity = Vector3.new(6000,6000,6000)
             end)
 
-            task.delay(0.25, function()
+            task.delay(0.55, function()
 
                 if connection then
                     connection:Disconnect()
