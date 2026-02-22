@@ -43,12 +43,12 @@
     -- Push
     -- Fling
     -- Anti Ragdoll
+    -- Anti Game Paused
 
 -- Need To Add
 
     -- Saving
     -- Persistent Walk, Jump, Etc Speed If Saved
-    -- Anti Game Paused
 
     -- Not Sure If Adding
 
@@ -353,10 +353,18 @@
             GlobalConnection = nil
         }
 
+    -- Infinite Jump
+
         Revo.InfiniteJump = {
             Enabled = false,
             Connection = nil,
             Debounce = false
+        }
+
+    -- Anti Game Pause
+
+        Revo.AntiGameplayPaused = {
+            Connection = nil
         }
 
 -- GUI
@@ -722,7 +730,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added No Ragdoll And Fixed Face Bang Bug With Shift Lock"
+    Revo.AnnouncementsText.Text = "Added Anti Gameplay Paused"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -743,7 +751,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 2.7"
+    Revo.VersionLabel.Text = "Version: 2.9"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -4771,6 +4779,7 @@
                     end
                 end
             end)
+-- Auto Runs
 
     -- Teleport To Last Location On Respawn
 
@@ -4917,6 +4926,34 @@
                 Revo.BasePlate:Update()
             end)
         end
+
+    -- Anti Game Paused
+
+        function Revo:EnableAntiGameplayPaused()
+            local coreGui = game:GetService("CoreGui")
+            local robloxGui = coreGui:FindFirstChild("RobloxGui")
+
+            if not robloxGui then return end
+
+            if self.AntiGameplayPaused.Connection then
+                pcall(function()
+                    self.AntiGameplayPaused.Connection:Disconnect()
+                end)
+            end
+
+            self.AntiGameplayPaused.Connection = robloxGui.ChildAdded:Connect(function(obj)
+                if obj.Name == "CoreScripts/NetworkPause" then
+                    obj:Destroy()
+                end
+            end)
+
+            local existing = robloxGui:FindFirstChild("CoreScripts/NetworkPause")
+            if existing then
+                existing:Destroy()
+            end
+        end
+
+        Revo:EnableAntiGameplayPaused()
 
 -- Loading Finish
 
