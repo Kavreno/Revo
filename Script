@@ -49,6 +49,7 @@
 
     -- Saving
     -- Persistent Walk, Jump, Etc Speed If Saved
+    -- Jerk While Face Banging
 
     -- Not Sure If Adding
 
@@ -381,14 +382,14 @@
 
     -- GUI Load Detection
 
-        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-        --     Revo.Services.StarterGui:SetCore("SendNotification", {
-        --         Title = "Revo",
-        --         Text = "GUI Already Loaded",
-        --         Duration = 5
-        --     })
-        --     return
-        -- end
+        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+            Revo.Services.StarterGui:SetCore("SendNotification", {
+                Title = "Revo",
+                Text = "GUI Already Loaded",
+                Duration = 5
+            })
+            return
+        end
 
     -- GUI Creation
 
