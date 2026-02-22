@@ -118,38 +118,48 @@
 
     -- Save
 
-        Revo.Save = {}
-        Revo.Save.FileName = "RevoSettings.json"
-        Revo.Save.Data = {}
+        Revo.Save = {
+            FileName = "RevoSettings.json",
+            Data = {},
+            Enabled = false
+        }
 
     -- Save And Load Function (Don't Ask Why Its Here)
 
         function Revo.Save:Load()
-            if isfile(self.FileName) then
-                local success, result = pcall(function()
-                    return game:GetService("HttpService"):JSONDecode(readfile(self.FileName))
-                end)
+            if not isfile(self.FileName) then
+                self.Data = {}
+                return
+            end
 
-                if success and typeof(result) == "table" then
-                    self.Data = result
-                else
-                    self.Data = {}
-                end
+            local success, decoded = pcall(function()
+                return Revo.Services.HttpService:JSONDecode(readfile(self.FileName))
+            end)
+
+            if success and typeof(decoded) == "table" then
+                self.Data = decoded
             else
                 self.Data = {}
             end
         end
 
         function Revo.Save:Write()
+            if not self.Enabled then
+                return
+            end
+
             pcall(function()
                 writefile(
                     self.FileName,
-                    game:GetService("HttpService"):JSONEncode(self.Data)
+                    Revo.Services.HttpService:JSONEncode(self.Data)
                 )
             end)
         end
 
         Revo.Save:Load()
+
+        Revo.Save.Enabled = false
+        Revo.Save.Data.SaveEnabled = false
 
     -- GUI
 
@@ -371,14 +381,14 @@
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = "Revo",
-                Text = "GUI Already Loaded",
-                Duration = 5
-            })
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo.Services.StarterGui:SetCore("SendNotification", {
+        --         Title = "Revo",
+        --         Text = "GUI Already Loaded",
+        --         Duration = 5
+        --     })
+        --     return
+        -- end
 
     -- GUI Creation
 
@@ -432,18 +442,40 @@
 
         -- Save Button
 
-            -- Revo.GUI.SaveButton = Instance.new("TextButton")
-            -- Revo.GUI.SaveButton.Name = "SaveButton"
-            -- Revo.GUI.SaveButton.Size = UDim2.new(0, 37, 0, 30)
-            -- Revo.GUI.SaveButton.Position = UDim2.new(1, -40, 0, 6)
-            -- Revo.GUI.SaveButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            -- Revo.GUI.SaveButton.BorderSizePixel = 0
-            -- Revo.GUI.SaveButton.Text = "💾"
-            -- Revo.GUI.SaveButton.TextSize = 16
-            -- Revo.GUI.SaveButton.Font = Enum.Font.GothamBold
-            -- Revo.GUI.SaveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            -- Revo.GUI.SaveButton.Parent = Revo.GUI.TitleBar
-            -- Revo.GUI:AddCorner(Revo.GUI.SaveButton)
+            Revo.GUI.SaveButton = Instance.new("TextButton")
+            Revo.GUI.SaveButton.Name = "SaveButton"
+            Revo.GUI.SaveButton.Size = UDim2.new(0, 37, 0, 30)
+            Revo.GUI.SaveButton.Position = UDim2.new(1, -40, 0, 6)
+            Revo.GUI.SaveButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.GUI.SaveButton.BorderSizePixel = 0
+            Revo.GUI.SaveButton.Text = "💾"
+            Revo.GUI.SaveButton.TextSize = 16
+            Revo.GUI.SaveButton.Font = Enum.Font.GothamBold
+            Revo.GUI.SaveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.GUI.SaveButton.Parent = Revo.GUI.TitleBar
+            Revo.GUI:AddCorner(Revo.GUI.SaveButton)
+
+            -- Save Button Function
+
+                Revo.GUI.SaveButton.MouseButton1Click:Connect(function()
+
+                    Revo.Save.Enabled = not Revo.Save.Enabled
+                    Revo.Save.Data.SaveEnabled = Revo.Save.Enabled
+
+                    pcall(function()
+                        writefile(
+                            Revo.Save.FileName,
+                            Revo.Services.HttpService:JSONEncode(Revo.Save.Data)
+                        )
+                    end)
+
+                    Revo:Notify(
+                        "Revo",
+                        Revo.Save.Enabled and "Saving Enabled" or "Saving Disabled",
+                        3
+                    )
+
+                end)
 
 -- Functions
 
@@ -730,7 +762,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Anti Gameplay Paused"
+    Revo.AnnouncementsText.Text = "Added Saving For All Keybind Or Number Inputs No Button Toggles Yet, I Will Add It Soon But I Need To Add Buttons For Other Things That Just Auto Load Currently"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -751,7 +783,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 2.9"
+    Revo.VersionLabel.Text = "Version: 3.0"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -851,7 +883,7 @@
 
         -- Walk Speed Button
      
-            Revo.WalkSpeed = (Revo.Save.Data and Revo.Save.Data.WalkSpeed) or 16
+            Revo.WalkSpeed = Revo.Save.Data.WalkSpeed or 16
 
             Revo.Buttons.WalkSpeed = Instance.new("TextButton")
             Revo.Buttons.WalkSpeed.Size = UDim2.new(0, 200, 0, 30)
@@ -1033,7 +1065,7 @@
 
             -- Fly Speed Button
 
-                Revo.Fly.Speed = (Revo.Save.Data and Revo.Save.Data.FlySpeed) or 50
+                Revo.Fly.Speed = Revo.Save.Data.FlySpeed or 50
 
                 Revo.Buttons.FlySpeed = Instance.new("TextButton")
                 Revo.Buttons.FlySpeed.Size = UDim2.new(0, 200, 0, 30)
@@ -1067,10 +1099,6 @@
                     Revo.Inputs.FlySpeed:CaptureFocus()
                 end)
 
-                if Revo.Save.Data.FlySpeed then
-                    Revo.Fly.Speed = Revo.Save.Data.FlySpeed
-                end
-
                 Revo.Inputs.FlySpeed.FocusLost:Connect(function()
                     pcall(function()
                         local Speed = Revo.Inputs.FlySpeed.Text:gsub("%D", "")
@@ -1090,6 +1118,12 @@
 
         -- Fly Key
 
+            Revo.Fly = Revo.Fly or {}
+
+            if Revo.Save.Data.FlyKey then
+                Revo.Fly.Key = Enum.KeyCode[Revo.Save.Data.FlyKey]
+            end
+
             Revo.Buttons.FlyKey = Instance.new("TextButton")
             Revo.Buttons.FlyKey.Size = UDim2.new(0, 200, 0, 30)
             Revo.Buttons.FlyKey.Position = UDim2.new(0, 215, 0, 40)
@@ -1097,7 +1131,7 @@
             Revo.Buttons.FlyKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.FlyKey.Font = Enum.Font.Gotham
             Revo.Buttons.FlyKey.TextSize = 16
-            Revo.Buttons.FlyKey.Text = "Fly Key: "..(Revo.Fly.Key and Revo.Fly.Key.Name or "None")
+            Revo.Buttons.FlyKey.Text = "Fly Key: " .. (Revo.Fly.Key and Revo.Fly.Key.Name or "None")
             Revo.Buttons.FlyKey.Parent = Revo.GUI.CharacterRightColumn
             Revo.GUI:AddCorner(Revo.Buttons.FlyKey)
 
@@ -1154,6 +1188,11 @@
                     self.CaptureConnection = nil
                 end
 
+                Revo.Save.Data.FlyKey = nil
+                if Revo.Save.Enabled then
+                    Revo.Save:Write()
+                end
+
                 self:EnableGlobalListener()
             end
 
@@ -1184,6 +1223,12 @@
                             Revo.Fly.Key = input.KeyCode
                             Revo.Buttons.FlyKey.Text = "Fly Key: " .. Revo.Fly.Key.Name
 
+                            -- Save key if saving is enabled
+                            if Revo.Save.Enabled then
+                                Revo.Save.Data.FlyKey = Revo.Fly.Key.Name
+                                Revo.Save:Write()
+                            end
+
                             Revo.Inputs.FlyKey.Visible = false
                             Revo.Buttons.FlyKey.Visible = true
                             Revo.Fly.CapturingKey = false
@@ -1205,6 +1250,12 @@
 
         -- Teleport Key
 
+            Revo.Teleport = Revo.Teleport or {}
+
+            if Revo.Save.Data.TeleportKey then
+                Revo.Teleport.Key = Enum.KeyCode[Revo.Save.Data.TeleportKey]
+            end
+
             Revo.Buttons.TeleportKey = Instance.new("TextButton")
             Revo.Buttons.TeleportKey.Size = UDim2.new(0, 200, 0, 30)
             Revo.Buttons.TeleportKey.Position = UDim2.new(0, 5, 0, 40)
@@ -1212,7 +1263,7 @@
             Revo.Buttons.TeleportKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.TeleportKey.Font = Enum.Font.Gotham
             Revo.Buttons.TeleportKey.TextSize = 16
-            Revo.Buttons.TeleportKey.Text = "Teleport Key: "..(Revo.Teleport.Key and Revo.Teleport.Key.Name or "None")
+            Revo.Buttons.TeleportKey.Text = "Teleport Key: " .. (Revo.Teleport.Key and Revo.Teleport.Key.Name or "None")
             Revo.Buttons.TeleportKey.Parent = Revo.GUI.CharacterLeftColumn
             Revo.GUI:AddCorner(Revo.Buttons.TeleportKey)
 
@@ -1302,6 +1353,9 @@
                     self.CaptureConnection = nil
                 end
 
+                Revo.Save.Data.TeleportKey = nil
+                Revo.Save:Write()
+
                 self:EnableGlobalListener()
             end
 
@@ -1332,6 +1386,9 @@
                             Revo.Teleport.Key = input.KeyCode
                             Revo.Buttons.TeleportKey.Text = "Teleport Key: " .. Revo.Teleport.Key.Name
 
+                            Revo.Save.Data.TeleportKey = Revo.Teleport.Key.Name
+                            Revo.Save:Write()
+
                             Revo.Inputs.TeleportKey.Visible = false
                             Revo.Buttons.TeleportKey.Visible = true
                             Revo.Teleport.CapturingKey = false
@@ -1352,6 +1409,10 @@
     -- Rewind
 
         -- Rewind Key
+
+            if Revo.Save.Data.RewindKey then
+                Revo.Rewind.Key = Enum.KeyCode[Revo.Save.Data.RewindKey]
+            end
 
             Revo.Buttons.RewindKey = Instance.new("TextButton")
             Revo.Buttons.RewindKey.Size = UDim2.new(0, 200, 0, 30)
@@ -1493,6 +1554,11 @@
                     self.CaptureConnection = nil
                 end
 
+                Revo.Save.Data.RewindKey = nil
+                if Revo.Save.Enabled then
+                    Revo.Save:Write()
+                end
+
                 self:EnableGlobalListener()
             end
 
@@ -1523,6 +1589,11 @@
                             Revo.Rewind.Key = input.KeyCode
                             Revo.Buttons.RewindKey.Text = "Rewind Key: " .. Revo.Rewind.Key.Name
 
+                            if Revo.Save.Enabled then
+                                Revo.Save.Data.RewindKey = Revo.Rewind.Key.Name
+                                Revo.Save:Write()
+                            end
+
                             Revo.Inputs.RewindKey.Visible = false
                             Revo.Buttons.RewindKey.Visible = true
                             Revo.Rewind.CapturingKey = false
@@ -1544,6 +1615,10 @@
     -- Trip
 
         -- Trip Key
+
+            if Revo.Save.Data.TripKey then
+                Revo.Trip.Key = Enum.KeyCode[Revo.Save.Data.TripKey]
+            end
 
             Revo.Buttons.TripKey = Instance.new("TextButton")
             Revo.Buttons.TripKey.Size = UDim2.new(0, 200, 0, 30)
@@ -1630,6 +1705,11 @@
                     self.CaptureConnection = nil
                 end
 
+                Revo.Save.Data.TripKey = nil
+                if Revo.Save.Enabled then
+                    Revo.Save:Write()
+                end
+
                 self:EnableGlobalListener()
             end
 
@@ -1660,6 +1740,11 @@
                             Revo.Trip.Key = input.KeyCode
                             Revo.Buttons.TripKey.Text = "Trip Key: " .. Revo.Trip.Key.Name
 
+                            if Revo.Save.Enabled then
+                                Revo.Save.Data.TripKey = Revo.Trip.Key.Name
+                                Revo.Save:Write()
+                            end
+
                             Revo.Inputs.TripKey.Visible = false
                             Revo.Buttons.TripKey.Visible = true
                             Revo.Trip.CapturingKey = false
@@ -1682,7 +1767,7 @@
 
         -- Jump Power Button
 
-            Revo.JumpPower = (Revo.Save.Data and Revo.Save.Data.JumpPower) or 50
+            Revo.JumpPower = Revo.Save.Data.JumpPower or 50
 
             Revo.Buttons.JumpPower = Instance.new("TextButton")
             Revo.Buttons.JumpPower.Size = UDim2.new(0, 200, 0, 30)
@@ -1992,6 +2077,10 @@
 
         -- Invisibility Button
 
+            if Revo.Save.Data.InvisibilityKey then
+                Revo.Invisibility.Key = Enum.KeyCode[Revo.Save.Data.InvisibilityKey]
+            end
+
             Revo.Buttons.InvisibilityKey = Instance.new("TextButton")
             Revo.Buttons.InvisibilityKey.Size = UDim2.new(0, 200, 0, 30)
             Revo.Buttons.InvisibilityKey.Position = UDim2.new(0, 5, 0, 145)
@@ -1999,7 +2088,7 @@
             Revo.Buttons.InvisibilityKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.InvisibilityKey.Font = Enum.Font.Gotham
             Revo.Buttons.InvisibilityKey.TextSize = 16
-            Revo.Buttons.InvisibilityKey.Text = "Invisibility Key: "..(Revo.Invisibility.Key and Revo.Invisibility.Key.Name or "None")
+            Revo.Buttons.InvisibilityKey.Text = "Invisibility Key: " .. (Revo.Invisibility.Key and Revo.Invisibility.Key.Name or "None")
             Revo.Buttons.InvisibilityKey.Parent = Revo.GUI.CharacterLeftColumn
             Revo.GUI:AddCorner(Revo.Buttons.InvisibilityKey)
 
@@ -2034,11 +2123,21 @@
             function Revo.Invisibility:CancelKeyCapture()
                 self.Key = nil
                 Revo.Buttons.InvisibilityKey.Text = "Invisibility Key: None"
+                
                 self.CapturingKey = false
+                Revo.Inputs.InvisibilityKey.Visible = false
+                Revo.Buttons.InvisibilityKey.Visible = true
+
                 if self.CaptureConnection then
                     self.CaptureConnection:Disconnect()
                     self.CaptureConnection = nil
                 end
+
+                Revo.Save.Data.InvisibilityKey = nil
+                if Revo.Save.Enabled then
+                    Revo.Save:Write()
+                end
+
                 self:EnableGlobalListener()
             end
 
@@ -2064,6 +2163,10 @@
                         else
                             Revo.Invisibility.Key = input.KeyCode
                             Revo.Buttons.InvisibilityKey.Text = "Invisibility Key: "..Revo.Invisibility.Key.Name
+                            if Revo.Save.Enabled then
+                                Revo.Save.Data.InvisibilityKey = Revo.Invisibility.Key.Name
+                                Revo.Save:Write()
+                            end
                             Revo.Invisibility.CapturingKey = false
                             Revo.Invisibility.CaptureConnection:Disconnect()
                             Revo.Invisibility.CaptureConnection = nil
@@ -2325,12 +2428,26 @@
                     workspace.Gravity = Gravity
 
                     Revo.Buttons.Gravity.Text = "Gravity: " .. Gravity
+
+                    if Revo.Save.Enabled then
+                        Revo.Save.Data.Gravity = Gravity
+                        Revo.Save:Write()
+                    end
                 end)
 
                 Revo.Inputs.Gravity.Text = ""
                 Revo.Inputs.Gravity.Visible = false
                 Revo.Buttons.Gravity.Visible = true
             end)
+
+            if Revo.Save.Data.Gravity then
+                local savedGravity = tonumber(Revo.Save.Data.Gravity)
+                if savedGravity then
+                    Revo.Gravity = savedGravity
+                    workspace.Gravity = savedGravity
+                    Revo.Buttons.Gravity.Text = "Gravity: " .. savedGravity
+                end
+            end
                     
 -- Target
 
@@ -3432,7 +3549,7 @@
                 if Revo.Target.Player and player.Name == Revo.Target.Player then
                     Revo:UpdateTarget(nil)
                     Revo:StopTargetActions()
-                    Revo:Notify("Revo", "Targeted Player Left/Rejoined.", 5)
+                    Revo:Notify("Revo", "Targeted Player Left Or Rejoined.", 5)
                 end
             end)
         end)
@@ -4332,6 +4449,10 @@
 
         -- GUI Key
 
+            if Revo.Save.Data.GUIKey then
+                Revo.GUI.Key = Enum.KeyCode[Revo.Save.Data.GUIKey]
+            end
+
             Revo.Buttons.GUIKey = Instance.new("TextButton")
             Revo.Buttons.GUIKey.Size = UDim2.new(0, 200, 0, 30)
             Revo.Buttons.GUIKey.Position = UDim2.new(0, 215, 0, 145)
@@ -4339,9 +4460,11 @@
             Revo.Buttons.GUIKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.GUIKey.Font = Enum.Font.Gotham
             Revo.Buttons.GUIKey.TextSize = 16
-            Revo.Buttons.GUIKey.Text = "GUI Key: "..(Revo.GUI.Key and Revo.GUI.Key.Name or "None")
+            Revo.Buttons.GUIKey.Text = "GUI Key: " .. (Revo.GUI.Key and Revo.GUI.Key.Name or "None")
             Revo.Buttons.GUIKey.Parent = Revo.GUI.MiscRightColumn
             Revo.GUI:AddCorner(Revo.Buttons.GUIKey)
+
+            Revo:UpdateHomeText()
 
             Revo.Inputs = Revo.Inputs or {}
             Revo.Inputs.GUIKey = Instance.new("TextBox")
@@ -4386,12 +4509,16 @@
 
                 Revo.Inputs.GUIKey.Visible = false
                 Revo.Buttons.GUIKey.Visible = true
-
                 self.CapturingKey = false
 
                 if self.CaptureConnection then
                     self.CaptureConnection:Disconnect()
                     self.CaptureConnection = nil
+                end
+
+                Revo.Save.Data.GUIKey = nil
+                if Revo.Save.Enabled then
+                    Revo.Save:Write()
                 end
 
                 self:EnableGlobalListener()
@@ -4426,6 +4553,11 @@
                             Revo.Buttons.GUIKey.Text = "GUI Key: " .. Revo.GUI.Key.Name
                             Revo:UpdateHomeText()
 
+                            if Revo.Save.Enabled then
+                                Revo.Save.Data.GUIKey = Revo.GUI.Key.Name
+                                Revo.Save:Write()
+                            end
+
                             Revo.Inputs.GUIKey.Visible = false
                             Revo.Buttons.GUIKey.Visible = true
                             Revo.GUI.CapturingKey = false
@@ -4447,6 +4579,10 @@
 
         -- Auto Clicker Key
 
+            if Revo.Save.Data.AutoClickerKey then
+                Revo.AutoClicker.Key = Enum.KeyCode[Revo.Save.Data.AutoClickerKey]
+            end
+
             Revo.Buttons.AutoClickerKey = Instance.new("TextButton")
             Revo.Buttons.AutoClickerKey.Size = UDim2.new(0, 200, 0, 30)
             Revo.Buttons.AutoClickerKey.Position = UDim2.new(0, 215, 0, 180)
@@ -4454,7 +4590,7 @@
             Revo.Buttons.AutoClickerKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.AutoClickerKey.Font = Enum.Font.Gotham
             Revo.Buttons.AutoClickerKey.TextSize = 16
-            Revo.Buttons.AutoClickerKey.Text = "Auto Clicker Key: "..(Revo.AutoClicker.Key and Revo.AutoClicker.Key.Name or "None")
+            Revo.Buttons.AutoClickerKey.Text = "Auto Clicker Key: " .. (Revo.AutoClicker.Key and Revo.AutoClicker.Key.Name or "None")
             Revo.Buttons.AutoClickerKey.Parent = Revo.GUI.MiscRightColumn
             Revo.GUI:AddCorner(Revo.Buttons.AutoClickerKey)
 
@@ -4508,12 +4644,17 @@
 
                 Revo.Inputs.AutoClickerKey.Visible = false
                 Revo.Buttons.AutoClickerKey.Visible = true
-
                 self.CapturingKey = false
 
                 if self.CaptureConnection then
                     self.CaptureConnection:Disconnect()
                     self.CaptureConnection = nil
+                end
+
+                -- Remove from save if enabled
+                Revo.Save.Data.AutoClickerKey = nil
+                if Revo.Save.Enabled then
+                    Revo.Save:Write()
                 end
 
                 self:EnableGlobalListener()
@@ -4545,6 +4686,11 @@
                         else
                             Revo.AutoClicker.Key = input.KeyCode
                             Revo.Buttons.AutoClickerKey.Text = "Auto Clicker Key: " .. input.KeyCode.Name
+
+                            if Revo.Save.Enabled then
+                                Revo.Save.Data.AutoClickerKey = Revo.AutoClicker.Key.Name
+                                Revo.Save:Write()
+                            end
 
                             Revo.Inputs.AutoClickerKey.Visible = false
                             Revo.Buttons.AutoClickerKey.Visible = true
