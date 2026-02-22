@@ -44,6 +44,7 @@
     -- Fling
     -- Anti Ragdoll
     -- Anti Game Paused
+    -- Anti Void
 
 -- Need To Add
 
@@ -70,9 +71,10 @@
         -- Orbit Target
         -- See Others Cameras
         -- Anti All (Headsit, Backpack, ETC)
-
-    -- Never Getting Added
-
+        -- FPS
+        -- Ping
+        -- Custom Notifaction UI
+        -- Custom Name Tags
         -- Chat Bypass
         -- Voice Chat Bypass
 
@@ -380,14 +382,14 @@
 
     -- GUI Load Detection
 
-        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-        --     Revo.Services.StarterGui:SetCore("SendNotification", {
-        --         Title = "Revo",
-        --         Text = "GUI Already Loaded",
-        --         Duration = 5
-        --     })
-        --     return
-        -- end
+        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+            Revo.Services.StarterGui:SetCore("SendNotification", {
+                Title = "Revo",
+                Text = "GUI Already Loaded",
+                Duration = 5
+            })
+            return
+        end
 
     -- GUI Creation
 
