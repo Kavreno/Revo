@@ -48,8 +48,6 @@
 -- Need To Add
 
     -- Saving
-    -- Persistent Walk, Jump, Etc Speed If Saved
-    -- Jerk While Face Banging
 
     -- Not Sure If Adding
 
@@ -382,14 +380,14 @@
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = "Revo",
-                Text = "GUI Already Loaded",
-                Duration = 5
-            })
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo.Services.StarterGui:SetCore("SendNotification", {
+        --         Title = "Revo",
+        --         Text = "GUI Already Loaded",
+        --         Duration = 5
+        --     })
+        --     return
+        -- end
 
     -- GUI Creation
 
@@ -473,7 +471,7 @@
                     Revo:Notify(
                         "Revo",
                         Revo.Save.Enabled and "Saving Enabled" or "Saving Disabled",
-                        3
+                        5
                     )
 
                 end)
@@ -763,7 +761,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Saving For All Keybind Or Number Inputs No Button Toggles Yet, I Will Add It Soon But I Need To Add Buttons For Other Things That Just Auto Load Currently"
+    Revo.AnnouncementsText.Text = "Added Jerk While Face Bang, Anti Game Play Paused Button, And Saving For All Keybind Or Number Inputs No Button Toggles Yet"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -3407,6 +3405,7 @@
                         root.BreakVelocity:Destroy()
                     end
 
+                    humanoid.PlatformStand = false
                     humanoid.AutoRotate = true
                     humanoid:ChangeState(Enum.HumanoidStateType.Running)
 
@@ -3428,13 +3427,12 @@
                 end
 
                 humanoid.AutoRotate = false
+                humanoid.PlatformStand = true
 
                 task.spawn(function()
                     local t = 0
                     while Revo.Target.FaceBanging do
                         pcall(function()
-
-                            Revo:StopAnim()
 
                             if not root:FindFirstChild("BreakVelocity") then
                                 local tempV = Revo.VelocityAsset:Clone()
@@ -4926,6 +4924,59 @@
                     end
                 end
             end)
+
+    -- Anti Game Paused
+
+        -- Anti Game Paused Button
+
+            Revo.Buttons.AntiGamePaused = Instance.new("TextButton")
+            Revo.Buttons.AntiGamePaused.Size = UDim2.new(0, 200, 0, 30)
+            Revo.Buttons.AntiGamePaused.Position = UDim2.new(0, 5, 0, 240)
+            Revo.Buttons.AntiGamePaused.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.AntiGamePaused.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.AntiGamePaused.Font = Enum.Font.Gotham
+            Revo.Buttons.AntiGamePaused.TextSize = 16
+            Revo.Buttons.AntiGamePaused.Text = "Anti Game Paused"
+            Revo.Buttons.AntiGamePaused.Parent = Revo.GUI.MiscLeftColumn
+            Revo.GUI:AddCorner(Revo.Buttons.AntiGamePaused)
+
+        -- Anti Game Paused Function
+
+            function Revo:ToggleAntiGameplayPaused()
+                local coreGui = game:GetService("CoreGui")
+                local robloxGui = coreGui:FindFirstChild("RobloxGui")
+                if not robloxGui then return end
+
+                if Revo.AntiGameplayPausedEnabled then
+                    if Revo.AntiGameplayPausedConnection then
+                        pcall(function()
+                            Revo.AntiGameplayPausedConnection:Disconnect()
+                        end)
+                        Revo.AntiGameplayPausedConnection = nil
+                    end
+                    Revo:Notify("Revo", "Anti Game Paused: Disabled", 5)
+                    Revo.AntiGameplayPausedEnabled = false
+                else
+                    Revo.AntiGameplayPausedConnection = robloxGui.ChildAdded:Connect(function(obj)
+                        if obj.Name == "CoreScripts/NetworkPause" then
+                            obj:Destroy()
+                        end
+                    end)
+
+                    local existing = robloxGui:FindFirstChild("CoreScripts/NetworkPause")
+                    if existing then
+                        existing:Destroy()
+                    end
+
+                    Revo:Notify("Revo", "Anti Game Paused: Enabled", 5)
+                    Revo.AntiGameplayPausedEnabled = true
+                end
+            end
+
+            Revo.Buttons.AntiGamePaused.MouseButton1Click:Connect(function()
+                Revo:ToggleAntiGameplayPaused()
+            end)
+
 -- Auto Runs
 
     -- Teleport To Last Location On Respawn
@@ -5073,34 +5124,6 @@
                 Revo.BasePlate:Update()
             end)
         end
-
-    -- Anti Game Paused
-
-        function Revo:EnableAntiGameplayPaused()
-            local coreGui = game:GetService("CoreGui")
-            local robloxGui = coreGui:FindFirstChild("RobloxGui")
-
-            if not robloxGui then return end
-
-            if self.AntiGameplayPaused.Connection then
-                pcall(function()
-                    self.AntiGameplayPaused.Connection:Disconnect()
-                end)
-            end
-
-            self.AntiGameplayPaused.Connection = robloxGui.ChildAdded:Connect(function(obj)
-                if obj.Name == "CoreScripts/NetworkPause" then
-                    obj:Destroy()
-                end
-            end)
-
-            local existing = robloxGui:FindFirstChild("CoreScripts/NetworkPause")
-            if existing then
-                existing:Destroy()
-            end
-        end
-
-        Revo:EnableAntiGameplayPaused()
 
 -- Loading Finish
 
