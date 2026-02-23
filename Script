@@ -45,6 +45,10 @@
     -- Anti Ragdoll
     -- Anti Game Paused
     -- Anti Void
+    -- FPS Display
+    -- Ping Display
+    -- Spin
+    -- FOV
 
 -- Need To Add
 
@@ -65,14 +69,10 @@
         -- Animation Speeds
         -- Custom Sky Box
         -- ESP
-        -- FOV
         -- Free Cam
-        -- Spin (With Spin Speed)
         -- Orbit Target
         -- See Others Cameras
         -- Anti All (Headsit, Backpack, ETC)
-        -- FPS
-        -- Ping
         -- Custom Notifaction UI
         -- Custom Name Tags
         -- Chat Bypass
@@ -100,6 +100,7 @@
             Lighting = game:GetService("Lighting"),
             VirtualUser = game:GetService("VirtualUser"),
             GuiService = game:GetService("GuiService"),
+            Stats = game:GetService("Stats"),
         }
 
         Revo.HttpRequest =
@@ -478,6 +479,65 @@
 
                 end)
 
+        -- FPS And Ping
+
+            Revo.GUI.FPSLabel = Instance.new("TextLabel")
+            Revo.GUI.FPSLabel.Name = "FPSLabel"
+            Revo.GUI.FPSLabel.Size = UDim2.new(0, 55, 1, 0)
+            Revo.GUI.FPSLabel.Position = UDim2.new(0, 10, 0, 0)
+            Revo.GUI.FPSLabel.BackgroundTransparency = 1
+            Revo.GUI.FPSLabel.Text = "FPS: 0"
+            Revo.GUI.FPSLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.GUI.FPSLabel.Font = Enum.Font.Gotham
+            Revo.GUI.FPSLabel.TextSize = 14
+            Revo.GUI.FPSLabel.TextXAlignment = Enum.TextXAlignment.Left
+            Revo.GUI.FPSLabel.Parent = Revo.GUI.TitleBar
+
+            Revo.GUI.FPSPingSeparator = Instance.new("Frame")
+            Revo.GUI.FPSPingSeparator.Size = UDim2.new(0, 1, 0, 16)
+            Revo.GUI.FPSPingSeparator.Position = UDim2.new(0, 70, 0.5, -8)
+            Revo.GUI.FPSPingSeparator.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+            Revo.GUI.FPSPingSeparator.BorderSizePixel = 0
+            Revo.GUI.FPSPingSeparator.Parent = Revo.GUI.TitleBar
+
+            Revo.GUI.PingLabel = Instance.new("TextLabel")
+            Revo.GUI.PingLabel.Name = "PingLabel"
+            Revo.GUI.PingLabel.Size = UDim2.new(0, 55, 1, 0)
+            Revo.GUI.PingLabel.Position = UDim2.new(0, 80, 0, 0)
+            Revo.GUI.PingLabel.BackgroundTransparency = 1
+            Revo.GUI.PingLabel.Text = "0 ms"
+            Revo.GUI.PingLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.GUI.PingLabel.Font = Enum.Font.Gotham
+            Revo.GUI.PingLabel.TextSize = 14
+            Revo.GUI.PingLabel.TextXAlignment = Enum.TextXAlignment.Left
+            Revo.GUI.PingLabel.Parent = Revo.GUI.TitleBar
+
+            -- FPS And Ping Function
+
+                do
+                    local frameCount = 0
+                    local lastTime = tick()
+
+                    Revo.Services.RunService.RenderStepped:Connect(function()
+                        frameCount += 1
+
+                        local currentTime = tick()
+                        if currentTime - lastTime >= 1 then
+                            local fps = frameCount
+                            Revo.GUI.FPSLabel.Text = "FPS: " .. fps
+
+                            local ping = math.floor(
+                                Revo.Services.Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+                            )
+
+                            Revo.GUI.PingLabel.Text = ping .. " ms"
+
+                            frameCount = 0
+                            lastTime = currentTime
+                        end
+                    end)
+                end
+
 -- Functions
 
     -- Create Pages
@@ -763,7 +823,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Jerk While Face Bang, Anti Game Play Paused Button, And Saving For All Keybind Or Number Inputs No Button Toggles Yet"
+    Revo.AnnouncementsText.Text = "Added Spin, FOV, FPS Display, Ping Display"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -784,7 +844,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 3.0"
+    Revo.VersionLabel.Text = "Version: 3.1"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -2449,7 +2509,139 @@
                     Revo.Buttons.Gravity.Text = "Gravity: " .. savedGravity
                 end
             end
-                    
+
+    -- Spin
+
+        -- Spin Button
+
+            Revo.SpinSpeed = Revo.Save.Data.SpinSpeed or 0
+
+            Revo.Buttons.Spin = Instance.new("TextButton")
+            Revo.Buttons.Spin.Size = UDim2.new(0, 200, 0, 30)
+            Revo.Buttons.Spin.Position = UDim2.new(0, 5, 0, 220)
+            Revo.Buttons.Spin.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Buttons.Spin.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Buttons.Spin.Font = Enum.Font.Gotham
+            Revo.Buttons.Spin.TextSize = 16
+            Revo.Buttons.Spin.Text = "Spin Speed: " .. Revo.SpinSpeed
+            Revo.Buttons.Spin.Parent = Revo.GUI.CharacterLeftColumn
+            Revo.GUI:AddCorner(Revo.Buttons.Spin)
+
+            Revo.Inputs.Spin = Instance.new("TextBox")
+            Revo.Inputs.Spin.Size = Revo.Buttons.Spin.Size
+            Revo.Inputs.Spin.Position = Revo.Buttons.Spin.Position
+            Revo.Inputs.Spin.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Revo.Inputs.Spin.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.Inputs.Spin.Font = Enum.Font.Gotham
+            Revo.Inputs.Spin.TextSize = 16
+            Revo.Inputs.Spin.PlaceholderText = "Enter Spin Speed"
+            Revo.Inputs.Spin.Visible = false
+            Revo.Inputs.Spin.ClearTextOnFocus = true
+            Revo.Inputs.Spin.Parent = Revo.GUI.CharacterLeftColumn
+            Revo.GUI:AddCorner(Revo.Inputs.Spin)
+
+        -- Spin Function    
+
+            Revo.Buttons.Spin.MouseButton1Click:Connect(function()
+                Revo.Buttons.Spin.Visible = false
+                Revo.Inputs.Spin.Visible = true
+                Revo.Inputs.Spin:CaptureFocus()
+            end)
+
+            Revo.Inputs.Spin.FocusLost:Connect(function()
+                pcall(function()
+                    local Speed = Revo.Inputs.Spin.Text:gsub("%D", "")
+                    if Speed == "" then Speed = 0 end
+                    Speed = tonumber(Speed)
+                    Revo.SpinSpeed = Speed
+
+                    local root = Revo.Player.Character and Revo.Player.Character:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        for i, v in pairs(root:GetChildren()) do
+                            if v.Name == "Spinning" then
+                                v:Destroy()
+                            end
+                        end
+
+                        if Speed ~= 0 then
+                            local Spin = Instance.new("BodyAngularVelocity")
+                            Spin.Name = "Spinning"
+                            Spin.Parent = root
+                            Spin.MaxTorque = Vector3.new(0, math.huge, 0)
+                            Spin.AngularVelocity = Vector3.new(0, Speed, 0)
+                        end
+                    end
+
+                    Revo.Buttons.Spin.Text = "Spin Speed: " .. Speed
+
+                    Revo.Save.Data.SpinSpeed = Speed
+                    Revo.Save:Write()
+                end)
+
+                Revo.Inputs.Spin.Text = ""
+                Revo.Inputs.Spin.Visible = false
+                Revo.Buttons.Spin.Visible = true
+            end)
+
+    -- FOV
+
+        Revo.FOV = Revo.Save.Data.FOV or 70
+
+        Revo.Buttons.FOV = Instance.new("TextButton")
+        Revo.Buttons.FOV.Size = UDim2.new(0, 200, 0, 30)
+        Revo.Buttons.FOV.Position = UDim2.new(0, 5, 0, 220)
+        Revo.Buttons.FOV.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Revo.Buttons.FOV.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.Buttons.FOV.Font = Enum.Font.Gotham
+        Revo.Buttons.FOV.TextSize = 16
+        Revo.Buttons.FOV.Text = "FOV: " .. Revo.FOV
+        Revo.Buttons.FOV.Parent = Revo.GUI.CharacterRightColumn
+        Revo.GUI:AddCorner(Revo.Buttons.FOV)
+
+        -- FOV Input Box
+        Revo.Inputs.FOV = Instance.new("TextBox")
+        Revo.Inputs.FOV.Size = Revo.Buttons.FOV.Size
+        Revo.Inputs.FOV.Position = Revo.Buttons.FOV.Position
+        Revo.Inputs.FOV.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Revo.Inputs.FOV.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.Inputs.FOV.Font = Enum.Font.Gotham
+        Revo.Inputs.FOV.TextSize = 16
+        Revo.Inputs.FOV.PlaceholderText = "Enter FOV"
+        Revo.Inputs.FOV.Visible = false
+        Revo.Inputs.FOV.ClearTextOnFocus = true
+        Revo.Inputs.FOV.Parent = Revo.GUI.CharacterRightColumn
+        Revo.GUI:AddCorner(Revo.Inputs.FOV)
+
+        -- FOV Button Function (open input)
+        Revo.Buttons.FOV.MouseButton1Click:Connect(function()
+            Revo.Buttons.FOV.Visible = false
+            Revo.Inputs.FOV.Visible = true
+            Revo.Inputs.FOV:CaptureFocus()
+        end)
+
+        -- FOV Input Function (apply FOV)
+        Revo.Inputs.FOV.FocusLost:Connect(function()
+            pcall(function()
+                local fov = Revo.Inputs.FOV.Text:gsub("%D", "")
+                if fov == "" then fov = 70 end -- default FOV
+                fov = tonumber(fov)
+                Revo.FOV = fov
+
+                -- Apply to camera
+                workspace.CurrentCamera.FieldOfView = fov
+
+                Revo.Buttons.FOV.Text = "FOV: " .. fov
+
+                -- Save
+                Revo.Save.Data.FOV = fov
+                Revo.Save:Write()
+            end)
+
+            Revo.Inputs.FOV.Text = ""
+            Revo.Inputs.FOV.Visible = false
+            Revo.Buttons.FOV.Visible = true
+        end)
+                                
 -- Target
 
     -- Scrolling Frame
