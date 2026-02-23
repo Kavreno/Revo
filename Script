@@ -52,7 +52,10 @@
 
 -- Need To Add
 
-    -- Saving
+    -- Saving (WIP)
+    -- Custom Notifaction UI (WIP)
+    -- Custom Name Tags (WIP)
+    -- Better Walk On Air
 
     -- Not Sure If Adding
 
@@ -73,8 +76,6 @@
         -- Orbit Target
         -- See Others Cameras
         -- Anti All (Headsit, Backpack, ETC)
-        -- Custom Notifaction UI
-        -- Custom Name Tags
         -- Chat Bypass
         -- Voice Chat Bypass
 
@@ -211,6 +212,10 @@
         Revo.Shaders = {
             Enabled = false
         }
+
+    -- Default Time
+
+        Revo.defaultTime = game.Lighting.ClockTime
 
     -- No Sit
 
@@ -368,7 +373,7 @@
     -- Infinite Jump
 
         Revo.InfiniteJump = {
-            Enabled = false,
+            Enabled = Revo.Save.Data.InfiniteJumpEnabled or false,
             Connection = nil,
             Debounce = false
         }
@@ -383,14 +388,14 @@
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = "Revo",
-                Text = "GUI Already Loaded",
-                Duration = 5
-            })
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo.Services.StarterGui:SetCore("SendNotification", {
+        --         Title = "Revo",
+        --         Text = "GUI Already Loaded",
+        --         Duration = 5
+        --     })
+        --     return
+        -- end
 
     -- GUI Creation
 
@@ -823,7 +828,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Spin, FOV, FPS Display, Ping Display"
+    Revo.AnnouncementsText.Text = "Added Saving To Everything Expect Other Scripts So Emote Scripts And Infinite Yield Dont Have Saving"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -844,7 +849,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 3.1"
+    Revo.VersionLabel.Text = "Version: 3.2"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -1892,6 +1897,8 @@
 
         -- Jerk Button
 
+            Revo.JerkEnabled = Revo.Save.Data.JerkEnabled or false
+
             Revo.Buttons.Jerk = Instance.new("TextButton")
             Revo.Buttons.Jerk.Size = UDim2.new(0, 200, 0, 30)
             Revo.Buttons.Jerk.Position = UDim2.new(0, 5, 0, 75)
@@ -1968,13 +1975,38 @@
                 end)
             end
 
+            function Revo:removeJerkTool()
+                local backpack = self.Player:FindFirstChild("Backpack")
+                if backpack then
+                    local tool = backpack:FindFirstChild("Jerk Off")
+                    if tool then tool:Destroy() end
+                end
+
+                local character = self.Player.Character
+                if character then
+                    local tool = character:FindFirstChild("Jerk Off")
+                    if tool then tool:Destroy() end
+                end
+            end
+
             Revo.Buttons.Jerk.MouseButton1Click:Connect(function()
-                Revo:runJerk()
+                Revo.JerkEnabled = not Revo.JerkEnabled
+
+                Revo.Save.Data.JerkEnabled = Revo.JerkEnabled
+                Revo.Save:Write()
+
+                if Revo.JerkEnabled then
+                    Revo:runJerk()
+                else
+                    Revo:removeJerkTool()
+                end
             end)
 
     -- Walk On Air
 
         -- Walk On Air Button
+
+            Revo.WalkOnAir.Enabled = Revo.Save.Data.WalkOnAirEnabled or false
 
             Revo.GUI.WalkOnAirFrame = Instance.new("Frame")
             Revo.GUI.WalkOnAirFrame.Size = UDim2.new(1, 0, 0, 30)
@@ -2037,6 +2069,8 @@
                     
             Revo.Buttons.WalkOnAir.MouseButton1Click:Connect(function()
                 Revo.WalkOnAir.Enabled = true
+                Revo.Save.Data.WalkOnAirEnabled = true
+                Revo.Save:Write()
 
                 local root = Revo.Player.Character and Revo.Player.Character:FindFirstChild("HumanoidRootPart")
                 if root then
@@ -2055,6 +2089,8 @@
 
             Revo.Buttons.WalkOnAirOff.MouseButton1Click:Connect(function()
                 Revo.WalkOnAir.Enabled = false
+                Revo.Save.Data.WalkOnAirEnabled = false
+                Revo.Save:Write()
 
                 if Revo.WalkOnAir.Platform then
                     Revo.WalkOnAir.Platform:Destroy()
@@ -2133,6 +2169,22 @@
                     root.Position.Z
                 )
             end)
+
+            if Revo.WalkOnAir.Enabled then
+                local root = Revo.Player.Character and Revo.Player.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    Revo.WalkOnAir.BaseY = root.Position.Y + (Revo.WalkOnAir.HeightOffset or 5)
+                end
+
+                Revo.Buttons.WalkOnAir.Visible = false
+                Revo.Buttons.WalkOnAirOff.Visible = true
+                Revo.Buttons.WalkOnAirUp.Visible = true
+                Revo.Buttons.WalkOnAirDown.Visible = true
+
+                if not Revo.WalkOnAir.Platform then
+                    Revo.WalkOnAir.Platform = Revo:CreateWalkOnAirPlatform()
+                end
+            end
 
     -- Invisibility
 
@@ -2384,59 +2436,62 @@
                 Revo.Buttons.InfiniteJump.TextColor3 = Color3.fromRGB(255, 255, 255)
                 Revo.Buttons.InfiniteJump.Font = Enum.Font.Gotham
                 Revo.Buttons.InfiniteJump.TextSize = 16
-                Revo.Buttons.InfiniteJump.Text = "Infinite Jump"
+                Revo.Buttons.InfiniteJump.Text = "Infinite Jump: " .. (Revo.InfiniteJump.Enabled and "On" or "Off")
                 Revo.Buttons.InfiniteJump.Parent = Revo.GUI.CharacterLeftColumn
                 Revo.GUI:AddCorner(Revo.Buttons.InfiniteJump)
 
-            -- Infinite Jump Button Function
+                function Revo:EnableInfiniteJump()
+                    if Revo.InfiniteJump.Connection then
+                        Revo.InfiniteJump.Connection:Disconnect()
+                    end
+
+                    Revo.InfiniteJump.Enabled = true
+                    Revo.InfiniteJump.Debounce = false
+
+                    Revo.InfiniteJump.Connection = Revo.Services.UserInputService.JumpRequest:Connect(function()
+                        if not Revo.InfiniteJump.Enabled then return end
+                        if Revo.InfiniteJump.Debounce then return end
+
+                        local char = Revo.Player.Character
+                        if not char then return end
+
+                        local humanoid = char:FindFirstChildOfClass("Humanoid")
+                        if not humanoid then return end
+
+                        Revo.InfiniteJump.Debounce = true
+                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                        task.wait()
+                        Revo.InfiniteJump.Debounce = false
+                    end)
+                end
+
+                function Revo:DisableInfiniteJump()
+                    Revo.InfiniteJump.Enabled = false
+
+                    if Revo.InfiniteJump.Connection then
+                        Revo.InfiniteJump.Connection:Disconnect()
+                        Revo.InfiniteJump.Connection = nil
+                    end
+
+                    Revo.InfiniteJump.Debounce = false
+                end
 
                 Revo.Buttons.InfiniteJump.MouseButton1Click:Connect(function()
-
                     if Revo.InfiniteJump.Enabled then
                         Revo:DisableInfiniteJump()
                     else
                         Revo:EnableInfiniteJump()
                     end
 
+                    Revo.Buttons.InfiniteJump.Text = "Infinite Jump: " .. (Revo.InfiniteJump.Enabled and "On" or "Off")
+
+                    Revo.Save.Data.InfiniteJumpEnabled = Revo.InfiniteJump.Enabled
+                    Revo.Save:Write()
                 end)
 
-        -- Infinite Jump Function
-
-            function Revo:EnableInfiniteJump()
-                if Revo.InfiniteJump.Connection then
-                    Revo.InfiniteJump.Connection:Disconnect()
+                if Revo.InfiniteJump.Enabled then
+                    Revo:EnableInfiniteJump()
                 end
-
-                Revo.InfiniteJump.Enabled = true
-                Revo.InfiniteJump.Debounce = false
-
-                Revo.InfiniteJump.Connection = Revo.Services.UserInputService.JumpRequest:Connect(function()
-                    if not Revo.InfiniteJump.Enabled then return end
-                    if Revo.InfiniteJump.Debounce then return end
-
-                    local char = Revo.Player.Character
-                    if not char then return end
-
-                    local humanoid = char:FindFirstChildOfClass("Humanoid")
-                    if not humanoid then return end
-
-                    Revo.InfiniteJump.Debounce = true
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                    task.wait()
-                    Revo.InfiniteJump.Debounce = false
-                end)
-            end
-
-            function Revo:DisableInfiniteJump()
-                Revo.InfiniteJump.Enabled = false
-
-                if Revo.InfiniteJump.Connection then
-                    Revo.InfiniteJump.Connection:Disconnect()
-                    Revo.InfiniteJump.Connection = nil
-                end
-
-                Revo.InfiniteJump.Debounce = false
-            end
 
     -- Gravity
 
@@ -2598,7 +2653,6 @@
         Revo.Buttons.FOV.Parent = Revo.GUI.CharacterRightColumn
         Revo.GUI:AddCorner(Revo.Buttons.FOV)
 
-        -- FOV Input Box
         Revo.Inputs.FOV = Instance.new("TextBox")
         Revo.Inputs.FOV.Size = Revo.Buttons.FOV.Size
         Revo.Inputs.FOV.Position = Revo.Buttons.FOV.Position
@@ -2612,27 +2666,23 @@
         Revo.Inputs.FOV.Parent = Revo.GUI.CharacterRightColumn
         Revo.GUI:AddCorner(Revo.Inputs.FOV)
 
-        -- FOV Button Function (open input)
         Revo.Buttons.FOV.MouseButton1Click:Connect(function()
             Revo.Buttons.FOV.Visible = false
             Revo.Inputs.FOV.Visible = true
             Revo.Inputs.FOV:CaptureFocus()
         end)
 
-        -- FOV Input Function (apply FOV)
         Revo.Inputs.FOV.FocusLost:Connect(function()
             pcall(function()
                 local fov = Revo.Inputs.FOV.Text:gsub("%D", "")
-                if fov == "" then fov = 70 end -- default FOV
+                if fov == "" then fov = 70 end
                 fov = tonumber(fov)
                 Revo.FOV = fov
 
-                -- Apply to camera
                 workspace.CurrentCamera.FieldOfView = fov
 
                 Revo.Buttons.FOV.Text = "FOV: " .. fov
 
-                -- Save
                 Revo.Save.Data.FOV = fov
                 Revo.Save:Write()
             end)
@@ -2864,56 +2914,86 @@
 
     -- Target Tool
 
-        -- Target Tool Button
+-- Load saved state
+Revo.TargetToolEnabled = Revo.Save.Data.TargetToolEnabled or false
 
-            Revo.GUI.ClickTargetToolButton = Instance.new("ImageButton")
-            Revo.GUI.ClickTargetToolButton.Name = "ClickTargetToolButton"
-            Revo.GUI.ClickTargetToolButton.BackgroundTransparency = 1
-            Revo.GUI.ClickTargetToolButton.Position = UDim2.new(1, 5, 0, 0)
-            Revo.GUI.ClickTargetToolButton.Size = UDim2.new(0, 30, 0, 30)
-            Revo.GUI.ClickTargetToolButton.Image = "rbxassetid://2716591855"
-            Revo.GUI.ClickTargetToolButton.Parent = Revo.GUI.TargetNameInput
+-- Create Target Tool Button
+Revo.GUI.ClickTargetToolButton = Instance.new("ImageButton")
+Revo.GUI.ClickTargetToolButton.Name = "ClickTargetToolButton"
+Revo.GUI.ClickTargetToolButton.BackgroundTransparency = 1
+Revo.GUI.ClickTargetToolButton.Position = UDim2.new(1, 5, 0, 0)
+Revo.GUI.ClickTargetToolButton.Size = UDim2.new(0, 30, 0, 30)
+Revo.GUI.ClickTargetToolButton.Image = "rbxassetid://2716591855"
+Revo.GUI.ClickTargetToolButton.Parent = Revo.GUI.TargetNameInput
 
-        -- Target Tool Function
+-- Function to give the tool
+local function giveTargetTool()
+    local existingTool = Revo.Player.Backpack:FindFirstChild("ClickTarget") 
+        or (Revo.Player.Character and Revo.Player.Character:FindFirstChild("ClickTarget"))
+    if existingTool then return end
 
-            Revo.GUI.ClickTargetToolButton.MouseButton1Click:Connect(function()
+    local tool = Instance.new("Tool")
+    tool.Name = "ClickTarget"
+    tool.RequiresHandle = false
+    tool.TextureId = "rbxassetid://2716591855"
+    tool.ToolTip = "Select Target"
 
-                local existingTool = Revo.Player.Backpack:FindFirstChild("ClickTarget") 
-                    or (Revo.Player.Character and Revo.Player.Character:FindFirstChild("ClickTarget"))
+    tool.Activated:Connect(function()
+        local root = Revo.Player.Character and Revo.Player.Character:FindFirstChild("HumanoidRootPart")
+        if not root then return end
 
-                if existingTool then
-                    return
-                end
+        local hit = Revo.Mouse.Target
+        local person = nil
 
-                local GetTargetTool = Instance.new("Tool")
-                GetTargetTool.Name = "ClickTarget"
-                GetTargetTool.RequiresHandle = false
-                GetTargetTool.TextureId = "rbxassetid://2716591855"
-                GetTargetTool.ToolTip = "Select Target"
+        if hit and hit.Parent then
+            if hit.Parent:IsA("Model") then
+                person = Revo.Services.Players:GetPlayerFromCharacter(hit.Parent)
+            elseif hit.Parent:IsA("Accessory") then
+                person = Revo.Services.Players:GetPlayerFromCharacter(hit.Parent.Parent)
+            end
 
-                local function ActivateTool()
-                    local root = Revo.Player.Character and Revo.Player.Character:FindFirstChild("HumanoidRootPart")
-                    if not root then return end
+            if person then
+                Revo:UpdateTarget(person)
+            end
+        end
+    end)
 
-                    local hit = Revo.Mouse.Target
-                    local person = nil
+    tool.Parent = Revo.Player.Backpack
+end
 
-                    if hit and hit.Parent then
-                        if hit.Parent:IsA("Model") then
-                            person = Revo.Services.Players:GetPlayerFromCharacter(hit.Parent)
-                        elseif hit.Parent:IsA("Accessory") then
-                            person = Revo.Services.Players:GetPlayerFromCharacter(hit.Parent.Parent)
-                        end
+-- Function to remove the tool
+local function removeTargetTool()
+    local existingTool = Revo.Player.Backpack:FindFirstChild("ClickTarget")
+        or (Revo.Player.Character and Revo.Player.Character:FindFirstChild("ClickTarget"))
+    if existingTool then
+        existingTool:Destroy()
+    end
+end
 
-                        if person then
-                            Revo:UpdateTarget(person)
-                        end
-                    end
-                end
+-- Toggle function
+local function toggleTargetTool()
+    if Revo.TargetToolEnabled then
+        -- Turn off
+        Revo.TargetToolEnabled = false
+        removeTargetTool()
+    else
+        -- Turn on
+        Revo.TargetToolEnabled = true
+        giveTargetTool()
+    end
 
-                GetTargetTool.Activated:Connect(ActivateTool)
-                GetTargetTool.Parent = Revo.Player.Backpack
-            end)
+    -- Save state
+    Revo.Save.Data.TargetToolEnabled = Revo.TargetToolEnabled
+    Revo.Save:Write()
+end
+
+-- Button click
+Revo.GUI.ClickTargetToolButton.MouseButton1Click:Connect(toggleTargetTool)
+
+-- Spawn initially if saved
+if Revo.TargetToolEnabled then
+    giveTargetTool()
+end
 
     -- View Target
 
@@ -4390,125 +4470,161 @@
 
     -- Shaders
 
-        -- Shaders Button
+        Revo.Shaders.Enabled = Revo.Save.Data.ShadersEnabled or false
 
-            Revo.Buttons.Shaders = Instance.new("TextButton")
-            Revo.Buttons.Shaders.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Shaders.Position = UDim2.new(0, 5, 0, 40)
-            Revo.Buttons.Shaders.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.Shaders.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.Shaders.Font = Enum.Font.Gotham
-            Revo.Buttons.Shaders.TextSize = 16
-            Revo.Buttons.Shaders.Text = "Shaders"
-            Revo.Buttons.Shaders.Parent = Revo.GUI.MiscLeftColumn
-            Revo.GUI:AddCorner(Revo.Buttons.Shaders)
+        Revo.Buttons.Shaders = Instance.new("TextButton")
+        Revo.Buttons.Shaders.Size = UDim2.new(0, 200, 0, 30)
+        Revo.Buttons.Shaders.Position = UDim2.new(0, 5, 0, 40)
+        Revo.Buttons.Shaders.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Revo.Buttons.Shaders.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.Buttons.Shaders.Font = Enum.Font.Gotham
+        Revo.Buttons.Shaders.TextSize = 16
+        Revo.Buttons.Shaders.Text = "Shaders: " .. (Revo.Shaders.Enabled and "On" or "Off")
+        Revo.Buttons.Shaders.Parent = Revo.GUI.MiscLeftColumn
+        Revo.GUI:AddCorner(Revo.Buttons.Shaders)
 
-        -- Shaders Function
+        Revo.Buttons.Shaders.MouseButton1Click:Connect(function()
+            Revo.Shaders.Enabled = not Revo.Shaders.Enabled
 
-            Revo.Buttons.Shaders.MouseButton1Click:Connect(function()
-                shadersOn = not shadersOn
+            local Lighting = game:GetService("Lighting")
 
-                local Lighting = game:GetService("Lighting")
+            if Revo.Shaders.Enabled then
+                local Sky = Instance.new("Sky")
+                local Bloom = Instance.new("BloomEffect")
+                local Blur = Instance.new("BlurEffect")
+                local ColorC = Instance.new("ColorCorrectionEffect")
+                local SunRays = Instance.new("SunRaysEffect")
 
-                if shadersOn then
-                    local Sky = Instance.new("Sky")
-                    local Bloom = Instance.new("BloomEffect")
-                    local Blur = Instance.new("BlurEffect")
-                    local ColorC = Instance.new("ColorCorrectionEffect")
-                    local SunRays = Instance.new("SunRaysEffect")
+                Lighting.Brightness = 2.25
+                Lighting.ExposureCompensation = 0.1
+                Lighting.ClockTime = 17.55
 
-                    Lighting.Brightness = 2.25
-                    Lighting.ExposureCompensation = 0.1
-                    Lighting.ClockTime = 17.55
+                Sky.SkyboxBk = "http://www.roblox.com/asset/?id=144933338"
+                Sky.SkyboxDn = "http://www.roblox.com/asset/?id=144931530"
+                Sky.SkyboxFt = "http://www.roblox.com/asset/?id=144933262"
+                Sky.SkyboxLf = "http://www.roblox.com/asset/?id=144933244"
+                Sky.SkyboxRt = "http://www.roblox.com/asset/?id=144933299"
+                Sky.SkyboxUp = "http://www.roblox.com/asset/?id=144931564"
+                Sky.StarCount = 5000
+                Sky.SunAngularSize = 5
+                Sky.Parent = Lighting
 
-                    Sky.SkyboxBk = "http://www.roblox.com/asset/?id=144933338"
-                    Sky.SkyboxDn = "http://www.roblox.com/asset/?id=144931530"
-                    Sky.SkyboxFt = "http://www.roblox.com/asset/?id=144933262"
-                    Sky.SkyboxLf = "http://www.roblox.com/asset/?id=144933244"
-                    Sky.SkyboxRt = "http://www.roblox.com/asset/?id=144933299"
-                    Sky.SkyboxUp = "http://www.roblox.com/asset/?id=144931564"
-                    Sky.StarCount = 5000
-                    Sky.SunAngularSize = 5
-                    Sky.Parent = Lighting
+                Bloom.Intensity = 0.3
+                Bloom.Size = 10
+                Bloom.Threshold = 0.8
+                Bloom.Parent = Lighting
 
-                    Bloom.Intensity = 0.3
-                    Bloom.Size = 10
-                    Bloom.Threshold = 0.8
-                    Bloom.Parent = Lighting
+                Blur.Size = 3
+                Blur.Parent = Lighting
 
-                    Blur.Size = 3
-                    Blur.Parent = Lighting
+                ColorC.Brightness = 0
+                ColorC.Contrast = 0.1
+                ColorC.Saturation = 0.25
+                ColorC.TintColor = Color3.fromRGB(255, 255, 255)
+                ColorC.Parent = Lighting
 
-                    ColorC.Brightness = 0
-                    ColorC.Contrast = 0.1
-                    ColorC.Saturation = 0.25
-                    ColorC.TintColor = Color3.fromRGB(255, 255, 255)
-                    ColorC.Parent = Lighting
-
-                    SunRays.Intensity = 0.1
-                    SunRays.Spread = 0.8
-                    SunRays.Parent = Lighting
-                else
-                    for _, v in pairs(Lighting:GetChildren()) do
-                        if v:IsA("Sky") or v:IsA("BloomEffect") or v:IsA("BlurEffect") 
-                        or v:IsA("ColorCorrectionEffect") or v:IsA("SunRaysEffect") then
-                            v:Destroy()
-                        end
+                SunRays.Intensity = 0.1
+                SunRays.Spread = 0.8
+                SunRays.Parent = Lighting
+            else
+                for _, v in pairs(Lighting:GetChildren()) do
+                    if v:IsA("Sky") or v:IsA("BloomEffect") or v:IsA("BlurEffect") 
+                    or v:IsA("ColorCorrectionEffect") or v:IsA("SunRaysEffect") then
+                        v:Destroy()
                     end
-                    Lighting.Brightness = 2
-                    Lighting.ExposureCompensation = 0
                 end
-            end)
+
+                Lighting.Brightness = 2
+                Lighting.ExposureCompensation = 0
+
+                game.Lighting.ClockTime = Revo.defaultTime
+            end
+
+            Revo.Buttons.Shaders.Text = "Shaders: " .. (Revo.Shaders.Enabled and "On" or "Off")
+
+            Revo.Save.Data.ShadersEnabled = Revo.Shaders.Enabled
+            Revo.Save:Write()
+        end)
+
+        if Revo.Shaders.Enabled then
+            Revo.Buttons.Shaders.MouseButton1Click:Invoke()
+        end
 
     -- Day
 
-        -- Day Button
+        Revo.DayEnabled = Revo.Save.Data.DayEnabled or false
 
-            Revo.Buttons.Day = Instance.new("TextButton")
-            Revo.Buttons.Day.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Day.Position = UDim2.new(0, 5, 0, 75)
-            Revo.Buttons.Day.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.Day.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.Day.Font = Enum.Font.Gotham
-            Revo.Buttons.Day.TextSize = 16
-            Revo.Buttons.Day.Text = "Day"
-            Revo.Buttons.Day.Parent = Revo.GUI.MiscLeftColumn
-            Revo.GUI:AddCorner(Revo.Buttons.Day)
+        Revo.Buttons.Day = Instance.new("TextButton")
+        Revo.Buttons.Day.Size = UDim2.new(0, 200, 0, 30)
+        Revo.Buttons.Day.Position = UDim2.new(0, 5, 0, 75)
+        Revo.Buttons.Day.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Revo.Buttons.Day.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.Buttons.Day.Font = Enum.Font.Gotham
+        Revo.Buttons.Day.TextSize = 16
+        Revo.Buttons.Day.Text = "Day: " .. (Revo.DayEnabled and "On" or "Off")
+        Revo.Buttons.Day.Parent = Revo.GUI.MiscLeftColumn
+        Revo.GUI:AddCorner(Revo.Buttons.Day)
 
-        -- Day Function
-
-            Revo.Buttons.Day.MouseButton1Click:Connect(function()
-                if not shadersOn then
-                    game:GetService("Lighting").ClockTime = 14
+        Revo.Buttons.Day.MouseButton1Click:Connect(function()
+            if not shadersOn then
+                if Revo.DayEnabled then
+                    game.Lighting.ClockTime = Revo.defaultTime
+                    Revo.DayEnabled = false
                 else
-                    Revo:Notify("Revo", "Please Turn Off Shaders", 5)
+                    game.Lighting.ClockTime = 14.5
+                    Revo.DayEnabled = true
                 end
-            end)
+
+                Revo.Buttons.Day.Text = "Day: " .. (Revo.DayEnabled and "On" or "Off")
+
+                Revo.Save.Data.DayEnabled = Revo.DayEnabled
+                Revo.Save:Write()
+            else
+                Revo:Notify("Revo", "Please Turn Off Shaders", 5)
+            end
+        end)
+
+        if Revo.DayEnabled and not shadersOn then
+            game.Lighting.ClockTime = 14.5
+        end
 
     -- Night
 
-        -- Night Button
+        Revo.NightEnabled = Revo.Save.Data.NightEnabled or false
 
-            Revo.Buttons.Night = Instance.new("TextButton")
-            Revo.Buttons.Night.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Night.Position = UDim2.new(0, 5, 0, 110)
-            Revo.Buttons.Night.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.Night.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.Night.Font = Enum.Font.Gotham
-            Revo.Buttons.Night.TextSize = 16
-            Revo.Buttons.Night.Text = "Night"
-            Revo.Buttons.Night.Parent = Revo.GUI.MiscLeftColumn
-            Revo.GUI:AddCorner(Revo.Buttons.Night)
+        Revo.Buttons.Night = Instance.new("TextButton")
+        Revo.Buttons.Night.Size = UDim2.new(0, 200, 0, 30)
+        Revo.Buttons.Night.Position = UDim2.new(0, 5, 0, 110)
+        Revo.Buttons.Night.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Revo.Buttons.Night.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.Buttons.Night.Font = Enum.Font.Gotham
+        Revo.Buttons.Night.TextSize = 16
+        Revo.Buttons.Night.Text = "Night: " .. (Revo.NightEnabled and "On" or "Off")
+        Revo.Buttons.Night.Parent = Revo.GUI.MiscLeftColumn
+        Revo.GUI:AddCorner(Revo.Buttons.Night)
 
-        -- Night Function
-
-            Revo.Buttons.Night.MouseButton1Click:Connect(function()
-                if not Revo.Shaders.Enabled then
-                    game:GetService("Lighting").ClockTime = 19
+        Revo.Buttons.Night.MouseButton1Click:Connect(function()
+            if not Revo.Shaders.Enabled then
+                if Revo.NightEnabled then
+                    game.Lighting.ClockTime = Revo.defaultTime
+                    Revo.NightEnabled = false
                 else
-                    Revo:Notify("Revo", "Please Turn Off Shaders.", 5)
+                    game.Lighting.ClockTime = 19
+                    Revo.NightEnabled = true
                 end
-            end)
+
+                Revo.Buttons.Night.Text = "Night: " .. (Revo.NightEnabled and "On" or "Off")
+
+                Revo.Save.Data.NightEnabled = Revo.NightEnabled
+                Revo.Save:Write()
+            else
+                Revo:Notify("Revo", "Please Turn Off Shaders.", 5)
+            end
+        end)
+
+        if Revo.NightEnabled and not Revo.Shaders.Enabled then
+            game:GetService("Lighting").ClockTime = 19
+        end
 
     -- Emotes
 
@@ -4902,193 +5018,197 @@
 
     -- Anti AFK
 
-        -- Anti AFK Button
+        Revo.AntiAfk.Enabled = Revo.Save.Data.AntiAFKEnabled or false
 
-            Revo.Buttons.AntiAFK = Instance.new("TextButton")
-            Revo.Buttons.AntiAFK.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.AntiAFK.Position = UDim2.new(0, 5, 0, 180)
-            Revo.Buttons.AntiAFK.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.AntiAFK.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.AntiAFK.Font = Enum.Font.Gotham
-            Revo.Buttons.AntiAFK.TextSize = 16
-            Revo.Buttons.AntiAFK.Text = "Anti AFK"
-            Revo.Buttons.AntiAFK.Parent = Revo.GUI.MiscLeftColumn
-            Revo.GUI:AddCorner(Revo.Buttons.AntiAFK)
+        Revo.Buttons.AntiAFK = Instance.new("TextButton")
+        Revo.Buttons.AntiAFK.Size = UDim2.new(0, 200, 0, 30)
+        Revo.Buttons.AntiAFK.Position = UDim2.new(0, 5, 0, 180)
+        Revo.Buttons.AntiAFK.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Revo.Buttons.AntiAFK.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.Buttons.AntiAFK.Font = Enum.Font.Gotham
+        Revo.Buttons.AntiAFK.TextSize = 16
+        Revo.Buttons.AntiAFK.Text = "Anti AFK: " .. (Revo.AntiAfk.Enabled and "On" or "Off")
+        Revo.Buttons.AntiAFK.Parent = Revo.GUI.MiscLeftColumn
+        Revo.GUI:AddCorner(Revo.Buttons.AntiAFK)
 
-        -- Anit AFK Function
+        function Revo:ToggleAntiAFK()
+            Revo.AntiAfk.Enabled = not Revo.AntiAfk.Enabled
 
-            function Revo:ToggleAntiAFK()
-                Revo.AntiAfk.Enabled = not Revo.AntiAfk.Enabled
-                Revo:Notify(
-                    "Revo",
-                    Revo.AntiAfk.Enabled and "Anti AFK Enabled" or "Anti AFK Disabled",
-                    5
-                )
+            Revo.Buttons.AntiAFK.Text = "Anti AFK: " .. (Revo.AntiAfk.Enabled and "On" or "Off")
+
+            Revo.Save.Data.AntiAFKEnabled = Revo.AntiAfk.Enabled
+            Revo.Save:Write()
+        end
+
+        Revo.Buttons.AntiAFK.MouseButton1Click:Connect(function()
+            Revo:ToggleAntiAFK()
+        end)
+
+        Revo.Player.Idled:Connect(function()
+            if Revo.AntiAfk.Enabled then
+                Revo.Services.VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                Revo.Services.VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
             end
+        end)
 
-            Revo.Buttons.AntiAFK.MouseButton1Click:Connect(function()
-                Revo:ToggleAntiAFK()
-            end)
-
-            Revo.Player.Idled:Connect(function()
-                if Revo.AntiAfk.Enabled then
-                    Revo.Services.VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-                    task.wait(1)
-                    Revo.Services.VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-                end
-            end)
+        if Revo.AntiAfk.Enabled then
+            Revo.Buttons.AntiAFK.Text = "Anti AFK: On"
+        end
 
     -- Anti Void
 
-        -- Anti Void Button
+        Revo.AntiVoid.Enabled = Revo.Save.Data.AntiVoidEnabled or false
 
-            Revo.Buttons.AntiVoid = Instance.new("TextButton")
-            Revo.Buttons.AntiVoid.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.AntiVoid.Position = UDim2.new(0, 5, 0, 215)
-            Revo.Buttons.AntiVoid.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.AntiVoid.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.AntiVoid.Font = Enum.Font.Gotham
-            Revo.Buttons.AntiVoid.TextSize = 16
-            Revo.Buttons.AntiVoid.Text = "Anti Void"
-            Revo.Buttons.AntiVoid.Parent = Revo.GUI.MiscLeftColumn
-            Revo.GUI:AddCorner(Revo.Buttons.AntiVoid)
+        Revo.Buttons.AntiVoid = Instance.new("TextButton")
+        Revo.Buttons.AntiVoid.Size = UDim2.new(0, 200, 0, 30)
+        Revo.Buttons.AntiVoid.Position = UDim2.new(0, 5, 0, 215)
+        Revo.Buttons.AntiVoid.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Revo.Buttons.AntiVoid.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.Buttons.AntiVoid.Font = Enum.Font.Gotham
+        Revo.Buttons.AntiVoid.TextSize = 16
+        Revo.Buttons.AntiVoid.Text = "Anti Void: " .. (Revo.AntiVoid.Enabled and "On" or "Off")
+        Revo.Buttons.AntiVoid.Parent = Revo.GUI.MiscLeftColumn
+        Revo.GUI:AddCorner(Revo.Buttons.AntiVoid)
 
-        -- Anti Void Function
+        function Revo:AntiVoidCheck()
+            if not Revo.AntiVoid.Enabled then return end
 
-            function Revo:AntiVoidCheck()
-                if not Revo.AntiVoid.Enabled then return end
-
-                if Revo.Player.Character and Revo.Player.Character:FindFirstChild("HumanoidRootPart") then
-                    local root = Revo.Player.Character.HumanoidRootPart
-                    if root.Position.Y < Revo.VOID_Y then
-                        root.Velocity = Vector3.new(0, 500, 0)
-                    end
+            if Revo.Player.Character and Revo.Player.Character:FindFirstChild("HumanoidRootPart") then
+                local root = Revo.Player.Character.HumanoidRootPart
+                if root.Position.Y < Revo.VOID_Y then
+                    root.Velocity = Vector3.new(0, 500, 0)
                 end
             end
+        end
 
-            game:GetService("RunService").Heartbeat:Connect(function()
-                Revo:AntiVoidCheck()
-            end)
+        game:GetService("RunService").Heartbeat:Connect(function()
+            Revo:AntiVoidCheck()
+        end)
 
-            Revo.Buttons.AntiVoid.MouseButton1Click:Connect(function()
-                Revo.AntiVoid.Enabled = not Revo.AntiVoid.Enabled
-                
-                if Revo.AntiVoid.Enabled then
-                    Revo:Notify("Revo", "Anti Void Enabled", 5)
-                else
-                    Revo:Notify("Revo", "Anti Void Disabled", 5)
-                end
-            end)
+        Revo.Buttons.AntiVoid.MouseButton1Click:Connect(function()
+            Revo.AntiVoid.Enabled = not Revo.AntiVoid.Enabled
+
+            Revo.Buttons.AntiVoid.Text = "Anti Void: " .. (Revo.AntiVoid.Enabled and "On" or "Off")
+
+            Revo.Save.Data.AntiVoidEnabled = Revo.AntiVoid.Enabled
+            Revo.Save:Write()
+        end)
+
+        if Revo.AntiVoid.Enabled then
+            Revo.Buttons.AntiVoid.Text = "Anti Void: On"
+        end
 
     -- No Sit
 
-        -- NO Sit Button
+        Revo.NoSit.Enabled = Revo.Save.Data.NoSitEnabled or false
 
-            Revo.Buttons.Nosit = Instance.new("TextButton")
-            Revo.Buttons.Nosit.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Nosit.Position = UDim2.new(0, 215, 0, 215)
-            Revo.Buttons.Nosit.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.Nosit.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.Nosit.Font = Enum.Font.Gotham
-            Revo.Buttons.Nosit.TextSize = 16
-            Revo.Buttons.Nosit.Text = "No Sit"
-            Revo.Buttons.Nosit.Parent = Revo.GUI.MiscRightColumn
-            Revo.GUI:AddCorner(Revo.Buttons.Nosit)
+        Revo.Buttons.Nosit = Instance.new("TextButton")
+        Revo.Buttons.Nosit.Size = UDim2.new(0, 200, 0, 30)
+        Revo.Buttons.Nosit.Position = UDim2.new(0, 215, 0, 215)
+        Revo.Buttons.Nosit.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Revo.Buttons.Nosit.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.Buttons.Nosit.Font = Enum.Font.Gotham
+        Revo.Buttons.Nosit.TextSize = 16
+        Revo.Buttons.Nosit.Text = "No Sit: " .. (Revo.NoSit.Enabled and "On" or "Off")
+        Revo.Buttons.Nosit.Parent = Revo.GUI.MiscRightColumn
+        Revo.GUI:AddCorner(Revo.Buttons.Nosit)
 
-        -- No Sit Function
+        local function applyNoSit(enabled)
+            local humanoid = Revo.Player.Character and Revo.Player.Character:FindFirstChildWhichIsA("Humanoid")
+            if humanoid then
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, not enabled)
+            end
 
-            Revo.Buttons.Nosit.MouseButton1Click:Connect(function()
-                Revo.NoSit.Enabled = not Revo.NoSit.Enabled
-                
-                Revo:Notify(
-                    "Revo",
-                    Revo.NoSit.Enabled and "No Sit Enabled" or "No Sit Disabled",
-                    5
-                )
-                
-                if Revo.NoSit.Enabled then
-                    local humanoid = Revo.Player.Character and Revo.Player.Character:FindFirstChildWhichIsA("Humanoid")
-                    if humanoid then
-                        humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-                    end
-                    
-                    Revo.Player.CharacterAdded:Connect(function(character)
-                        repeat wait() until character:FindFirstChildWhichIsA("Humanoid")
-                        local newHumanoid = character:FindFirstChildWhichIsA("Humanoid")
-                        newHumanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-                    end)
-                else
-                    local humanoid = Revo.Player.Character and Revo.Player.Character:FindFirstChildWhichIsA("Humanoid")
-                    if humanoid then
-                        humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-                    end
-                end
+            Revo.Player.CharacterAdded:Connect(function(character)
+                repeat task.wait() until character:FindFirstChildWhichIsA("Humanoid")
+                local newHumanoid = character:FindFirstChildWhichIsA("Humanoid")
+                newHumanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, not enabled)
             end)
+        end
+
+        Revo.Buttons.Nosit.MouseButton1Click:Connect(function()
+            Revo.NoSit.Enabled = not Revo.NoSit.Enabled
+
+            Revo.Buttons.Nosit.Text = "No Sit: " .. (Revo.NoSit.Enabled and "On" or "Off")
+
+            Revo.Save.Data.NoSitEnabled = Revo.NoSit.Enabled
+            Revo.Save:Write()
+
+            applyNoSit(Revo.NoSit.Enabled)
+        end)
+
+        if Revo.NoSit.Enabled then
+            applyNoSit(true)
+            Revo.Buttons.Nosit.Text = "No Sit: On"
+        end
 
     -- No Ragdoll
 
-        -- No Ragdoll Button
+        Revo.NoRagdoll.Enabled = Revo.Save.Data.NoRagdollEnabled or false
 
-            Revo.Buttons.NoRagdoll = Instance.new("TextButton")
-            Revo.Buttons.NoRagdoll.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.NoRagdoll.Position = UDim2.new(0, 215, 0, 215)
-            Revo.Buttons.NoRagdoll.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.NoRagdoll.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.NoRagdoll.Font = Enum.Font.Gotham
-            Revo.Buttons.NoRagdoll.TextSize = 16
-            Revo.Buttons.NoRagdoll.Text = "No Ragdoll"
-            Revo.Buttons.NoRagdoll.Parent = Revo.GUI.MiscRightColumn
-            Revo.GUI:AddCorner(Revo.Buttons.NoRagdoll)
+        Revo.Buttons.NoRagdoll = Instance.new("TextButton")
+        Revo.Buttons.NoRagdoll.Size = UDim2.new(0, 200, 0, 30)
+        Revo.Buttons.NoRagdoll.Position = UDim2.new(0, 215, 0, 215)
+        Revo.Buttons.NoRagdoll.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Revo.Buttons.NoRagdoll.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.Buttons.NoRagdoll.Font = Enum.Font.Gotham
+        Revo.Buttons.NoRagdoll.TextSize = 16
+        Revo.Buttons.NoRagdoll.Text = "No Ragdoll: " .. (Revo.NoRagdoll.Enabled and "On" or "Off")
+        Revo.Buttons.NoRagdoll.Parent = Revo.GUI.MiscRightColumn
+        Revo.GUI:AddCorner(Revo.Buttons.NoRagdoll)
 
-            -- No Ragdoll Button Function
-
-                Revo.Buttons.NoRagdoll.MouseButton1Click:Connect(function()
-                    if Revo.NoRagdoll.Enabled then
-                        Revo:DisableNoRagdoll()
-                        Revo:Notify("Revo", "No Ragdoll Disabled")
-                    else
-                        Revo:EnableNoRagdoll()
-                        Revo:Notify("Revo", "No Ragdoll Enabled")
-                    end
-                end)
-
-        -- No Ragdoll Function
-
-            function Revo:EnableNoRagdoll()
-                local char = self.Player.Character
-                if not char then return end
-
-                local humanoid = char:FindFirstChildWhichIsA("Humanoid")
-                if not humanoid then return end
-
-                if Revo.NoRagdoll.Connection then
-                    Revo.NoRagdoll.Connection:Disconnect()
-                end
-
-                Revo.NoRagdoll.Connection = humanoid.StateChanged:Connect(function(old, new)
-
-                    if Revo.NoRagdoll.Bypass then return end
-
-                    if new == Enum.HumanoidStateType.Ragdoll
-                    or new == Enum.HumanoidStateType.Physics
-                    or new == Enum.HumanoidStateType.PlatformStanding
-                    or new == Enum.HumanoidStateType.FallingDown then
-
-                        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-                    end
-                end)
-
-                Revo.NoRagdoll.Enabled = true
+        Revo.Buttons.NoRagdoll.MouseButton1Click:Connect(function()
+            if Revo.NoRagdoll.Enabled then
+                Revo:DisableNoRagdoll()
+            else
+                Revo:EnableNoRagdoll()
             end
 
-            function Revo:DisableNoRagdoll()
-                if Revo.NoRagdoll.Connection then
-                    Revo.NoRagdoll.Connection:Disconnect()
-                    Revo.NoRagdoll.Connection = nil
-                end
+            Revo.Buttons.NoRagdoll.Text = "No Ragdoll: " .. (Revo.NoRagdoll.Enabled and "On" or "Off")
 
-                Revo.NoRagdoll.Enabled = false
+            Revo.Save.Data.NoRagdollEnabled = Revo.NoRagdoll.Enabled
+            Revo.Save:Write()
+        end)
+
+        function Revo:EnableNoRagdoll()
+            local char = self.Player.Character
+            if not char then return end
+
+            local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+            if not humanoid then return end
+
+            if Revo.NoRagdoll.Connection then
+                Revo.NoRagdoll.Connection:Disconnect()
             end
+
+            Revo.NoRagdoll.Connection = humanoid.StateChanged:Connect(function(old, new)
+                if Revo.NoRagdoll.Bypass then return end
+
+                if new == Enum.HumanoidStateType.Ragdoll
+                or new == Enum.HumanoidStateType.Physics
+                or new == Enum.HumanoidStateType.PlatformStanding
+                or new == Enum.HumanoidStateType.FallingDown then
+                    humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+                end
+            end)
+
+            Revo.NoRagdoll.Enabled = true
+        end
+
+        function Revo:DisableNoRagdoll()
+            if Revo.NoRagdoll.Connection then
+                Revo.NoRagdoll.Connection:Disconnect()
+                Revo.NoRagdoll.Connection = nil
+            end
+
+            Revo.NoRagdoll.Enabled = false
+        end
+
+        if Revo.NoRagdoll.Enabled then
+            Revo:EnableNoRagdoll()
+            Revo.Buttons.NoRagdoll.Text = "No Ragdoll: On"
+        end
 
     -- Normal Respawn
 
@@ -5121,55 +5241,69 @@
 
     -- Anti Game Paused
 
-        -- Anti Game Paused Button
+        Revo.AntiGameplayPausedEnabled = Revo.Save.Data.AntiGamePausedEnabled or false
+        Revo.AntiGameplayPausedConnection = nil
 
-            Revo.Buttons.AntiGamePaused = Instance.new("TextButton")
-            Revo.Buttons.AntiGamePaused.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.AntiGamePaused.Position = UDim2.new(0, 5, 0, 240)
-            Revo.Buttons.AntiGamePaused.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Revo.Buttons.AntiGamePaused.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.Buttons.AntiGamePaused.Font = Enum.Font.Gotham
-            Revo.Buttons.AntiGamePaused.TextSize = 16
-            Revo.Buttons.AntiGamePaused.Text = "Anti Game Paused"
-            Revo.Buttons.AntiGamePaused.Parent = Revo.GUI.MiscLeftColumn
-            Revo.GUI:AddCorner(Revo.Buttons.AntiGamePaused)
+        Revo.Buttons.AntiGamePaused = Instance.new("TextButton")
+        Revo.Buttons.AntiGamePaused.Size = UDim2.new(0, 200, 0, 30)
+        Revo.Buttons.AntiGamePaused.Position = UDim2.new(0, 5, 0, 240)
+        Revo.Buttons.AntiGamePaused.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        Revo.Buttons.AntiGamePaused.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Revo.Buttons.AntiGamePaused.Font = Enum.Font.Gotham
+        Revo.Buttons.AntiGamePaused.TextSize = 16
+        Revo.Buttons.AntiGamePaused.Parent = Revo.GUI.MiscLeftColumn
+        Revo.GUI:AddCorner(Revo.Buttons.AntiGamePaused)
 
-        -- Anti Game Paused Function
+        local function UpdateAntiPauseButton()
+            Revo.Buttons.AntiGamePaused.Text = "Anti Game Paused: " .. (Revo.AntiGameplayPausedEnabled and "On" or "Off")
+        end
 
-            function Revo:ToggleAntiGameplayPaused()
-                local coreGui = game:GetService("CoreGui")
-                local robloxGui = coreGui:FindFirstChild("RobloxGui")
-                if not robloxGui then return end
+        local function EnableAntiPause()
+            local coreGui = game:GetService("CoreGui")
+            local robloxGui = coreGui:FindFirstChild("RobloxGui")
+            if not robloxGui then return end
 
-                if Revo.AntiGameplayPausedEnabled then
-                    if Revo.AntiGameplayPausedConnection then
-                        pcall(function()
-                            Revo.AntiGameplayPausedConnection:Disconnect()
-                        end)
-                        Revo.AntiGameplayPausedConnection = nil
-                    end
-                    Revo:Notify("Revo", "Anti Game Paused: Disabled", 5)
-                    Revo.AntiGameplayPausedEnabled = false
-                else
-                    Revo.AntiGameplayPausedConnection = robloxGui.ChildAdded:Connect(function(obj)
-                        if obj.Name == "CoreScripts/NetworkPause" then
-                            obj:Destroy()
-                        end
-                    end)
-
-                    local existing = robloxGui:FindFirstChild("CoreScripts/NetworkPause")
-                    if existing then
-                        existing:Destroy()
-                    end
-
-                    Revo:Notify("Revo", "Anti Game Paused: Enabled", 5)
-                    Revo.AntiGameplayPausedEnabled = true
-                end
+            local existing = robloxGui:FindFirstChild("CoreScripts/NetworkPause")
+            if existing then
+                existing:Destroy()
             end
 
-            Revo.Buttons.AntiGamePaused.MouseButton1Click:Connect(function()
-                Revo:ToggleAntiGameplayPaused()
+            Revo.AntiGameplayPausedConnection = robloxGui.ChildAdded:Connect(function(obj)
+                if obj.Name == "CoreScripts/NetworkPause" then
+                    obj:Destroy()
+                end
             end)
+        end
+
+        local function DisableAntiPause()
+            if Revo.AntiGameplayPausedConnection then
+                Revo.AntiGameplayPausedConnection:Disconnect()
+                Revo.AntiGameplayPausedConnection = nil
+            end
+        end
+
+        function Revo:ToggleAntiGameplayPaused()
+            Revo.AntiGameplayPausedEnabled = not Revo.AntiGameplayPausedEnabled
+
+            if Revo.AntiGameplayPausedEnabled then
+                EnableAntiPause()
+            else
+                DisableAntiPause()
+            end
+
+            UpdateAntiPauseButton()
+            Revo.Save.Data.AntiGamePausedEnabled = Revo.AntiGameplayPausedEnabled
+            Revo.Save:Write()
+        end
+
+        Revo.Buttons.AntiGamePaused.MouseButton1Click:Connect(function()
+            Revo:ToggleAntiGameplayPaused()
+        end)
+
+        UpdateAntiPauseButton()
+        if Revo.AntiGameplayPausedEnabled then
+            EnableAntiPause()
+        end
 
 -- Auto Runs
 
@@ -5195,6 +5329,58 @@
             if Revo.NoRagdoll and Revo.NoRagdoll.Enabled then
                 task.wait(0.1)
                 Revo:EnableNoRagdoll()
+            end
+
+            if Revo.TargetToolEnabled then
+                task.spawn(function()
+                    local character = Revo.Player.Character or Revo.Player.CharacterAdded:Wait()
+                    task.wait(0.1)
+                    local existingTool = Revo.Player.Backpack:FindFirstChild("ClickTarget")
+                        or (character and character:FindFirstChild("ClickTarget"))
+                    if not existingTool then
+                        local tool = Instance.new("Tool")
+                        tool.Name = "ClickTarget"
+                        tool.RequiresHandle = false
+                        tool.TextureId = "rbxassetid://2716591855"
+                        tool.ToolTip = "Select Target"
+
+                        tool.Activated:Connect(function()
+                            local root = character:FindFirstChild("HumanoidRootPart")
+                            if not root then return end
+
+                            local hit = Revo.Mouse.Target
+                            local person = nil
+
+                            if hit and hit.Parent then
+                                if hit.Parent:IsA("Model") then
+                                    person = Revo.Services.Players:GetPlayerFromCharacter(hit.Parent)
+                                elseif hit.Parent:IsA("Accessory") then
+                                    person = Revo.Services.Players:GetPlayerFromCharacter(hit.Parent.Parent)
+                                end
+
+                                if person then
+                                    Revo:UpdateTarget(person)
+                                end
+                            end
+                        end)
+
+                        tool.Parent = Revo.Player.Backpack
+                    end
+                end)
+
+                if Revo.JerkEnabled then
+                    task.spawn(function()
+                        local character = Revo.Player.Character or Revo.Player.CharacterAdded:Wait()
+                        task.wait(0.2)
+                        local humanoid = character:WaitForChild("Humanoid")
+                        local backpack = Revo.Player:WaitForChild("Backpack")
+
+                        if backpack:FindFirstChild("Jerk Off") then return end
+
+                        Revo:runJerk()
+                    end)
+                end
+
             end
 
             humanoid.Died:Connect(function()
