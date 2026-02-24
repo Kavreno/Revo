@@ -1,70 +1,116 @@
 -- Already Added
 
-    -- Walk Speed
-    -- Fly And 
-    -- Fly Speed
-    -- Teleport
-    -- Rewind
-    -- Trip
-    -- Jump Power
-    -- Jerk
-    -- Walk On Air
-    -- Invisibility
-    -- Head Sit Target
-    -- View Target
-    -- Backpack Target
-    -- Face Bang Target
-    -- Bang Target
-    -- Stand Target
-    -- Focus Target
-    -- Teleport Target
-    -- Doggy Target
-    -- Drag Target
-    -- Inspect Target
-    -- All Of Roblox's Animation Packs
-    -- Rejoin
-    -- Server Hop
-    -- Shaders
-    -- Day
-    -- Night
-    -- Emotes Script
-    -- UGC Emotes Script
-    -- Infinite Yield Script
-    -- Explode
-    -- Gui Rebinding
-    -- Auto Clicker
-    -- Anti AFK
-    -- No Sit
-    -- Teleport To Last Location On Respawn
-    -- Extended Baseplate
-    -- Gravity
-    -- Infinite Jump
-    -- Normal Respawn
-    -- Push
-    -- Fling
-    -- Anti Ragdoll
-    -- Anti Game Paused
-    -- Anti Void
-    -- FPS Display
-    -- Ping Display
-    -- Spin
-    -- FOV
-    -- Custom Notifaction UI
+    -- Character Section
+
+        -- Walk Speed
+        -- Fly Speed
+        -- Teleport
+        -- Fly
+        -- Jerk
+        -- Rewind
+        -- Walk On Air
+        -- Trip
+        -- Invisibility
+        -- Jump Power
+        -- Infinite Jump
+        -- Gravity
+        -- Spin
+        -- FOV
+
+    -- Target Section
+
+        -- Fling
+        -- View
+        -- Focus
+        -- Headsit
+        -- Stand
+        -- Backpack
+        -- Doggy
+        -- Bang
+        -- Drag
+        -- Teleport
+        -- Push
+        -- Face Bang
+        -- Face Bang Distance
+        -- Face Bang Speed
+        -- Inspect
+
+    -- Animations Section
+
+        -- Bold
+        -- Rthro
+        -- Vampire
+        -- Hero
+        -- Zombie Classic
+        -- Mage
+        -- Ghost
+        -- Elder
+        -- Levitation
+        -- Astronaut
+        -- Ninja
+        -- Werewolf
+        -- Cartoon
+        -- Pirate
+        -- Sneaky
+        -- Toy
+        -- Knight
+        -- Confident
+        -- Popstar
+        -- Princess
+        -- Cowboy
+        -- Patrol
+        -- FE Zombie
+        -- Catwalk
+        -- Unboxed
+        -- Popular
+        -- Community
+        -- Aura
+        -- Old
+        -- Sports
+        -- Stylish
+        -- Wicked
+        -- Bubbly
+        -- Robot
+        -- NFL
+        -- Boundaries
+        -- Realistic
+
+    -- Misc Section
+
+        -- Rejoin
+        -- ServerHop
+        -- Shaders
+        -- Emotes
+        -- Day
+        -- UGC Emotes
+        -- Night
+        -- Infinite Yield
+        -- Explode
+        -- GUI Key
+        -- Anti AFK
+        -- Auto Clicker
+        -- Anti Void
+        -- No Sit
+        -- Respawn
+        -- No Ragdoll
+        -- Anti Game Paused
+        -- Animation Sub Sections
 
 -- Need To Add
 
     -- Saving (Basically Done)
     -- Custom Name Tags (WIP)
-    -- Better Walk On Air
+    -- Move While Emoting (WIP)
+    -- Merge Emote Scripts Or Make Own (WIP)
+    -- Make Headsit Work Like Backpack
 
 -- Not Sure If Adding
 
-    -- Merge Emote Scripts Or Make Own
+    -- Universal Expand Base Plate
     -- Mute And Unmute Player
     -- Hide And Unhide Player
     -- Add And Unadd Player
     -- Block And Unblock Player
-    -- Move While Emoting
     -- No Clip
     -- Aim Bot
     -- Custom Animations
@@ -971,7 +1017,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Custom Notifications, Fixed Day, Night, And Shaders Toggles"
+    Revo.AnnouncementsText.Text = "Added Animations Sub Sections"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -992,7 +1038,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 3.4"
+    Revo.VersionLabel.Text = "Version: 3.5"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -3057,86 +3103,77 @@
 
     -- Target Tool
 
--- Load saved state
-Revo.TargetToolEnabled = Revo.Save.Data.TargetToolEnabled or false
+        Revo.TargetToolEnabled = Revo.Save.Data.TargetToolEnabled or false
 
--- Create Target Tool Button
-Revo.GUI.ClickTargetToolButton = Instance.new("ImageButton")
-Revo.GUI.ClickTargetToolButton.Name = "ClickTargetToolButton"
-Revo.GUI.ClickTargetToolButton.BackgroundTransparency = 1
-Revo.GUI.ClickTargetToolButton.Position = UDim2.new(1, 5, 0, 0)
-Revo.GUI.ClickTargetToolButton.Size = UDim2.new(0, 30, 0, 30)
-Revo.GUI.ClickTargetToolButton.Image = "rbxassetid://2716591855"
-Revo.GUI.ClickTargetToolButton.Parent = Revo.GUI.TargetNameInput
+        Revo.GUI.ClickTargetToolButton = Instance.new("ImageButton")
+        Revo.GUI.ClickTargetToolButton.Name = "ClickTargetToolButton"
+        Revo.GUI.ClickTargetToolButton.BackgroundTransparency = 1
+        Revo.GUI.ClickTargetToolButton.Position = UDim2.new(1, 5, 0, 0)
+        Revo.GUI.ClickTargetToolButton.Size = UDim2.new(0, 30, 0, 30)
+        Revo.GUI.ClickTargetToolButton.Image = "rbxassetid://2716591855"
+        Revo.GUI.ClickTargetToolButton.Parent = Revo.GUI.TargetNameInput
 
--- Function to give the tool
-local function giveTargetTool()
-    local existingTool = Revo.Player.Backpack:FindFirstChild("ClickTarget") 
-        or (Revo.Player.Character and Revo.Player.Character:FindFirstChild("ClickTarget"))
-    if existingTool then return end
+        local function giveTargetTool()
+            local existingTool = Revo.Player.Backpack:FindFirstChild("ClickTarget") 
+                or (Revo.Player.Character and Revo.Player.Character:FindFirstChild("ClickTarget"))
+            if existingTool then return end
 
-    local tool = Instance.new("Tool")
-    tool.Name = "ClickTarget"
-    tool.RequiresHandle = false
-    tool.TextureId = "rbxassetid://2716591855"
-    tool.ToolTip = "Select Target"
+            local tool = Instance.new("Tool")
+            tool.Name = "ClickTarget"
+            tool.RequiresHandle = false
+            tool.TextureId = "rbxassetid://2716591855"
+            tool.ToolTip = "Select Target"
 
-    tool.Activated:Connect(function()
-        local root = Revo.Player.Character and Revo.Player.Character:FindFirstChild("HumanoidRootPart")
-        if not root then return end
+            tool.Activated:Connect(function()
+                local root = Revo.Player.Character and Revo.Player.Character:FindFirstChild("HumanoidRootPart")
+                if not root then return end
 
-        local hit = Revo.Mouse.Target
-        local person = nil
+                local hit = Revo.Mouse.Target
+                local person = nil
 
-        if hit and hit.Parent then
-            if hit.Parent:IsA("Model") then
-                person = Revo.Services.Players:GetPlayerFromCharacter(hit.Parent)
-            elseif hit.Parent:IsA("Accessory") then
-                person = Revo.Services.Players:GetPlayerFromCharacter(hit.Parent.Parent)
-            end
+                if hit and hit.Parent then
+                    if hit.Parent:IsA("Model") then
+                        person = Revo.Services.Players:GetPlayerFromCharacter(hit.Parent)
+                    elseif hit.Parent:IsA("Accessory") then
+                        person = Revo.Services.Players:GetPlayerFromCharacter(hit.Parent.Parent)
+                    end
 
-            if person then
-                Revo:UpdateTarget(person)
+                    if person then
+                        Revo:UpdateTarget(person)
+                    end
+                end
+            end)
+
+            tool.Parent = Revo.Player.Backpack
+        end
+
+        local function removeTargetTool()
+            local existingTool = Revo.Player.Backpack:FindFirstChild("ClickTarget")
+                or (Revo.Player.Character and Revo.Player.Character:FindFirstChild("ClickTarget"))
+            if existingTool then
+                existingTool:Destroy()
             end
         end
-    end)
 
-    tool.Parent = Revo.Player.Backpack
-end
+        -- Toggle function
+        local function toggleTargetTool()
+            if Revo.TargetToolEnabled then
+                Revo.TargetToolEnabled = false
+                removeTargetTool()
+            else
+                Revo.TargetToolEnabled = true
+                giveTargetTool()
+            end
 
--- Function to remove the tool
-local function removeTargetTool()
-    local existingTool = Revo.Player.Backpack:FindFirstChild("ClickTarget")
-        or (Revo.Player.Character and Revo.Player.Character:FindFirstChild("ClickTarget"))
-    if existingTool then
-        existingTool:Destroy()
-    end
-end
+            Revo.Save.Data.TargetToolEnabled = Revo.TargetToolEnabled
+            Revo.Save:Write()
+        end
 
--- Toggle function
-local function toggleTargetTool()
-    if Revo.TargetToolEnabled then
-        -- Turn off
-        Revo.TargetToolEnabled = false
-        removeTargetTool()
-    else
-        -- Turn on
-        Revo.TargetToolEnabled = true
-        giveTargetTool()
-    end
+        Revo.GUI.ClickTargetToolButton.MouseButton1Click:Connect(toggleTargetTool)
 
-    -- Save state
-    Revo.Save.Data.TargetToolEnabled = Revo.TargetToolEnabled
-    Revo.Save:Write()
-end
-
--- Button click
-Revo.GUI.ClickTargetToolButton.MouseButton1Click:Connect(toggleTargetTool)
-
--- Spawn initially if saved
-if Revo.TargetToolEnabled then
-    giveTargetTool()
-end
+        if Revo.TargetToolEnabled then
+            giveTargetTool()
+        end
 
     -- View Target
 
@@ -4025,6 +4062,49 @@ end
     Revo.AnimPadding.PaddingRight = UDim.new(0, 0)
     Revo.AnimPadding.Parent = Revo.AnimScrollFrame
 
+    Revo.AnimSubScrollFrame = Instance.new("ScrollingFrame")
+    Revo.AnimSubScrollFrame.Name = "Anim_SubSection"
+    Revo.AnimSubScrollFrame.Size = UDim2.new(1, 6, 1, -40)
+    Revo.AnimSubScrollFrame.Position = UDim2.new(0, -3, 0, 35)
+    Revo.AnimSubScrollFrame.BackgroundTransparency = 1
+    Revo.AnimSubScrollFrame.ScrollBarThickness = 0
+    Revo.AnimSubScrollFrame.ScrollBarImageTransparency = 1
+    Revo.AnimSubScrollFrame.ClipsDescendants = true
+    Revo.AnimSubScrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+    Revo.AnimSubScrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.None
+    Revo.AnimSubScrollFrame.Visible = false
+    Revo.AnimSubScrollFrame.Parent = Revo.Pages.Animations
+
+    Revo.AnimSubPadding = Instance.new("UIPadding")
+    Revo.AnimSubPadding.PaddingTop = UDim.new(0, 3)
+    Revo.AnimSubPadding.PaddingBottom = UDim.new(0, 5)
+    Revo.AnimSubPadding.PaddingLeft = UDim.new(0, 0)
+    Revo.AnimSubPadding.PaddingRight = UDim.new(0, 0)
+    Revo.AnimSubPadding.Parent = Revo.AnimSubScrollFrame
+
+    Revo.AnimSubLeftColumn = Instance.new("Frame")
+    Revo.AnimSubLeftColumn.Size = UDim2.new(0.5, 0, 1, 0)
+    Revo.AnimSubLeftColumn.BackgroundTransparency = 1
+    Revo.AnimSubLeftColumn.Parent = Revo.AnimSubScrollFrame
+
+    Revo.AnimSubRightColumn = Instance.new("Frame")
+    Revo.AnimSubRightColumn.Size = UDim2.new(0.5, 0, 1, 0)
+    Revo.AnimSubRightColumn.Position = UDim2.new(0.5, 0, 0, 0)
+    Revo.AnimSubRightColumn.BackgroundTransparency = 1
+    Revo.AnimSubRightColumn.Parent = Revo.AnimSubScrollFrame
+
+    Revo.AnimSubLeftLayout = Instance.new("UIListLayout")
+    Revo.AnimSubLeftLayout.Padding = UDim.new(0,5)
+    Revo.AnimSubLeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    Revo.AnimSubLeftLayout.Parent = Revo.AnimSubLeftColumn
+
+    Revo.AnimSubRightLayout = Instance.new("UIListLayout")
+    Revo.AnimSubRightLayout.Padding = UDim.new(0,5)
+    Revo.AnimSubRightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    Revo.AnimSubRightLayout.Parent = Revo.AnimSubRightColumn
+
+    Revo.AnimSubUseLeft = true
+
     function Revo:UpdateAnimCanvas()
         pcall(function()
             local scroll = Revo.AnimScrollFrame
@@ -4048,6 +4128,28 @@ end
 
     task.defer(function()
         Revo:UpdateAnimCanvas()
+    end)
+
+    function Revo:UpdateAnimSubCanvas()
+        pcall(function()
+            local scroll = self.AnimSubScrollFrame
+            local left = self.AnimSubLeftLayout
+            local right = self.AnimSubRightLayout
+            if not scroll or not left or not right then return end
+
+            scroll.CanvasSize = UDim2.new(
+                0, 0,
+                0, math.max(left.AbsoluteContentSize.Y, right.AbsoluteContentSize.Y) + 10
+            )
+        end)
+    end
+
+    Revo.AnimSubLeftLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Revo:UpdateAnimSubCanvas()
+    end)
+
+    Revo.AnimSubRightLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Revo:UpdateAnimSubCanvas()
     end)
 
     -- Animation Table
@@ -4452,21 +4554,119 @@ end
         local anims = self.AnimationTable[animNumber]
 
         Btn.MouseButton1Click:Connect(function()
-            local Animate = self.Player.Character.Animate
-            Animate.Disabled = true
-            Revo:StopAnim()
-            Animate.idle.Animation1.AnimationId = anims[1]
-            Animate.idle.Animation2.AnimationId = anims[2]
-            Animate.walk.WalkAnim.AnimationId = anims[3]
-            Animate.run.RunAnim.AnimationId = anims[4]
-            Animate.jump.JumpAnim.AnimationId = anims[5]
-            Animate.climb.ClimbAnim.AnimationId = anims[6]
-            Animate.fall.FallAnim.AnimationId = anims[7]
-            self.Player.Character.Humanoid:ChangeState(3)
-            Animate.Disabled = false
+            self:OpenAnimSubMenu(name, animNumber)
         end)
 
         return Btn
+    end
+
+    function Revo:OpenAnimSubMenu(packName, animNumber)
+        self.AnimScrollFrame.Visible = false
+        self.AnimSubScrollFrame.Visible = true
+
+        for _,v in pairs(self.AnimSubLeftColumn:GetChildren()) do
+            if v:IsA("TextButton") then
+                v:Destroy()
+            end
+        end
+
+        for _,v in pairs(self.AnimSubRightColumn:GetChildren()) do
+            if v:IsA("TextButton") then
+                v:Destroy()
+            end
+        end
+
+        local anims = self.AnimationTable[animNumber]
+
+        local function applySingle(slotName)
+            local Character = self.Player.Character
+            if not Character then return end
+
+            local Animate = Character:FindFirstChild("Animate")
+            local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+            if not Animate or not Humanoid then return end
+
+            Animate.Disabled = true
+            self:StopAnim()
+
+            if slotName == "Idle" then
+                Animate.idle.Animation1.AnimationId = anims[1]
+                Animate.idle.Animation2.AnimationId = anims[1]
+            elseif slotName == "Walk" then
+                Animate.walk.WalkAnim.AnimationId = anims[3]
+            elseif slotName == "Run" then
+                Animate.run.RunAnim.AnimationId = anims[4]
+            elseif slotName == "Jump" then
+                Animate.jump.JumpAnim.AnimationId = anims[5]
+            elseif slotName == "Climb" then
+                Animate.climb.ClimbAnim.AnimationId = anims[6]
+            elseif slotName == "Fall" then
+                Animate.fall.FallAnim.AnimationId = anims[7]
+            elseif slotName == "All" then
+                Animate.idle.Animation1.AnimationId = anims[1]
+                Animate.idle.Animation2.AnimationId = anims[1]
+                Animate.walk.WalkAnim.AnimationId = anims[3]
+                Animate.run.RunAnim.AnimationId = anims[4]
+                Animate.jump.JumpAnim.AnimationId = anims[5]
+                Animate.climb.ClimbAnim.AnimationId = anims[6]
+                Animate.fall.FallAnim.AnimationId = anims[7]
+            end
+
+            Humanoid:ChangeState(3)
+            Animate.Disabled = false
+        end
+
+        local function createButton(text, side, color)
+            local column
+
+            if side == "Left" then
+                column = self.AnimSubLeftColumn
+            elseif side == "Right" then
+                column = self.AnimSubRightColumn
+            else
+                column = self.AnimSubLeftColumn
+            end
+
+            local Btn = Instance.new("TextButton")
+            Btn.Size = UDim2.new(0,200,0,30)
+            Btn.Text = text
+            Btn.BackgroundColor3 = color or Color3.fromRGB(50,50,50)
+            Btn.TextColor3 = Color3.new(1,1,1)
+            Btn.Font = Enum.Font.Gotham
+            Btn.TextSize = 16
+            Btn.Parent = column
+            self.GUI:AddCorner(Btn)
+
+            Btn.MouseButton1Click:Connect(function()
+                applySingle(text)
+            end)
+
+            return Btn
+        end
+
+        local Back = Instance.new("TextButton")
+        Back.Size = UDim2.new(0,200,0,30)
+        Back.Text = "Back"
+        Back.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        Back.TextColor3 = Color3.new(1,1,1)
+        Back.Font = Enum.Font.Gotham
+        Back.TextSize = 16
+        Back.Parent = self.AnimSubLeftColumn
+        self.GUI:AddCorner(Back)
+
+        Back.MouseButton1Click:Connect(function()
+            self.AnimSubScrollFrame.Visible = false
+            self.AnimScrollFrame.Visible = true
+        end)
+
+        createButton("All", "Right")
+        createButton("Idle", "Left")
+        createButton("Walk", "Right")
+        createButton("Run", "Left")
+        createButton("Jump", "Right")
+        createButton("Climb", "Left")
+        createButton("Fall", "Right")
+
     end
 
     function Revo:AddAnimButton(name, animNumber)
