@@ -56,7 +56,6 @@
     -- Custom Notifaction UI (WIP)
     -- Custom Name Tags (WIP)
     -- Better Walk On Air
-    -- Fexed Face Bang With Jerk
 
 -- Not Sure If Adding
 
@@ -389,14 +388,14 @@
 
     -- GUI Load Detection
 
-        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-        --     Revo.Services.StarterGui:SetCore("SendNotification", {
-        --         Title = "Revo",
-        --         Text = "GUI Already Loaded",
-        --         Duration = 5
-        --     })
-        --     return
-        -- end
+        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+            Revo.Services.StarterGui:SetCore("SendNotification", {
+                Title = "Revo",
+                Text = "GUI Already Loaded",
+                Duration = 5
+            })
+            return
+        end
 
     -- GUI Creation
 
