@@ -591,10 +591,10 @@
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo:Notify("Revo", "GUI Already Loaded", 5)
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo:Notify("Revo", "GUI Already Loaded", 5)
+        --     return
+        -- end
         
     -- GUI Creation
 
@@ -938,6 +938,11 @@
         btn.MouseButton1Click:Connect(function()
             for _, page in pairs(self.Pages) do
                 page.Visible = false
+            end
+
+            if self.AnimSubScrollFrame and self.AnimScrollFrame then
+                self.AnimSubScrollFrame.Visible = false
+                self.AnimScrollFrame.Visible = true
             end
 
             local target = self.Pages[name]
