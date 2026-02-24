@@ -591,10 +591,10 @@
 
     -- GUI Load Detection
 
-        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-        --     Revo:Notify("Revo", "GUI Already Loaded", 5)
-        --     return
-        -- end
+        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+            Revo:Notify("Revo", "GUI Already Loaded", 5)
+            return
+        end
         
     -- GUI Creation
 
