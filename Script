@@ -49,11 +49,11 @@
     -- Ping Display
     -- Spin
     -- FOV
+    -- Custom Notifaction UI
 
 -- Need To Add
 
-    -- Saving (WIP)
-    -- Custom Notifaction UI (WIP)
+    -- Saving (Basically Done)
     -- Custom Name Tags (WIP)
     -- Better Walk On Air
 
@@ -386,17 +386,170 @@
 
 -- GUI
 
+    -- Send Notifications
+
+        Revo.Notifications = {}
+        Revo.MaxNotifications = 3
+
+        function Revo:RestackNotifications()
+            for i, notif in ipairs(Revo.Notifications) do
+                if notif and notif.Parent then
+                    local targetPos = UDim2.new(1, -320, 0, 20 + ((i - 1) * 90))
+                    notif:TweenPosition(
+                        targetPos,
+                        Enum.EasingDirection.Out,
+                        Enum.EasingStyle.Quart,
+                        0.25,
+                        true
+                    )
+                end
+            end
+        end
+
+        function Revo:Notify(title, text, duration)
+            duration = duration or 5
+            local playerGui = Revo.Player:WaitForChild("PlayerGui")
+
+            if not Revo.NotificationGui then
+                local gui = Instance.new("ScreenGui")
+                gui.Name = "RevoNotifications"
+                gui.ResetOnSpawn = false
+                gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+                gui.Parent = playerGui
+                Revo.NotificationGui = gui
+            end
+
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(0, 300, 0, 80)
+            frame.Position = UDim2.new(1, 320, 0, 20)
+            frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            frame.BorderSizePixel = 0
+            frame.Parent = Revo.NotificationGui
+
+            local corner = Instance.new("UICorner", frame)
+            corner.CornerRadius = UDim.new(0, 10)
+            local stroke = Instance.new("UIStroke", frame)
+            stroke.Color = Color3.fromRGB(60, 60, 60)
+            stroke.Thickness = 1.5
+
+            local titleLabel = Instance.new("TextLabel")
+            titleLabel.Size = UDim2.new(1, -20, 0, 25)
+            titleLabel.Position = UDim2.new(0, 10, 0, 8)
+            titleLabel.BackgroundTransparency = 1
+            titleLabel.Text = title
+            titleLabel.Font = Enum.Font.GothamBold
+            titleLabel.TextSize = 14
+            titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            titleLabel.Parent = frame
+
+            local textLabel = Instance.new("TextLabel")
+            textLabel.Size = UDim2.new(1, -20, 0, 40)
+            textLabel.Position = UDim2.new(0, 10, 0, 30)
+            textLabel.BackgroundTransparency = 1
+            textLabel.TextWrapped = true
+            textLabel.Text = text
+            textLabel.Font = Enum.Font.Gotham
+            textLabel.TextSize = 13
+            textLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            textLabel.TextXAlignment = Enum.TextXAlignment.Left
+            textLabel.TextYAlignment = Enum.TextYAlignment.Top
+            textLabel.Parent = frame
+
+            local function removeNotification(notif)
+                local removeIndex
+                for i, n in ipairs(Revo.Notifications) do
+                    if n == notif then
+                        removeIndex = i
+                        break
+                    end
+                end
+                if not removeIndex then return end
+
+                table.remove(Revo.Notifications, removeIndex)
+
+                local finished = false
+
+                notif:TweenPosition(
+                    UDim2.new(1, 320, 0, notif.Position.Y.Offset),
+                    Enum.EasingDirection.In,
+                    Enum.EasingStyle.Quart,
+                    0.25,
+                    true,
+                    function()
+                        finished = true
+                    end
+                )
+
+                repeat task.wait() until finished
+
+                if notif then
+                    notif:Destroy()
+                end
+
+                Revo:RestackNotifications()
+            end
+
+            frame.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    removeNotification(frame)
+                end
+            end)
+
+            while #Revo.Notifications >= Revo.MaxNotifications do
+                local oldest = table.remove(Revo.Notifications, 1)
+
+                if oldest and oldest.Parent then
+                    local finished = false
+
+                    oldest:TweenPosition(
+                        UDim2.new(1, 320, 0, oldest.Position.Y.Offset),
+                        Enum.EasingDirection.In,
+                        Enum.EasingStyle.Quart,
+                        0.25,
+                        true,
+                        function()
+                            finished = true
+                        end
+                    )
+
+                    repeat task.wait() until finished
+
+                    if oldest then
+                        oldest:Destroy()
+                    end
+                end
+
+                Revo:RestackNotifications()
+            end
+
+            table.insert(Revo.Notifications, frame)
+
+            local newIndex = #Revo.Notifications
+            local finalY = 20 + ((newIndex - 1) * 90)
+
+            frame.Position = UDim2.new(1, 320, 0, finalY)
+
+            frame:TweenPosition(
+                UDim2.new(1, -320, 0, finalY),
+                Enum.EasingDirection.Out,
+                Enum.EasingStyle.Quart,
+                0.25,
+                true
+            )
+
+            task.delay(duration, function()
+                removeNotification(frame)
+            end)
+        end
+
     -- GUI Load Detection
 
         if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = "Revo",
-                Text = "GUI Already Loaded",
-                Duration = 5
-            })
+            Revo:Notify("Revo", "GUI Already Loaded", 5)
             return
         end
-
+        
     -- GUI Creation
 
         -- Screen GUI
@@ -559,16 +712,6 @@
             self.Pages[name] = page
 
             return page
-        end
-
-    -- Send Notifications
-
-        function Revo:Notify(title, text, duration)
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = title,
-                Text = text,
-                Duration = duration or 5
-            })
         end
 
     -- Get Root
@@ -828,7 +971,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Fixed Face Bang And Jerk Not Working Together"
+    Revo.AnnouncementsText.Text = "Added Custom Notifications, Fixed Day, Night, And Shaders Toggles"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -849,7 +992,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 3.3"
+    Revo.VersionLabel.Text = "Version: 3.4"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -4492,8 +4635,13 @@ end
         Revo.GUI:AddCorner(Revo.Buttons.Shaders)
 
         Revo.Buttons.Shaders.MouseButton1Click:Connect(function()
-            Revo.Shaders.Enabled = not Revo.Shaders.Enabled
+            if Revo.DayEnabled or Revo.NightEnabled then
+                local activeTime = Revo.DayEnabled and "Day" or "Night"
+                Revo:Notify("Revo", "Please Turn Off " .. activeTime .. "", 5)
+                return
+            end
 
+            Revo.Shaders.Enabled = not Revo.Shaders.Enabled
             local Lighting = game:GetService("Lighting")
 
             if Revo.Shaders.Enabled then
@@ -4544,12 +4692,10 @@ end
 
                 Lighting.Brightness = 2
                 Lighting.ExposureCompensation = 0
-
-                game.Lighting.ClockTime = Revo.defaultTime
+                Lighting.ClockTime = Revo.defaultTime
             end
 
             Revo.Buttons.Shaders.Text = "Shaders: " .. (Revo.Shaders.Enabled and "On" or "Off")
-
             Revo.Save.Data.ShadersEnabled = Revo.Shaders.Enabled
             Revo.Save:Write()
         end)
@@ -4574,25 +4720,26 @@ end
         Revo.GUI:AddCorner(Revo.Buttons.Day)
 
         Revo.Buttons.Day.MouseButton1Click:Connect(function()
-            if not shadersOn then
-                if Revo.DayEnabled then
-                    game.Lighting.ClockTime = Revo.defaultTime
-                    Revo.DayEnabled = false
-                else
-                    game.Lighting.ClockTime = 14.5
-                    Revo.DayEnabled = true
-                end
-
-                Revo.Buttons.Day.Text = "Day: " .. (Revo.DayEnabled and "On" or "Off")
-
-                Revo.Save.Data.DayEnabled = Revo.DayEnabled
-                Revo.Save:Write()
-            else
-                Revo:Notify("Revo", "Please Turn Off Shaders", 5)
+            if Revo.Shaders.Enabled or Revo.NightEnabled then
+                local activeTime = Revo.Shaders.Enabled and "Shaders" or "Night"
+                Revo:Notify("Revo", "Please Turn Off " .. activeTime .. "", 5)
+                return
             end
+
+            if Revo.DayEnabled then
+                game.Lighting.ClockTime = Revo.defaultTime
+                Revo.DayEnabled = false
+            else
+                game.Lighting.ClockTime = 14.5
+                Revo.DayEnabled = true
+            end
+
+            Revo.Buttons.Day.Text = "Day: " .. (Revo.DayEnabled and "On" or "Off")
+            Revo.Save.Data.DayEnabled = Revo.DayEnabled
+            Revo.Save:Write()
         end)
 
-        if Revo.DayEnabled and not shadersOn then
+        if Revo.DayEnabled and not Revo.Shaders.Enabled and not Revo.NightEnabled then
             game.Lighting.ClockTime = 14.5
         end
 
@@ -4612,22 +4759,23 @@ end
         Revo.GUI:AddCorner(Revo.Buttons.Night)
 
         Revo.Buttons.Night.MouseButton1Click:Connect(function()
-            if not Revo.Shaders.Enabled then
-                if Revo.NightEnabled then
-                    game.Lighting.ClockTime = Revo.defaultTime
-                    Revo.NightEnabled = false
-                else
-                    game.Lighting.ClockTime = 19
-                    Revo.NightEnabled = true
-                end
-
-                Revo.Buttons.Night.Text = "Night: " .. (Revo.NightEnabled and "On" or "Off")
-
-                Revo.Save.Data.NightEnabled = Revo.NightEnabled
-                Revo.Save:Write()
-            else
-                Revo:Notify("Revo", "Please Turn Off Shaders.", 5)
+            if Revo.Shaders.Enabled or Revo.DayEnabled then
+                local activeTime = Revo.Shaders.Enabled and "Shaders" or "Day"
+                Revo:Notify("Revo", "Please Turn Off " .. activeTime .. "", 5)
+                return
             end
+
+            if Revo.NightEnabled then
+                game.Lighting.ClockTime = Revo.defaultTime
+                Revo.NightEnabled = false
+            else
+                game.Lighting.ClockTime = 19
+                Revo.NightEnabled = true
+            end
+
+            Revo.Buttons.Night.Text = "Night: " .. (Revo.NightEnabled and "On" or "Off")
+            Revo.Save.Data.NightEnabled = Revo.NightEnabled
+            Revo.Save:Write()
         end)
 
         if Revo.NightEnabled and not Revo.Shaders.Enabled then
