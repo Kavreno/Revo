@@ -56,28 +56,29 @@
     -- Custom Notifaction UI (WIP)
     -- Custom Name Tags (WIP)
     -- Better Walk On Air
+    -- Fexed Face Bang With Jerk
 
-    -- Not Sure If Adding
+-- Not Sure If Adding
 
-        -- Merge Emote Scripts Or Make Own
-        -- Mute And Unmute Player
-        -- Hide And Unhide Player
-        -- Add And Unadd Player
-        -- Block And Unblock Player
-        -- Move While Emoting
-        -- No Clip
-        -- Aim Bot
-        -- Custom Animations
-        -- Animation Cloning
-        -- Animation Speeds
-        -- Custom Sky Box
-        -- ESP
-        -- Free Cam
-        -- Orbit Target
-        -- See Others Cameras
-        -- Anti All (Headsit, Backpack, ETC)
-        -- Chat Bypass
-        -- Voice Chat Bypass
+    -- Merge Emote Scripts Or Make Own
+    -- Mute And Unmute Player
+    -- Hide And Unhide Player
+    -- Add And Unadd Player
+    -- Block And Unblock Player
+    -- Move While Emoting
+    -- No Clip
+    -- Aim Bot
+    -- Custom Animations
+    -- Animation Cloning
+    -- Animation Speeds
+    -- Custom Sky Box
+    -- ESP
+    -- Free Cam
+    -- Orbit Target
+    -- See Others Cameras
+    -- Anti All (Headsit, Backpack, ETC)
+    -- Chat Bypass
+    -- Voice Chat Bypass
 
 -- Loading Start
 
@@ -388,14 +389,14 @@
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo.Services.StarterGui:SetCore("SendNotification", {
-                Title = "Revo",
-                Text = "GUI Already Loaded",
-                Duration = 5
-            })
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo.Services.StarterGui:SetCore("SendNotification", {
+        --         Title = "Revo",
+        --         Text = "GUI Already Loaded",
+        --         Duration = 5
+        --     })
+        --     return
+        -- end
 
     -- GUI Creation
 
@@ -828,7 +829,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Saving To Everything Expect Other Scripts So Emote Scripts And Infinite Yield Dont Have Saving"
+    Revo.AnnouncementsText.Text = "Fixed Face Bang And Jerk Not Working Together"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -849,7 +850,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 3.2"
+    Revo.VersionLabel.Text = "Version: 3.3"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -3702,6 +3703,14 @@ end
 
                 humanoid.AutoRotate = false
                 humanoid.PlatformStand = true
+
+                if char:FindFirstChild("Animate") then
+                    char.Animate.Disabled = true
+                end
+
+                for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                    track:Stop()
+                end
 
                 task.spawn(function()
                     local t = 0
