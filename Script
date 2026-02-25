@@ -74,6 +74,7 @@
         -- NFL
         -- Boundaries
         -- Realistic
+        -- Animation Sub Sections
 
     -- Misc Section
 
@@ -94,19 +95,17 @@
         -- Respawn
         -- No Ragdoll
         -- Anti Game Paused
-        -- Animation Sub Sections
+        -- Universal Expand Base Plate
 
 -- Need To Add
 
     -- Saving (Basically Done)
     -- Custom Name Tags (WIP)
-    -- Move While Emoting (WIP)
-    -- Merge Emote Scripts Or Make Own (WIP)
-    -- Make Headsit Work Like Backpack
 
 -- Not Sure If Adding
 
-    -- Universal Expand Base Plate
+    -- Move While Emoting (WIP)
+    -- Merge Emote Scripts Or Make Own (WIP)
     -- Mute And Unmute Player
     -- Hide And Unhide Player
     -- Add And Unadd Player
@@ -452,8 +451,10 @@
             end
         end
 
-        function Revo:Notify(title, text, duration)
+        function Revo:Notify(title, text, duration, options)
             duration = duration or 5
+            options = options or {}
+
             local playerGui = Revo.Player:WaitForChild("PlayerGui")
 
             if not Revo.NotificationGui then
@@ -465,22 +466,54 @@
                 Revo.NotificationGui = gui
             end
 
+            local isInteractive = options.Buttons ~= nil
+
+            if #Revo.Notifications >= Revo.MaxNotifications then
+                for i, notif in ipairs(Revo.Notifications) do
+                    if not notif:GetAttribute("IsInteractive") then
+
+                        local currentY = notif.Position.Y.Offset
+                        local finished = false
+
+                        notif:TweenPosition(
+                            UDim2.new(1, 320, 0, currentY),
+                            Enum.EasingDirection.In,
+                            Enum.EasingStyle.Quart,
+                            0.25,
+                            true,
+                            function()
+                                finished = true
+                            end
+                        )
+
+                        repeat task.wait() until finished
+
+                        table.remove(Revo.Notifications, i)
+                        notif:Destroy()
+
+                        Revo:RestackNotifications()
+
+                        break
+                    end
+                end
+            end
+
             local frame = Instance.new("Frame")
             frame.Size = UDim2.new(0, 300, 0, 80)
-            frame.Position = UDim2.new(1, 320, 0, 20)
             frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
             frame.BorderSizePixel = 0
             frame.Parent = Revo.NotificationGui
+            frame:SetAttribute("IsInteractive", isInteractive)
 
-            local corner = Instance.new("UICorner", frame)
-            corner.CornerRadius = UDim.new(0, 10)
+            Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
             local stroke = Instance.new("UIStroke", frame)
             stroke.Color = Color3.fromRGB(60, 60, 60)
             stroke.Thickness = 1.5
 
             local titleLabel = Instance.new("TextLabel")
-            titleLabel.Size = UDim2.new(1, -20, 0, 25)
-            titleLabel.Position = UDim2.new(0, 10, 0, 8)
+            titleLabel.Size = UDim2.new(1, -20, 0, 20)
+            titleLabel.Position = UDim2.new(0, 10, 0, 6)
             titleLabel.BackgroundTransparency = 1
             titleLabel.Text = title
             titleLabel.Font = Enum.Font.GothamBold
@@ -490,8 +523,8 @@
             titleLabel.Parent = frame
 
             local textLabel = Instance.new("TextLabel")
-            textLabel.Size = UDim2.new(1, -20, 0, 40)
-            textLabel.Position = UDim2.new(0, 10, 0, 30)
+            textLabel.Size = UDim2.new(1, -20, 0, 30)
+            textLabel.Position = UDim2.new(0, 10, 0, 26)
             textLabel.BackgroundTransparency = 1
             textLabel.TextWrapped = true
             textLabel.Text = text
@@ -503,16 +536,19 @@
             textLabel.Parent = frame
 
             local function removeNotification(notif)
-                local removeIndex
+                local index
+
                 for i, n in ipairs(Revo.Notifications) do
                     if n == notif then
-                        removeIndex = i
+                        index = i
                         break
                     end
                 end
-                if not removeIndex then return end
 
-                table.remove(Revo.Notifications, removeIndex)
+                if not index then return end
+
+                if notif:GetAttribute("Removing") then return end
+                notif:SetAttribute("Removing", true)
 
                 local finished = false
 
@@ -529,52 +565,56 @@
 
                 repeat task.wait() until finished
 
-                if notif then
-                    notif:Destroy()
-                end
+                table.remove(Revo.Notifications, index)
+
+                notif:Destroy()
 
                 Revo:RestackNotifications()
             end
 
-            frame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    removeNotification(frame)
-                end
-            end)
+            if isInteractive then
+                local buttonContainer = Instance.new("Frame")
+                buttonContainer.Size = UDim2.new(1, -20, 0, 20)
+                buttonContainer.Position = UDim2.new(0, 10, 1, -24)
+                buttonContainer.BackgroundTransparency = 1
+                buttonContainer.Parent = frame
 
-            while #Revo.Notifications >= Revo.MaxNotifications do
-                local oldest = table.remove(Revo.Notifications, 1)
+                local layout = Instance.new("UIListLayout", buttonContainer)
+                layout.FillDirection = Enum.FillDirection.Horizontal
+                layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+                layout.Padding = UDim.new(0, 10)
 
-                if oldest and oldest.Parent then
-                    local finished = false
+                for _, buttonData in ipairs(options.Buttons) do
+                    local button = Instance.new("TextButton")
+                    button.Size = UDim2.new(0, 80, 1, 0)
+                    button.Text = buttonData.Text
+                    button.Font = Enum.Font.GothamBold
+                    button.TextSize = 12
+                    button.TextColor3 = Color3.new(1,1,1)
+                    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                    button.Parent = buttonContainer
 
-                    oldest:TweenPosition(
-                        UDim2.new(1, 320, 0, oldest.Position.Y.Offset),
-                        Enum.EasingDirection.In,
-                        Enum.EasingStyle.Quart,
-                        0.25,
-                        true,
-                        function()
-                            finished = true
+                    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 10)
+
+                    button.MouseButton1Click:Connect(function()
+                        if buttonData.Callback then
+                            buttonData.Callback()
                         end
-                    )
-
-                    repeat task.wait() until finished
-
-                    if oldest then
-                        oldest:Destroy()
-                    end
+                        removeNotification(frame)
+                    end)
                 end
-
-                Revo:RestackNotifications()
+            else
+                task.delay(duration, function()
+                    removeNotification(frame)
+                end)
             end
 
-            table.insert(Revo.Notifications, frame)
-
-            local newIndex = #Revo.Notifications
+            local newIndex = #Revo.Notifications + 1
             local finalY = 20 + ((newIndex - 1) * 90)
 
             frame.Position = UDim2.new(1, 320, 0, finalY)
+
+            table.insert(Revo.Notifications, frame)
 
             frame:TweenPosition(
                 UDim2.new(1, -320, 0, finalY),
@@ -583,10 +623,6 @@
                 0.25,
                 true
             )
-
-            task.delay(duration, function()
-                removeNotification(frame)
-            end)
         end
 
     -- GUI Load Detection
@@ -1022,7 +1058,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Animations Sub Sections"
+    Revo.AnnouncementsText.Text = "Fixed Headsit And Backpack Unsitting If Both Buttons Were On And Made Base Plate Universal"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -1043,7 +1079,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 3.5"
+    Revo.VersionLabel.Text = "Version: 3.6"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
@@ -1775,6 +1811,11 @@
 
                     self.Enabled = false
                     self.Recording = true
+
+                    hrp.Velocity = Vector3.new(0, 0, 0)
+                    hrp.RotVelocity = Vector3.new(0, 0, 0)
+                    humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+                    humanoid:Move(Vector3.new(0, 0, 0))
 
                     humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
                     Revo:ToggleRagdoll(false)
@@ -3180,6 +3221,62 @@
             giveTargetTool()
         end
 
+    -- Stop Other Buttons
+
+        function Revo:StopHeadsit()
+            if not Revo.Target.Headsitting then return end
+            Revo.Target.Headsitting = false
+
+            if not Revo.Player.Character then return end
+
+            local humanoid = Revo.Player.Character:FindFirstChildOfClass("Humanoid")
+            local root = Revo:GetRoot(Revo.Player)
+            if not humanoid or not root then return end
+
+            if root:FindFirstChild("BreakVelocity") then
+                root.BreakVelocity:Destroy()
+            end
+
+            humanoid.Sit = false
+            humanoid.AutoRotate = true
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+
+            task.wait()
+            humanoid:ChangeState(Enum.HumanoidStateType.Running)
+
+            if Revo._NoSitBeforeActions then
+                Revo.NoSit.Enabled = true
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+            end
+        end
+
+        function Revo:StopBackpack()
+            if not Revo.Target.Backpacking then return end
+            Revo.Target.Backpacking = false
+
+            if not Revo.Player.Character then return end
+
+            local humanoid = Revo.Player.Character:FindFirstChildOfClass("Humanoid")
+            local root = Revo:GetRoot(Revo.Player)
+            if not humanoid or not root then return end
+
+            if root:FindFirstChild("BreakVelocity") then
+                root.BreakVelocity:Destroy()
+            end
+
+            humanoid.Sit = false
+            humanoid.AutoRotate = true
+            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+
+            task.wait()
+            humanoid:ChangeState(Enum.HumanoidStateType.Running)
+
+            if Revo._NoSitBeforeSitActions then
+                Revo.NoSit.Enabled = true
+                humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+            end
+        end
+
     -- View Target
 
         Revo.GUI.TargetButtons.View.MouseButton1Click:Connect(function()
@@ -3240,6 +3337,10 @@
 
         Revo.GUI.TargetButtons.Headsit.MouseButton1Click:Connect(function()
             if not Revo.Target.Player then return end
+
+            if Revo.Target.Backpacking then
+                Revo:StopBackpack()
+            end
 
             Revo.Target.Headsitting = not Revo.Target.Headsitting
 
@@ -3303,6 +3404,10 @@
 
         Revo.GUI.TargetButtons.Backpack.MouseButton1Click:Connect(function()
             if not Revo.Target.Player then return end
+
+            if Revo.Target.Headsitting then
+                Revo:StopHeadsit()
+            end
 
             Revo.Target.Backpacking = not Revo.Target.Backpacking
 
@@ -5766,10 +5871,8 @@
 
         Revo.BasePlate = {}
 
-        Revo.BasePlate.ValidPlaceIds = {
-            6884319169,
-            292628125,
-        }
+        Revo.BasePlate.Enabled = false
+        Revo.BasePlate.Connection = nil
 
         Revo.BasePlate.TILE_SIZE = 256 
         Revo.BasePlate.CHUNK_SIZE = 8
@@ -5860,11 +5963,42 @@
             self:UnloadFarChunks(cx, cz)
         end
 
-        if table.find(Revo.BasePlate.ValidPlaceIds, game.PlaceId) then
-            game:GetService("RunService").Heartbeat:Connect(function()
-                Revo.BasePlate:Update()
-            end)
-        end
+        Revo:Notify(
+            "Revo",
+            "Expand Baseplate?",
+            nil,
+            {
+                Buttons = {
+                    {
+                        Text = "Yes",
+                        Callback = function()
+                            if Revo.BasePlate.Enabled then return end
+
+                            Revo.BasePlate.Enabled = true
+
+                            Revo.BasePlate.Connection =
+                                game:GetService("RunService").Heartbeat:Connect(function()
+                                    if Revo.BasePlate.Enabled then
+                                        Revo.BasePlate:Update()
+                                    end
+                                end)
+                        end
+                    },
+                    {
+                        Text = "No",
+                        Callback = function()
+                            Revo.BasePlate.Enabled = false
+
+                            if Revo.BasePlate.Connection then
+                                Revo.BasePlate.Connection:Disconnect()
+                                Revo.BasePlate.Connection = nil
+                            end
+
+                        end
+                    }
+                }
+            }
+        )
 
 -- Loading Finish
 
