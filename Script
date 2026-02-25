@@ -101,6 +101,7 @@
 
     -- Saving (Basically Done)
     -- Custom Name Tags (WIP)
+    -- Sit Loop For Headsitting
 
 -- Not Sure If Adding
 
@@ -3382,19 +3383,33 @@
             task.spawn(function()
                 while Revo.Target.Headsitting do
                     pcall(function()
+
+                        if not Revo.Player.Character then return end
+
+                        humanoid = Revo.Player.Character:FindFirstChildOfClass("Humanoid")
+                        root = Revo:GetRoot(Revo.Player)
+
+                        if not humanoid or not root then return end
+
                         if not root:FindFirstChild("BreakVelocity") then
-                            local tempV = Revo.VelocityAsset:Clone()
-                            tempV.Parent = root
+                            Revo.VelocityAsset:Clone().Parent = root
                         end
 
-                        local targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
+                        targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
+
                         if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
-                            local targetHead = targetPlayer.Character.Head
-                            humanoid.Sit = true
-                            root.CFrame = targetHead.CFrame * CFrame.new(0, 2, 0)
-                            root.Velocity = Vector3.new(0, 0, 0)
+
+                            if not humanoid.Sit then
+                                humanoid.Sit = true
+                                humanoid:ChangeState(Enum.HumanoidStateType.Seated)
+                            end
+
+                            root.CFrame = targetPlayer.Character.Head.CFrame * CFrame.new(0,2,0)
+                            root.Velocity = Vector3.zero
+
                         end
                     end)
+
                     task.wait()
                 end
             end)
@@ -3452,24 +3467,34 @@
             task.spawn(function()
                 while Revo.Target.Backpacking do
                     pcall(function()
-                        local root = Revo:GetRoot(Revo.Player)
-                        if not root then return end
+
+                        if not Revo.Player.Character then return end
+
+                        humanoid = Revo.Player.Character:FindFirstChildOfClass("Humanoid")
+                        root = Revo:GetRoot(Revo.Player)
+
+                        if not humanoid or not root then return end
 
                         if not root:FindFirstChild("BreakVelocity") then
-                            local tempV = Revo.VelocityAsset:Clone()
-                            tempV.Parent = root
+                            Revo.VelocityAsset:Clone().Parent = root
                         end
 
-                        local targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
+                        targetPlayer = Revo.Services.Players:FindFirstChild(Revo.Target.Player)
+
                         if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                            local targetRoot = targetPlayer.Character.HumanoidRootPart
+
+                            if not humanoid.Sit then
+                                humanoid.Sit = true
+                                humanoid:ChangeState(Enum.HumanoidStateType.Seated)
+                            end
 
                             root.CFrame =
-                                targetRoot.CFrame
-                                * CFrame.new(0, 0, 1.2)
-                                * CFrame.Angles(0, -3, 0)
+                                targetPlayer.Character.HumanoidRootPart.CFrame
+                                * CFrame.new(0,0,1.2)
+                                * CFrame.Angles(0,-3,0)
 
                             root.Velocity = Vector3.zero
+
                         end
                     end)
 
