@@ -101,7 +101,6 @@
 
     -- Saving (Basically Done)
     -- Custom Name Tags (WIP)
-    -- Sit Loop For Headsitting
 
 -- Not Sure If Adding
 
@@ -1059,7 +1058,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Fixed Headsit And Backpack Unsitting If Both Buttons Were On And Made Base Plate Universal"
+    Revo.AnnouncementsText.Text = "Fixed Invisibility"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -2530,9 +2529,13 @@
         -- Invisibility Fucntion
 
             Revo.Invisibility.RealCharacter = Revo.Player.Character or Revo.Player.CharacterAdded:Wait()
-            Revo.Invisibility.RealCharacter.Archivable = true
+            Revo.Invisibility.RealCharacter:WaitForChild("Humanoid")
+            Revo.Invisibility.RealCharacter:WaitForChild("HumanoidRootPart")
 
+            Revo.Invisibility.RealCharacter.Archivable = true
             Revo.Invisibility.FakeCharacter = Revo.Invisibility.RealCharacter:Clone()
+
+            Revo.Invisibility.FakeCharacter:WaitForChild("HumanoidRootPart")
 
             Revo.Invisibility.Part = Instance.new("Part", workspace)
             Revo.Invisibility.Part.Anchored = true
@@ -2563,7 +2566,9 @@
                 Revo.Invisibility.CanInvis = false
 
                 Revo.Invisibility.RealCharacter:Destroy()
-                Revo.Invisibility.RealCharacter = Revo.Player.Character
+                Revo.Invisibility.RealCharacter = Revo.Player.Character or Revo.Player.CharacterAdded:Wait()
+                Revo.Invisibility.RealCharacter:WaitForChild("Humanoid")
+                Revo.Invisibility.RealCharacter:WaitForChild("HumanoidRootPart")
                 Revo.Invisibility.CanInvis = true
                 Revo.Invisibility.IsInvisible = false
 
@@ -2620,16 +2625,36 @@
             end)
 
             function Revo:ToggleInvisibility()
+
+                if not Revo.Invisibility.RealCharacter
+                or not Revo.Invisibility.RealCharacter.Parent
+                or not Revo.Invisibility.FakeCharacter
+                or not Revo.Invisibility.FakeCharacter.Parent then
+                    return
+                end
+
+                local RealHRP = Revo.Invisibility.RealCharacter:FindFirstChild("HumanoidRootPart")
+                local FakeHRP = Revo.Invisibility.FakeCharacter:FindFirstChild("HumanoidRootPart")
+                local RealHumanoid = Revo.Invisibility.RealCharacter:FindFirstChildOfClass("Humanoid")
+                local FakeHumanoid = Revo.Invisibility.FakeCharacter:FindFirstChildOfClass("Humanoid")
+
+                if not RealHRP or not FakeHRP or not RealHumanoid or not FakeHumanoid then
+                    return
+                end
+
+
                 if Revo.Invisibility.IsInvisible == false then
-                    local StoredCF = Revo.Invisibility.RealCharacter.HumanoidRootPart.CFrame
-                    Revo.Invisibility.RealCharacter.HumanoidRootPart.CFrame = Revo.Invisibility.FakeCharacter.HumanoidRootPart.CFrame
-                    Revo.Invisibility.FakeCharacter.HumanoidRootPart.CFrame = StoredCF
 
-                    Revo.Invisibility.RealCharacter.Humanoid:UnequipTools()
+                    local StoredCF = RealHRP.CFrame
+                    RealHRP.CFrame = FakeHRP.CFrame
+                    FakeHRP.CFrame = StoredCF
+
+                    RealHumanoid:UnequipTools()
+
                     Revo.Player.Character = Revo.Invisibility.FakeCharacter
-                    workspace.CurrentCamera.CameraSubject = Revo.Invisibility.FakeCharacter.Humanoid
+                    workspace.CurrentCamera.CameraSubject = FakeHumanoid
 
-                    Revo.Invisibility.PseudoAnchor = Revo.Invisibility.RealCharacter.HumanoidRootPart
+                    Revo.Invisibility.PseudoAnchor = RealHRP
 
                     for _, v in ipairs(Revo.Invisibility.FakeCharacter:GetChildren()) do
                         if v:IsA("LocalScript") then
@@ -2639,16 +2664,19 @@
 
                     Revo.Invisibility.IsInvisible = true
                     Revo.Invisibility.Enabled = true
+
                 else
-                    local StoredCF = Revo.Invisibility.FakeCharacter.HumanoidRootPart.CFrame
-                    Revo.Invisibility.FakeCharacter.HumanoidRootPart.CFrame = Revo.Invisibility.RealCharacter.HumanoidRootPart.CFrame
-                    Revo.Invisibility.RealCharacter.HumanoidRootPart.CFrame = StoredCF
 
-                    Revo.Invisibility.FakeCharacter.Humanoid:UnequipTools()
+                    local StoredCF = FakeHRP.CFrame
+                    FakeHRP.CFrame = RealHRP.CFrame
+                    RealHRP.CFrame = StoredCF
+
+                    FakeHumanoid:UnequipTools()
+
                     Revo.Player.Character = Revo.Invisibility.RealCharacter
-                    workspace.CurrentCamera.CameraSubject = Revo.Invisibility.RealCharacter.Humanoid
+                    workspace.CurrentCamera.CameraSubject = RealHumanoid
 
-                    Revo.Invisibility.PseudoAnchor = Revo.Invisibility.FakeCharacter.HumanoidRootPart
+                    Revo.Invisibility.PseudoAnchor = FakeHRP
 
                     for _, v in ipairs(Revo.Invisibility.FakeCharacter:GetChildren()) do
                         if v:IsA("LocalScript") then
@@ -2658,6 +2686,7 @@
 
                     Revo.Invisibility.IsInvisible = false
                     Revo.Invisibility.Enabled = false
+
                 end
             end
 
