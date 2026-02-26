@@ -572,6 +572,19 @@
                 Revo:RestackNotifications()
             end
 
+            frame.Active = true
+
+            frame.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    
+                    if frame:GetAttribute("IsInteractive") then
+                        return
+                    end
+                    
+                    removeNotification(frame)
+                end
+            end)
+
             if isInteractive then
                 local buttonContainer = Instance.new("Frame")
                 buttonContainer.Size = UDim2.new(1, -20, 0, 20)
@@ -627,10 +640,10 @@
 
     -- GUI Load Detection
 
-        if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo:Notify("Revo", "GUI Already Loaded", 5)
-            return
-        end
+        -- if Revo.PlayerGui:FindFirstChild("RevoGUI") then
+        --     Revo:Notify("Revo", "GUI Already Loaded", 5)
+        --     return
+        -- end
         
     -- GUI Creation
 
@@ -1058,7 +1071,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Fixed Invisibility"
+    Revo.AnnouncementsText.Text = "Fixed Notifications Click To Remove"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
@@ -1079,7 +1092,7 @@
     Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
     Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
     Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 3.6"
+    Revo.VersionLabel.Text = "Version: 3.7"
     Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     Revo.VersionLabel.Font = Enum.Font.Gotham
     Revo.VersionLabel.TextSize = 14
