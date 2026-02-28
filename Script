@@ -49,6 +49,7 @@
             VirtualUser = game:GetService("VirtualUser"),
             GuiService = game:GetService("GuiService"),
             Stats = game:GetService("Stats"),
+            LocalizationService = game:GetService("LocalizationService"),
         }
 
         Revo.HttpRequest =
@@ -125,6 +126,12 @@
             CapturingKey = false,
             CaptureConnection = nil,
             GlobalConnection = nil,
+        }
+
+    -- Server
+
+        Revo.Server = {
+            Region = "Unknown"
         }
 
     -- Target
@@ -637,8 +644,8 @@
 
             Revo.GUI.FPSLabel = Instance.new("TextLabel")
             Revo.GUI.FPSLabel.Name = "FPSLabel"
-            Revo.GUI.FPSLabel.Size = UDim2.new(0, 55, 1, 0)
-            Revo.GUI.FPSLabel.Position = UDim2.new(0, 10, 0, 0)
+            Revo.GUI.FPSLabel.Size = UDim2.new(0, 45, 1, 0)
+            Revo.GUI.FPSLabel.Position = UDim2.new(0, 5, 0, 0)
             Revo.GUI.FPSLabel.BackgroundTransparency = 1
             Revo.GUI.FPSLabel.Text = "FPS: 0"
             Revo.GUI.FPSLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -648,16 +655,16 @@
             Revo.GUI.FPSLabel.Parent = Revo.GUI.TitleBar
 
             Revo.GUI.FPSPingSeparator = Instance.new("Frame")
-            Revo.GUI.FPSPingSeparator.Size = UDim2.new(0, 1, 0, 16)
-            Revo.GUI.FPSPingSeparator.Position = UDim2.new(0, 70, 0.5, -8)
+            Revo.GUI.FPSPingSeparator.Size = UDim2.new(0, 1, 0, 18)
+            Revo.GUI.FPSPingSeparator.Position = UDim2.new(0, 60, 0.5, -9)
             Revo.GUI.FPSPingSeparator.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
             Revo.GUI.FPSPingSeparator.BorderSizePixel = 0
             Revo.GUI.FPSPingSeparator.Parent = Revo.GUI.TitleBar
 
             Revo.GUI.PingLabel = Instance.new("TextLabel")
             Revo.GUI.PingLabel.Name = "PingLabel"
-            Revo.GUI.PingLabel.Size = UDim2.new(0, 55, 1, 0)
-            Revo.GUI.PingLabel.Position = UDim2.new(0, 80, 0, 0)
+            Revo.GUI.PingLabel.Size = UDim2.new(0, 45, 1, 0)
+            Revo.GUI.PingLabel.Position = UDim2.new(0, 65, 0, 0)
             Revo.GUI.PingLabel.BackgroundTransparency = 1
             Revo.GUI.PingLabel.Text = "0 ms"
             Revo.GUI.PingLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -665,6 +672,26 @@
             Revo.GUI.PingLabel.TextSize = 14
             Revo.GUI.PingLabel.TextXAlignment = Enum.TextXAlignment.Left
             Revo.GUI.PingLabel.Parent = Revo.GUI.TitleBar
+
+            Revo.GUI.PingRegionSeparator = Instance.new("Frame")
+            Revo.GUI.PingRegionSeparator.Size = UDim2.new(0, 1, 0, 18)
+            Revo.GUI.PingRegionSeparator.Position = UDim2.new(0, 110, 0.5, -9)
+            Revo.GUI.PingRegionSeparator.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+            Revo.GUI.PingRegionSeparator.BorderSizePixel = 0
+            Revo.GUI.PingRegionSeparator.Parent = Revo.GUI.TitleBar
+
+            Revo.GUI.RegionLabel = Instance.new("TextLabel")
+            Revo.GUI.RegionLabel.Name = "RegionLabel"
+            Revo.GUI.RegionLabel.Size = UDim2.new(0, 65, 1, 0)
+            Revo.GUI.RegionLabel.Position = UDim2.new(0, 115, 0, 0)
+            Revo.GUI.RegionLabel.BackgroundTransparency = 1
+            Revo.GUI.RegionLabel.Text = "Region: ?"
+            Revo.GUI.RegionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Revo.GUI.RegionLabel.Font = Enum.Font.Gotham
+            Revo.GUI.RegionLabel.TextSize = 14
+            Revo.GUI.RegionLabel.TextXAlignment = Enum.TextXAlignment.Left
+            Revo.GUI.RegionLabel.Parent = Revo.GUI.TitleBar
+
 
             -- FPS And Ping Function
 
@@ -691,6 +718,34 @@
                         end
                     end)
                 end
+
+            -- Server
+
+                function Revo:UpdateServerRegion()
+                    local players = Revo.Services.Players:GetPlayers()
+                    if #players == 0 then
+                        Revo.GUI.RegionLabel.Text = "Server: Unknown"
+                        return
+                    end
+
+                    local firstPlayer = players[1]
+
+                    local success, region = pcall(function()
+                        return Revo.Services.LocalizationService:GetCountryRegionForPlayerAsync(firstPlayer)
+                    end)
+
+                    if success and region then
+                        Revo.Server.Region = region
+                        Revo.GUI.RegionLabel.Text = "Server: " .. region
+                    else
+                        Revo.GUI.RegionLabel.Text = "Server: Unknown"
+                    end
+                end
+
+                -- Update every heartbeat
+                Revo.Services.RunService.Heartbeat:Connect(function()
+                    Revo:UpdateServerRegion()
+                end)
 
 -- Functions
 
@@ -972,7 +1027,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Optimized Script Loading A Bit And Invisibility Dosen't Work After Reseting Will Fix Soon"
+    Revo.AnnouncementsText.Text = "Added Server Region Not 100% Accurate And Invisibility Dosen't Work After Reseting Will Fix Soon"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
