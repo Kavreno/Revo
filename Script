@@ -128,12 +128,6 @@
             GlobalConnection = nil,
         }
 
-    -- Server
-
-        Revo.Server = {
-            Region = "Unknown"
-        }
-
     -- Target
 
         Revo.Target = {
@@ -673,26 +667,6 @@
             Revo.GUI.PingLabel.TextXAlignment = Enum.TextXAlignment.Left
             Revo.GUI.PingLabel.Parent = Revo.GUI.TitleBar
 
-            Revo.GUI.PingRegionSeparator = Instance.new("Frame")
-            Revo.GUI.PingRegionSeparator.Size = UDim2.new(0, 1, 0, 18)
-            Revo.GUI.PingRegionSeparator.Position = UDim2.new(0, 110, 0.5, -9)
-            Revo.GUI.PingRegionSeparator.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-            Revo.GUI.PingRegionSeparator.BorderSizePixel = 0
-            Revo.GUI.PingRegionSeparator.Parent = Revo.GUI.TitleBar
-
-            Revo.GUI.RegionLabel = Instance.new("TextLabel")
-            Revo.GUI.RegionLabel.Name = "RegionLabel"
-            Revo.GUI.RegionLabel.Size = UDim2.new(0, 65, 1, 0)
-            Revo.GUI.RegionLabel.Position = UDim2.new(0, 115, 0, 0)
-            Revo.GUI.RegionLabel.BackgroundTransparency = 1
-            Revo.GUI.RegionLabel.Text = "Region: ?"
-            Revo.GUI.RegionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Revo.GUI.RegionLabel.Font = Enum.Font.Gotham
-            Revo.GUI.RegionLabel.TextSize = 14
-            Revo.GUI.RegionLabel.TextXAlignment = Enum.TextXAlignment.Left
-            Revo.GUI.RegionLabel.Parent = Revo.GUI.TitleBar
-
-
             -- FPS And Ping Function
 
                 do
@@ -718,34 +692,6 @@
                         end
                     end)
                 end
-
-            -- Server
-
-                function Revo:UpdateServerRegion()
-                    local players = Revo.Services.Players:GetPlayers()
-                    if #players == 0 then
-                        Revo.GUI.RegionLabel.Text = "Server: Unknown"
-                        return
-                    end
-
-                    local firstPlayer = players[1]
-
-                    local success, region = pcall(function()
-                        return Revo.Services.LocalizationService:GetCountryRegionForPlayerAsync(firstPlayer)
-                    end)
-
-                    if success and region then
-                        Revo.Server.Region = region
-                        Revo.GUI.RegionLabel.Text = "Server: " .. region
-                    else
-                        Revo.GUI.RegionLabel.Text = "Server: Unknown"
-                    end
-                end
-
-                -- Update every heartbeat
-                Revo.Services.RunService.Heartbeat:Connect(function()
-                    Revo:UpdateServerRegion()
-                end)
 
 -- Functions
 
