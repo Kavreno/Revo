@@ -1027,7 +1027,7 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Added Server Region Not 100% Accurate And Invisibility Dosen't Work After Reseting Will Fix Soon"
+    Revo.AnnouncementsText.Text = "Sorry For Not Really Updating This Script Trying To Make A Python Script To Pull All Emotes Off Of Robloxs Marketplace"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
