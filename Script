@@ -1,111 +1,12 @@
--- Already Added
-
-    -- Character Section
-
-        -- Walk Speed
-        -- Fly Speed
-        -- Teleport
-        -- Fly
-        -- Jerk
-        -- Rewind
-        -- Walk On Air
-        -- Trip
-        -- Invisibility
-        -- Jump Power
-        -- Infinite Jump
-        -- Gravity
-        -- Spin
-        -- FOV
-
-    -- Target Section
-
-        -- Fling
-        -- View
-        -- Focus
-        -- Headsit
-        -- Stand
-        -- Backpack
-        -- Doggy
-        -- Bang
-        -- Drag
-        -- Teleport
-        -- Push
-        -- Face Bang
-        -- Face Bang Distance
-        -- Face Bang Speed
-        -- Inspect
-
-    -- Animations Section
-
-        -- Bold
-        -- Rthro
-        -- Vampire
-        -- Hero
-        -- Zombie Classic
-        -- Mage
-        -- Ghost
-        -- Elder
-        -- Levitation
-        -- Astronaut
-        -- Ninja
-        -- Werewolf
-        -- Cartoon
-        -- Pirate
-        -- Sneaky
-        -- Toy
-        -- Knight
-        -- Confident
-        -- Popstar
-        -- Princess
-        -- Cowboy
-        -- Patrol
-        -- FE Zombie
-        -- Catwalk
-        -- Unboxed
-        -- Popular
-        -- Community
-        -- Aura
-        -- Old
-        -- Sports
-        -- Stylish
-        -- Wicked
-        -- Bubbly
-        -- Robot
-        -- NFL
-        -- Boundaries
-        -- Realistic
-        -- Animation Sub Sections
-
-    -- Misc Section
-
-        -- Rejoin
-        -- ServerHop
-        -- Shaders
-        -- Emotes
-        -- Day
-        -- UGC Emotes
-        -- Night
-        -- Infinite Yield
-        -- Explode
-        -- GUI Key
-        -- Anti AFK
-        -- Auto Clicker
-        -- Anti Void
-        -- No Sit
-        -- Respawn
-        -- No Ragdoll
-        -- Anti Game Paused
-        -- Universal Expand Base Plate
-
 -- Need To Add
 
     -- Saving (Basically Done)
-    -- Custom Name Tags (WIP)
 
 -- Not Sure If Adding
 
-    -- Move While Emoting (WIP)
-    -- Merge Emote Scripts Or Make Own (WIP)
+    -- Move While Emoting
+    -- Merge Emote Scripts Or Make Own
+    -- Custom Name Tags
     -- Mute And Unmute Player
     -- Hide And Unhide Player
     -- Add And Unadd Player
@@ -123,6 +24,7 @@
     -- Anti All (Headsit, Backpack, ETC)
     -- Chat Bypass
     -- Voice Chat Bypass
+    -- Custom Idle Aniamtion, Walk ETC
 
 -- Loading Start
 
@@ -431,220 +333,12 @@
 
 -- GUI
 
-    -- Send Notifications
-
-        Revo.Notifications = {}
-        Revo.MaxNotifications = 3
-
-        function Revo:RestackNotifications()
-            for i, notif in ipairs(Revo.Notifications) do
-                if notif and notif.Parent then
-                    local targetPos = UDim2.new(1, -320, 0, 20 + ((i - 1) * 90))
-                    notif:TweenPosition(
-                        targetPos,
-                        Enum.EasingDirection.Out,
-                        Enum.EasingStyle.Quart,
-                        0.25,
-                        true
-                    )
-                end
-            end
-        end
-
-        function Revo:Notify(title, text, duration, options)
-            duration = duration or 5
-            options = options or {}
-
-            local playerGui = Revo.Player:WaitForChild("PlayerGui")
-
-            if not Revo.NotificationGui then
-                local gui = Instance.new("ScreenGui")
-                gui.Name = "RevoNotifications"
-                gui.ResetOnSpawn = false
-                gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-                gui.Parent = playerGui
-                Revo.NotificationGui = gui
-            end
-
-            local isInteractive = options.Buttons ~= nil
-
-            if #Revo.Notifications >= Revo.MaxNotifications then
-                for i, notif in ipairs(Revo.Notifications) do
-                    if not notif:GetAttribute("IsInteractive") then
-
-                        local currentY = notif.Position.Y.Offset
-                        local finished = false
-
-                        notif:TweenPosition(
-                            UDim2.new(1, 320, 0, currentY),
-                            Enum.EasingDirection.In,
-                            Enum.EasingStyle.Quart,
-                            0.25,
-                            true,
-                            function()
-                                finished = true
-                            end
-                        )
-
-                        repeat task.wait() until finished
-
-                        table.remove(Revo.Notifications, i)
-                        notif:Destroy()
-
-                        Revo:RestackNotifications()
-
-                        break
-                    end
-                end
-            end
-
-            local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(0, 300, 0, 80)
-            frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-            frame.BorderSizePixel = 0
-            frame.Parent = Revo.NotificationGui
-            frame:SetAttribute("IsInteractive", isInteractive)
-
-            Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
-
-            local stroke = Instance.new("UIStroke", frame)
-            stroke.Color = Color3.fromRGB(60, 60, 60)
-            stroke.Thickness = 1.5
-
-            local titleLabel = Instance.new("TextLabel")
-            titleLabel.Size = UDim2.new(1, -20, 0, 20)
-            titleLabel.Position = UDim2.new(0, 10, 0, 6)
-            titleLabel.BackgroundTransparency = 1
-            titleLabel.Text = title
-            titleLabel.Font = Enum.Font.GothamBold
-            titleLabel.TextSize = 14
-            titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-            titleLabel.Parent = frame
-
-            local textLabel = Instance.new("TextLabel")
-            textLabel.Size = UDim2.new(1, -20, 0, 30)
-            textLabel.Position = UDim2.new(0, 10, 0, 26)
-            textLabel.BackgroundTransparency = 1
-            textLabel.TextWrapped = true
-            textLabel.Text = text
-            textLabel.Font = Enum.Font.Gotham
-            textLabel.TextSize = 13
-            textLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-            textLabel.TextXAlignment = Enum.TextXAlignment.Left
-            textLabel.TextYAlignment = Enum.TextYAlignment.Top
-            textLabel.Parent = frame
-
-            local function removeNotification(notif)
-                local index
-
-                for i, n in ipairs(Revo.Notifications) do
-                    if n == notif then
-                        index = i
-                        break
-                    end
-                end
-
-                if not index then return end
-
-                if notif:GetAttribute("Removing") then return end
-                notif:SetAttribute("Removing", true)
-
-                local finished = false
-
-                notif:TweenPosition(
-                    UDim2.new(1, 320, 0, notif.Position.Y.Offset),
-                    Enum.EasingDirection.In,
-                    Enum.EasingStyle.Quart,
-                    0.25,
-                    true,
-                    function()
-                        finished = true
-                    end
-                )
-
-                repeat task.wait() until finished
-
-                table.remove(Revo.Notifications, index)
-
-                notif:Destroy()
-
-                Revo:RestackNotifications()
-            end
-
-            frame.Active = true
-
-            frame.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    
-                    if frame:GetAttribute("IsInteractive") then
-                        return
-                    end
-                    
-                    removeNotification(frame)
-                end
-            end)
-
-            if isInteractive then
-                local buttonContainer = Instance.new("Frame")
-                buttonContainer.Size = UDim2.new(1, -20, 0, 20)
-                buttonContainer.Position = UDim2.new(0, 10, 1, -24)
-                buttonContainer.BackgroundTransparency = 1
-                buttonContainer.Parent = frame
-
-                local layout = Instance.new("UIListLayout", buttonContainer)
-                layout.FillDirection = Enum.FillDirection.Horizontal
-                layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-                layout.Padding = UDim.new(0, 10)
-
-                for _, buttonData in ipairs(options.Buttons) do
-                    local button = Instance.new("TextButton")
-                    button.Size = UDim2.new(0, 80, 1, 0)
-                    button.Text = buttonData.Text
-                    button.Font = Enum.Font.GothamBold
-                    button.TextSize = 12
-                    button.TextColor3 = Color3.new(1,1,1)
-                    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                    button.Parent = buttonContainer
-
-                    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 10)
-
-                    button.MouseButton1Click:Connect(function()
-                        if buttonData.Callback then
-                            buttonData.Callback()
-                        end
-                        removeNotification(frame)
-                    end)
-                end
-            else
-                task.delay(duration, function()
-                    removeNotification(frame)
-                end)
-            end
-
-            local newIndex = #Revo.Notifications + 1
-            local finalY = 20 + ((newIndex - 1) * 90)
-
-            frame.Position = UDim2.new(1, 320, 0, finalY)
-
-            table.insert(Revo.Notifications, frame)
-
-            frame:TweenPosition(
-                UDim2.new(1, -320, 0, finalY),
-                Enum.EasingDirection.Out,
-                Enum.EasingStyle.Quart,
-                0.25,
-                true
-            )
-        end
-
-    -- GUI Load Detection
+    -- GUI Detection
 
         if Revo.PlayerGui:FindFirstChild("RevoGUI") then
-            Revo:Notify("Revo", "GUI Already Loaded", 5)
             return
         end
-        
+
     -- GUI Creation
 
         -- Screen GUI
@@ -731,6 +425,213 @@
                     )
 
                 end)
+
+        -- Send Notifications
+
+            Revo.Notifications = {}
+            Revo.MaxNotifications = 3
+
+            function Revo:RestackNotifications()
+                for i, notif in ipairs(Revo.Notifications) do
+                    if notif and notif.Parent then
+                        local targetPos = UDim2.new(1, -320, 0, 20 + ((i - 1) * 90))
+                        notif:TweenPosition(
+                            targetPos,
+                            Enum.EasingDirection.Out,
+                            Enum.EasingStyle.Quart,
+                            0.25,
+                            true
+                        )
+                    end
+                end
+            end
+
+            function Revo:Notify(title, text, duration, options)
+                duration = duration or 5
+                options = options or {}
+
+                local playerGui = Revo.Player:WaitForChild("PlayerGui")
+
+                if not Revo.NotificationGui then
+                    local gui = Instance.new("ScreenGui")
+                    gui.Name = "RevoNotifications"
+                    gui.ResetOnSpawn = false
+                    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+                    gui.Parent = playerGui
+                    Revo.NotificationGui = gui
+                end
+
+                local isInteractive = options.Buttons ~= nil
+
+                if #Revo.Notifications >= Revo.MaxNotifications then
+                    for i, notif in ipairs(Revo.Notifications) do
+                        if not notif:GetAttribute("IsInteractive") then
+
+                            local currentY = notif.Position.Y.Offset
+                            local finished = false
+
+                            notif:TweenPosition(
+                                UDim2.new(1, 320, 0, currentY),
+                                Enum.EasingDirection.In,
+                                Enum.EasingStyle.Quart,
+                                0.25,
+                                true,
+                                function()
+                                    finished = true
+                                end
+                            )
+
+                            repeat task.wait() until finished
+
+                            table.remove(Revo.Notifications, i)
+                            notif:Destroy()
+
+                            Revo:RestackNotifications()
+
+                            break
+                        end
+                    end
+                end
+
+                local frame = Instance.new("Frame")
+                frame.Size = UDim2.new(0, 300, 0, 80)
+                frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+                frame.BorderSizePixel = 0
+                frame.Parent = Revo.NotificationGui
+                frame:SetAttribute("IsInteractive", isInteractive)
+
+                Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+                local stroke = Instance.new("UIStroke", frame)
+                stroke.Color = Color3.fromRGB(60, 60, 60)
+                stroke.Thickness = 1.5
+
+                local titleLabel = Instance.new("TextLabel")
+                titleLabel.Size = UDim2.new(1, -20, 0, 20)
+                titleLabel.Position = UDim2.new(0, 10, 0, 6)
+                titleLabel.BackgroundTransparency = 1
+                titleLabel.Text = title
+                titleLabel.Font = Enum.Font.GothamBold
+                titleLabel.TextSize = 14
+                titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+                titleLabel.Parent = frame
+
+                local textLabel = Instance.new("TextLabel")
+                textLabel.Size = UDim2.new(1, -20, 0, 30)
+                textLabel.Position = UDim2.new(0, 10, 0, 26)
+                textLabel.BackgroundTransparency = 1
+                textLabel.TextWrapped = true
+                textLabel.Text = text
+                textLabel.Font = Enum.Font.Gotham
+                textLabel.TextSize = 13
+                textLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+                textLabel.TextXAlignment = Enum.TextXAlignment.Left
+                textLabel.TextYAlignment = Enum.TextYAlignment.Top
+                textLabel.Parent = frame
+
+                local function removeNotification(notif)
+                    local index
+
+                    for i, n in ipairs(Revo.Notifications) do
+                        if n == notif then
+                            index = i
+                            break
+                        end
+                    end
+
+                    if not index then return end
+
+                    if notif:GetAttribute("Removing") then return end
+                    notif:SetAttribute("Removing", true)
+
+                    local finished = false
+
+                    notif:TweenPosition(
+                        UDim2.new(1, 320, 0, notif.Position.Y.Offset),
+                        Enum.EasingDirection.In,
+                        Enum.EasingStyle.Quart,
+                        0.25,
+                        true,
+                        function()
+                            finished = true
+                        end
+                    )
+
+                    repeat task.wait() until finished
+
+                    table.remove(Revo.Notifications, index)
+
+                    notif:Destroy()
+
+                    Revo:RestackNotifications()
+                end
+
+                frame.Active = true
+
+                frame.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        
+                        if frame:GetAttribute("IsInteractive") then
+                            return
+                        end
+                        
+                        removeNotification(frame)
+                    end
+                end)
+
+                if isInteractive then
+                    local buttonContainer = Instance.new("Frame")
+                    buttonContainer.Size = UDim2.new(1, -20, 0, 20)
+                    buttonContainer.Position = UDim2.new(0, 10, 1, -24)
+                    buttonContainer.BackgroundTransparency = 1
+                    buttonContainer.Parent = frame
+
+                    local layout = Instance.new("UIListLayout", buttonContainer)
+                    layout.FillDirection = Enum.FillDirection.Horizontal
+                    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+                    layout.Padding = UDim.new(0, 10)
+
+                    for _, buttonData in ipairs(options.Buttons) do
+                        local button = Instance.new("TextButton")
+                        button.Size = UDim2.new(0, 80, 1, 0)
+                        button.Text = buttonData.Text
+                        button.Font = Enum.Font.GothamBold
+                        button.TextSize = 12
+                        button.TextColor3 = Color3.new(1,1,1)
+                        button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                        button.Parent = buttonContainer
+
+                        Instance.new("UICorner", button).CornerRadius = UDim.new(0, 10)
+
+                        button.MouseButton1Click:Connect(function()
+                            if buttonData.Callback then
+                                buttonData.Callback()
+                            end
+                            removeNotification(frame)
+                        end)
+                    end
+                else
+                    task.delay(duration, function()
+                        removeNotification(frame)
+                    end)
+                end
+
+                local newIndex = #Revo.Notifications + 1
+                local finalY = 20 + ((newIndex - 1) * 90)
+
+                frame.Position = UDim2.new(1, 320, 0, finalY)
+
+                table.insert(Revo.Notifications, frame)
+
+                frame:TweenPosition(
+                    UDim2.new(1, -320, 0, finalY),
+                    Enum.EasingDirection.Out,
+                    Enum.EasingStyle.Quart,
+                    0.25,
+                    true
+                )
+            end
 
         -- FPS And Ping
 
@@ -1071,33 +972,11 @@
     Revo.AnnouncementsText.TextWrapped = true
     Revo.AnnouncementsText.TextYAlignment = Enum.TextYAlignment.Top
     Revo.AnnouncementsText.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.AnnouncementsText.Text = "Fixed Notifications Click To Remove"
+    Revo.AnnouncementsText.Text = "Optimized Script Loading A Bit And Invisibility Dosen't Work After Reseting Will Fix Soon"
     Revo.AnnouncementsText.TextColor3 = Color3.fromRGB(255, 255, 255)
     Revo.AnnouncementsText.Font = Enum.Font.Gotham
     Revo.AnnouncementsText.TextSize = 16
     Revo.AnnouncementsText.Parent = Revo.Pages.Home
-
-    Revo.CreditsLabel = Instance.new("TextLabel")
-    Revo.CreditsLabel.Size = UDim2.new(0.5, -10, 0, 20)
-    Revo.CreditsLabel.Position = UDim2.new(0, 10, 1, -30)
-    Revo.CreditsLabel.BackgroundTransparency = 1
-    Revo.CreditsLabel.Text = "Created By: Kavrenoo"
-    Revo.CreditsLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    Revo.CreditsLabel.Font = Enum.Font.Gotham
-    Revo.CreditsLabel.TextSize = 16
-    Revo.CreditsLabel.TextXAlignment = Enum.TextXAlignment.Left
-    Revo.CreditsLabel.Parent = Revo.Pages.Home
-
-    Revo.VersionLabel = Instance.new("TextLabel")
-    Revo.VersionLabel.Size = UDim2.new(0.5, -10, 0, 20)
-    Revo.VersionLabel.Position = UDim2.new(0.5, 0, 1, -30)
-    Revo.VersionLabel.BackgroundTransparency = 1
-    Revo.VersionLabel.Text = "Version: 3.7"
-    Revo.VersionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    Revo.VersionLabel.Font = Enum.Font.Gotham
-    Revo.VersionLabel.TextSize = 14
-    Revo.VersionLabel.TextXAlignment = Enum.TextXAlignment.Right
-    Revo.VersionLabel.Parent = Revo.Pages.Home
 
     Revo.Buttons.Home.MouseButton1Click:Connect(function()
         for _, page in pairs(Revo.Pages) do
@@ -1196,7 +1075,6 @@
 
             Revo.Buttons.WalkSpeed = Instance.new("TextButton")
             Revo.Buttons.WalkSpeed.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.WalkSpeed.Position = UDim2.new(0, 5, 0, 5)
             Revo.Buttons.WalkSpeed.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.WalkSpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.WalkSpeed.Font = Enum.Font.Gotham
@@ -1378,7 +1256,6 @@
 
                 Revo.Buttons.FlySpeed = Instance.new("TextButton")
                 Revo.Buttons.FlySpeed.Size = UDim2.new(0, 200, 0, 30)
-                Revo.Buttons.FlySpeed.Position = UDim2.new(0, 215, 0, 5)
                 Revo.Buttons.FlySpeed.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 Revo.Buttons.FlySpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
                 Revo.Buttons.FlySpeed.Font = Enum.Font.Gotham
@@ -1435,7 +1312,6 @@
 
             Revo.Buttons.FlyKey = Instance.new("TextButton")
             Revo.Buttons.FlyKey.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.FlyKey.Position = UDim2.new(0, 215, 0, 40)
             Revo.Buttons.FlyKey.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.FlyKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.FlyKey.Font = Enum.Font.Gotham
@@ -1567,7 +1443,6 @@
 
             Revo.Buttons.TeleportKey = Instance.new("TextButton")
             Revo.Buttons.TeleportKey.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.TeleportKey.Position = UDim2.new(0, 5, 0, 40)
             Revo.Buttons.TeleportKey.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.TeleportKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.TeleportKey.Font = Enum.Font.Gotham
@@ -1725,7 +1600,6 @@
 
             Revo.Buttons.RewindKey = Instance.new("TextButton")
             Revo.Buttons.RewindKey.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.RewindKey.Position = UDim2.new(0, 215, 0, 75)
             Revo.Buttons.RewindKey.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.RewindKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.RewindKey.Font = Enum.Font.Gotham
@@ -1936,7 +1810,6 @@
 
             Revo.Buttons.TripKey = Instance.new("TextButton")
             Revo.Buttons.TripKey.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.TripKey.Position = UDim2.new(0, 215, 0, 110)
             Revo.Buttons.TripKey.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.TripKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.TripKey.Font = Enum.Font.Gotham
@@ -2085,7 +1958,6 @@
 
             Revo.Buttons.JumpPower = Instance.new("TextButton")
             Revo.Buttons.JumpPower.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.JumpPower.Position = UDim2.new(0, 215, 0, 145)
             Revo.Buttons.JumpPower.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.JumpPower.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.JumpPower.Font = Enum.Font.Gotham
@@ -2149,7 +2021,6 @@
 
             Revo.Buttons.Jerk = Instance.new("TextButton")
             Revo.Buttons.Jerk.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Jerk.Position = UDim2.new(0, 5, 0, 75)
             Revo.Buttons.Jerk.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.Jerk.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.Jerk.Font = Enum.Font.Gotham
@@ -2444,7 +2315,6 @@
 
             Revo.Buttons.InvisibilityKey = Instance.new("TextButton")
             Revo.Buttons.InvisibilityKey.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.InvisibilityKey.Position = UDim2.new(0, 5, 0, 145)
             Revo.Buttons.InvisibilityKey.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.InvisibilityKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.InvisibilityKey.Font = Enum.Font.Gotham
@@ -2555,6 +2425,7 @@
             Revo.Invisibility.Part.Size = Vector3.new(200, 1, 200)
             Revo.Invisibility.Part.Position = Vector3.new(0, -500, 0)
             Revo.Invisibility.Part.CanCollide = true
+            Revo.Invisibility.Part.Transparency = 1
 
             Revo.Invisibility.FakeCharacter.Parent = workspace
             Revo.Invisibility.FakeCharacter.HumanoidRootPart.CFrame = Revo.Invisibility.Part.CFrame * CFrame.new(0, 5, 0)
@@ -2709,7 +2580,6 @@
 
                 Revo.Buttons.InfiniteJump = Instance.new("TextButton")
                 Revo.Buttons.InfiniteJump.Size = UDim2.new(0, 200, 0, 30)
-                Revo.Buttons.InfiniteJump.Position = UDim2.new(0, 5, 0, 180)
                 Revo.Buttons.InfiniteJump.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 Revo.Buttons.InfiniteJump.TextColor3 = Color3.fromRGB(255, 255, 255)
                 Revo.Buttons.InfiniteJump.Font = Enum.Font.Gotham
@@ -2779,7 +2649,6 @@
 
             Revo.Buttons.Gravity = Instance.new("TextButton")
             Revo.Buttons.Gravity.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Gravity.Position = UDim2.new(0, 215, 0, 180)
             Revo.Buttons.Gravity.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.Gravity.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.Gravity.Font = Enum.Font.Gotham
@@ -2851,7 +2720,6 @@
 
             Revo.Buttons.Spin = Instance.new("TextButton")
             Revo.Buttons.Spin.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Spin.Position = UDim2.new(0, 5, 0, 220)
             Revo.Buttons.Spin.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.Spin.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.Spin.Font = Enum.Font.Gotham
@@ -2919,10 +2787,10 @@
     -- FOV
 
         Revo.FOV = Revo.Save.Data.FOV or 70
+        workspace.CurrentCamera.FieldOfView = Revo.FOV
 
         Revo.Buttons.FOV = Instance.new("TextButton")
         Revo.Buttons.FOV.Size = UDim2.new(0, 200, 0, 30)
-        Revo.Buttons.FOV.Position = UDim2.new(0, 5, 0, 220)
         Revo.Buttons.FOV.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         Revo.Buttons.FOV.TextColor3 = Color3.fromRGB(255, 255, 255)
         Revo.Buttons.FOV.Font = Enum.Font.Gotham
@@ -3074,7 +2942,6 @@
             btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             btn.BackgroundTransparency = 0
             btn.BorderSizePixel = 0
-            btn.Position = pos
             btn.Size = UDim2.new(0, 200, 0, 30)
             btn.Font = Enum.Font.Gotham
             btn.Text = text
@@ -3088,18 +2955,18 @@
             return btn
         end
 
-        Revo.GUI.TargetButtons.Fling        = Revo.GUI:CreateTargetButton("Fling",        "Fling",                 UDim2.new(0, 5, 0, 120))
-        Revo.GUI.TargetButtons.View         = Revo.GUI:CreateTargetButton("View",         "View",                  UDim2.new(0, 215, 0, 120))
-        Revo.GUI.TargetButtons.Focus        = Revo.GUI:CreateTargetButton("Focus",        "Focus",                 UDim2.new(0, 5, 0, 155))
-        Revo.GUI.TargetButtons.Bang         = Revo.GUI:CreateTargetButton("Bang",         "Bang",                  UDim2.new(0, 215, 0, 155))
-        Revo.GUI.TargetButtons.Stand        = Revo.GUI:CreateTargetButton("Stand",        "Stand",                 UDim2.new(0, 5, 0, 190))
-        Revo.GUI.TargetButtons.Headsit      = Revo.GUI:CreateTargetButton("Headsit",      "Headsit",               UDim2.new(0, 215, 0, 190))
-        Revo.GUI.TargetButtons.Doggy        = Revo.GUI:CreateTargetButton("Doggy",        "Doggy",                 UDim2.new(0, 5, 0, 225))
-        Revo.GUI.TargetButtons.Backpack     = Revo.GUI:CreateTargetButton("Backpack",     "Backpack",              UDim2.new(0, 215, 0, 225))
-        Revo.GUI.TargetButtons.Drag         = Revo.GUI:CreateTargetButton("Drag",         "Drag",                  UDim2.new(0, 5, 0, 260))
-        Revo.GUI.TargetButtons.Teleport     = Revo.GUI:CreateTargetButton("Teleport",     "Teleport",              UDim2.new(0, 215, 0, 260))
-        Revo.GUI.TargetButtons.Push         = Revo.GUI:CreateTargetButton("Push",         "Push",                  UDim2.new(0, 5, 0, 295))
-        Revo.GUI.TargetButtons.FaceBang     = Revo.GUI:CreateTargetButton("FaceBang",     "Face Bang",             UDim2.new(0, 215, 0, 295))
+        Revo.GUI.TargetButtons.Fling        = Revo.GUI:CreateTargetButton("Fling",        "Fling")
+        Revo.GUI.TargetButtons.View         = Revo.GUI:CreateTargetButton("View",         "View")
+        Revo.GUI.TargetButtons.Focus        = Revo.GUI:CreateTargetButton("Focus",        "Focus")
+        Revo.GUI.TargetButtons.Bang         = Revo.GUI:CreateTargetButton("Bang",         "Bang")
+        Revo.GUI.TargetButtons.Stand        = Revo.GUI:CreateTargetButton("Stand",        "Stand")
+        Revo.GUI.TargetButtons.Headsit      = Revo.GUI:CreateTargetButton("Headsit",      "Headsit")
+        Revo.GUI.TargetButtons.Doggy        = Revo.GUI:CreateTargetButton("Doggy",        "Doggy")
+        Revo.GUI.TargetButtons.Backpack     = Revo.GUI:CreateTargetButton("Backpack",     "Backpack")
+        Revo.GUI.TargetButtons.Drag         = Revo.GUI:CreateTargetButton("Drag",         "Drag")
+        Revo.GUI.TargetButtons.Teleport     = Revo.GUI:CreateTargetButton("Teleport",     "Teleport")
+        Revo.GUI.TargetButtons.Push         = Revo.GUI:CreateTargetButton("Push",         "Push")
+        Revo.GUI.TargetButtons.FaceBang     = Revo.GUI:CreateTargetButton("FaceBang",     "Face Bang")
 
         Revo.GUI.TargetButtons.Fling.Parent    = Revo.GUI.TargetLeftColumn
         Revo.GUI.TargetButtons.Focus.Parent    = Revo.GUI.TargetLeftColumn
@@ -3916,7 +3783,6 @@
 
             Revo.Buttons.FaceBangSpeed = Instance.new("TextButton")
             Revo.Buttons.FaceBangSpeed.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.FaceBangSpeed.Position = UDim2.new(0, 215, 0, 330)
             Revo.Buttons.FaceBangSpeed.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.FaceBangSpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.FaceBangSpeed.Font = Enum.Font.Gotham
@@ -3941,7 +3807,6 @@
 
             Revo.Buttons.FaceBangDistance = Instance.new("TextButton")
             Revo.Buttons.FaceBangDistance.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.FaceBangDistance.Position = UDim2.new(0, 5, 0, 330)
             Revo.Buttons.FaceBangDistance.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.FaceBangDistance.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.FaceBangDistance.Font = Enum.Font.Gotham
@@ -4941,7 +4806,6 @@
 
             Revo.Buttons.Rejoin = Instance.new("TextButton")
             Revo.Buttons.Rejoin.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Rejoin.Position = UDim2.new(0, 5, 0, 5)
             Revo.Buttons.Rejoin.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.Rejoin.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.Rejoin.Font = Enum.Font.Gotham
@@ -4963,7 +4827,6 @@
 
             Revo.Buttons.ServerHop = Instance.new("TextButton")
             Revo.Buttons.ServerHop.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.ServerHop.Position = UDim2.new(0, 215, 0, 5)
             Revo.Buttons.ServerHop.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.ServerHop.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.ServerHop.Font = Enum.Font.Gotham
@@ -5002,7 +4865,6 @@
 
         Revo.Buttons.Shaders = Instance.new("TextButton")
         Revo.Buttons.Shaders.Size = UDim2.new(0, 200, 0, 30)
-        Revo.Buttons.Shaders.Position = UDim2.new(0, 5, 0, 40)
         Revo.Buttons.Shaders.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         Revo.Buttons.Shaders.TextColor3 = Color3.fromRGB(255, 255, 255)
         Revo.Buttons.Shaders.Font = Enum.Font.Gotham
@@ -5087,7 +4949,6 @@
 
         Revo.Buttons.Day = Instance.new("TextButton")
         Revo.Buttons.Day.Size = UDim2.new(0, 200, 0, 30)
-        Revo.Buttons.Day.Position = UDim2.new(0, 5, 0, 75)
         Revo.Buttons.Day.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         Revo.Buttons.Day.TextColor3 = Color3.fromRGB(255, 255, 255)
         Revo.Buttons.Day.Font = Enum.Font.Gotham
@@ -5126,7 +4987,6 @@
 
         Revo.Buttons.Night = Instance.new("TextButton")
         Revo.Buttons.Night.Size = UDim2.new(0, 200, 0, 30)
-        Revo.Buttons.Night.Position = UDim2.new(0, 5, 0, 110)
         Revo.Buttons.Night.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         Revo.Buttons.Night.TextColor3 = Color3.fromRGB(255, 255, 255)
         Revo.Buttons.Night.Font = Enum.Font.Gotham
@@ -5165,7 +5025,6 @@
 
             Revo.Buttons.Emotes = Instance.new("TextButton")
             Revo.Buttons.Emotes.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Emotes.Position = UDim2.new(0, 215, 0, 75)
             Revo.Buttons.Emotes.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.Emotes.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.Emotes.Font = Enum.Font.Gotham
@@ -5187,7 +5046,6 @@
 
             Revo.Buttons.UGCEmotes = Instance.new("TextButton")
             Revo.Buttons.UGCEmotes.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.UGCEmotes.Position = UDim2.new(0, 215, 0, 110)
             Revo.Buttons.UGCEmotes.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.UGCEmotes.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.UGCEmotes.Font = Enum.Font.Gotham
@@ -5208,7 +5066,6 @@
 
             Revo.Buttons.InfiniteYield = Instance.new("TextButton")
             Revo.Buttons.InfiniteYield.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.InfiniteYield.Position = UDim2.new(0, 215, 0, 40)
             Revo.Buttons.InfiniteYield.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.InfiniteYield.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.InfiniteYield.Font = Enum.Font.Gotham
@@ -5229,7 +5086,6 @@
 
             Revo.Buttons.Explode = Instance.new("TextButton")
             Revo.Buttons.Explode.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.Explode.Position = UDim2.new(0, 5, 0, 145)
             Revo.Buttons.Explode.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.Explode.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.Explode.Font = Enum.Font.Gotham
@@ -5297,7 +5153,6 @@
 
             Revo.Buttons.GUIKey = Instance.new("TextButton")
             Revo.Buttons.GUIKey.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.GUIKey.Position = UDim2.new(0, 215, 0, 145)
             Revo.Buttons.GUIKey.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.GUIKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.GUIKey.Font = Enum.Font.Gotham
@@ -5427,7 +5282,6 @@
 
             Revo.Buttons.AutoClickerKey = Instance.new("TextButton")
             Revo.Buttons.AutoClickerKey.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.AutoClickerKey.Position = UDim2.new(0, 215, 0, 180)
             Revo.Buttons.AutoClickerKey.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.AutoClickerKey.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.AutoClickerKey.Font = Enum.Font.Gotham
@@ -5555,7 +5409,6 @@
 
         Revo.Buttons.AntiAFK = Instance.new("TextButton")
         Revo.Buttons.AntiAFK.Size = UDim2.new(0, 200, 0, 30)
-        Revo.Buttons.AntiAFK.Position = UDim2.new(0, 5, 0, 180)
         Revo.Buttons.AntiAFK.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         Revo.Buttons.AntiAFK.TextColor3 = Color3.fromRGB(255, 255, 255)
         Revo.Buttons.AntiAFK.Font = Enum.Font.Gotham
@@ -5595,7 +5448,6 @@
 
         Revo.Buttons.AntiVoid = Instance.new("TextButton")
         Revo.Buttons.AntiVoid.Size = UDim2.new(0, 200, 0, 30)
-        Revo.Buttons.AntiVoid.Position = UDim2.new(0, 5, 0, 215)
         Revo.Buttons.AntiVoid.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         Revo.Buttons.AntiVoid.TextColor3 = Color3.fromRGB(255, 255, 255)
         Revo.Buttons.AntiVoid.Font = Enum.Font.Gotham
@@ -5638,7 +5490,6 @@
 
         Revo.Buttons.Nosit = Instance.new("TextButton")
         Revo.Buttons.Nosit.Size = UDim2.new(0, 200, 0, 30)
-        Revo.Buttons.Nosit.Position = UDim2.new(0, 215, 0, 215)
         Revo.Buttons.Nosit.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         Revo.Buttons.Nosit.TextColor3 = Color3.fromRGB(255, 255, 255)
         Revo.Buttons.Nosit.Font = Enum.Font.Gotham
@@ -5682,7 +5533,6 @@
 
         Revo.Buttons.NoRagdoll = Instance.new("TextButton")
         Revo.Buttons.NoRagdoll.Size = UDim2.new(0, 200, 0, 30)
-        Revo.Buttons.NoRagdoll.Position = UDim2.new(0, 215, 0, 215)
         Revo.Buttons.NoRagdoll.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         Revo.Buttons.NoRagdoll.TextColor3 = Color3.fromRGB(255, 255, 255)
         Revo.Buttons.NoRagdoll.Font = Enum.Font.Gotham
@@ -5749,7 +5599,6 @@
 
             Revo.Buttons.NormalRespawn = Instance.new("TextButton")
             Revo.Buttons.NormalRespawn.Size = UDim2.new(0, 200, 0, 30)
-            Revo.Buttons.NormalRespawn.Position = UDim2.new(0, 5, 0, 215)
             Revo.Buttons.NormalRespawn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Revo.Buttons.NormalRespawn.TextColor3 = Color3.fromRGB(255, 255, 255)
             Revo.Buttons.NormalRespawn.Font = Enum.Font.Gotham
@@ -5779,7 +5628,6 @@
 
         Revo.Buttons.AntiGamePaused = Instance.new("TextButton")
         Revo.Buttons.AntiGamePaused.Size = UDim2.new(0, 200, 0, 30)
-        Revo.Buttons.AntiGamePaused.Position = UDim2.new(0, 5, 0, 240)
         Revo.Buttons.AntiGamePaused.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         Revo.Buttons.AntiGamePaused.TextColor3 = Color3.fromRGB(255, 255, 255)
         Revo.Buttons.AntiGamePaused.Font = Enum.Font.Gotham
